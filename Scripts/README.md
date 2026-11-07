@@ -93,24 +93,24 @@ Plus 210+ demo students (e.g. `bscs1s1`, `bba3s5`, `col11s3`, `sch5s7`, `mse2s4`
 ## Example Commands
 
 ```powershell
-$server = "(localdb)\MSSQLLocalDB"
+$server = "localhost\SQLEXPRESS"   # SQL Server Express, Windows authentication; -C trusts its own certificate
 
-sqlcmd -S $server -d master -i "Scripts/00-Cleanup-Master-Mistake.sql"
-sqlcmd -S $server -d master -i "Scripts/01-Schema-Current.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/02-Seed-Core.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/03-FullDummyData.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/04-Maintenance-Indexes-And-Views.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/05-PostDeployment-Checks.sql"
+sqlcmd -S $server -C -d master -i "Scripts/00-Cleanup-Master-Mistake.sql"
+sqlcmd -S $server -C -d master -i "Scripts/01-Schema-Current.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/02-Seed-Core.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/03-FullDummyData.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/04-Maintenance-Indexes-And-Views.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/05-PostDeployment-Checks.sql"
 ```
 
 Optional utilities:
 
 ```powershell
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/06-Create-SuperAdmin-User.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/07-Fix-Sidebar-Role-Visibility.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/student-journey-class1-10.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/08-Create-Test-Admin-User.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/09-Institution-Dummy-Data.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/06-Create-SuperAdmin-User.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/07-Fix-Sidebar-Role-Visibility.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/student-journey-class1-10.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/08-Create-Test-Admin-User.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/09-Institution-Dummy-Data.sql"
 ```
 
 
@@ -119,22 +119,22 @@ sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/09-Institution-Dummy-Data.sq
 Demo/full path:
 
 ```powershell
-sqlcmd -S "localhost" -E -d "master" -i "Scripts\00-Cleanup-Master-Mistake.sql"
-sqlcmd -S "localhost" -E -d "master" -i "Scripts\01-Schema-Current.sql"
-sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\02-Seed-Core.sql"
-sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\03-FullDummyData.sql"
-sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\04-Maintenance-Indexes-And-Views.sql"
-sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\05-PostDeployment-Checks.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "master" -i "Scripts\00-Cleanup-Master-Mistake.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "master" -i "Scripts\01-Schema-Current.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "Tabsan-EduSphere" -i "Scripts\02-Seed-Core.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "Tabsan-EduSphere" -i "Scripts\03-FullDummyData.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "Tabsan-EduSphere" -i "Scripts\04-Maintenance-Indexes-And-Views.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "Tabsan-EduSphere" -i "Scripts\05-PostDeployment-Checks.sql"
 ```
 
 Clean baseline path (core seed only, skip the full 295-student dummy dataset):
 
 ```powershell
-sqlcmd -S "localhost" -E -d "master" -i "Scripts\00-Cleanup-Master-Mistake.sql"
-sqlcmd -S "localhost" -E -d "master" -i "Scripts\01-Schema-Current.sql"
-sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\02-Seed-Core.sql"
-sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\04-Maintenance-Indexes-And-Views.sql"
-sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\05-PostDeployment-Checks-Clean.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "master" -i "Scripts\00-Cleanup-Master-Mistake.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "master" -i "Scripts\01-Schema-Current.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "Tabsan-EduSphere" -i "Scripts\02-Seed-Core.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "Tabsan-EduSphere" -i "Scripts\04-Maintenance-Indexes-And-Views.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "Tabsan-EduSphere" -i "Scripts\05-PostDeployment-Checks-Clean.sql"
 ```
 
 The maintenance step is optional for strict clean-seed validation, but recommended to keep index/view state aligned with production deployments.
@@ -142,9 +142,9 @@ The maintenance step is optional for strict clean-seed validation, but recommend
 Utility and recovery scripts (run when needed):
 
 ```powershell
-sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\06-Create-SuperAdmin-User.sql"
-sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\07-Fix-Sidebar-Role-Visibility.sql"
-sqlcmd -S "localhost" -E -d "Tabsan-EduSphere" -i "Scripts\student-journey-class1-10.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "Tabsan-EduSphere" -i "Scripts\06-Create-SuperAdmin-User.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "Tabsan-EduSphere" -i "Scripts\07-Fix-Sidebar-Role-Visibility.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -E -C -d "Tabsan-EduSphere" -i "Scripts\student-journey-class1-10.sql"
 ```
 
 ## Phase 40.2 Unified Update (2026-05-21)

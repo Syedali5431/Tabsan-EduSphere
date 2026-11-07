@@ -4,7 +4,11 @@ using Tabsan.EduSphere.Mobile.Services;
 
 namespace Tabsan.EduSphere.Mobile;
 
-/// <summary>Plan M12 — the tabs for the signed-in role: students, teachers and parents each see their own app.</summary>
+/// <summary>
+/// Plan M12 — the tabs for the signed-in role. Students and parents: Home, Timetable, Courses, Homework, Attendance, Results;
+/// teachers the same without Results; admins Home with their campus. All end with Notifications and Settings (Android puts the
+/// tabs after the fourth under More). The child, class and campus chosen on one tab apply to all (one <see cref="Selection"/>).
+/// </summary>
 public sealed class AppShell : Shell
 {
 	public AppShell(IServiceProvider services)
@@ -20,26 +24,32 @@ public sealed class AppShell : Shell
 			try { portal = (await client.GetConfigAsync())?.PortalBaseUrl; }
 			catch (Exception ex) when (ex is HttpRequestException or ApiException or TaskCanceledException) { }
 		});
+		var selection = new Selection(client);
+		_ = LoadSelectionAsync(selection);
 
 		var tabs = new TabBar();
-		tabs.Items.Add(Tab("Home", new HomePage(new HomeViewModel(client), client, launcher, pickers, () => portal)));
-		if (state.IsStudent || state.IsTeacher)
+		tabs.Items.Add(Tab("Home", new HomePage(new HomeViewModel(client), selection, client, launcher, pickers, () => portal)));
+		if (state.IsStudent || state.IsTeacher || state.IsParent)
 		{
-			tabs.Items.Add(Tab("Timetable", new TimetablePage(new TimetableViewModel(client))));
-			tabs.Items.Add(Tab("Courses", new CoursesPage(new CoursesViewModel(client), client, launcher, pickers, () => portal)));
+			tabs.Items.Add(Tab("Timetable", new TimetablePage(new TimetableViewModel(client, selection), selection)));
+			tabs.Items.Add(Tab("Courses", new CoursesPage(new CoursesViewModel(client, selection), selection, client, launcher, pickers, () => portal)));
+			tabs.Items.Add(Tab("Homework", new HomeworkPage(new HomeworkViewModel(client, selection), selection, client, pickers)));
+			tabs.Items.Add(Tab("Attendance", new AttendancePage(new AttendanceScreenViewModel(client, selection), selection, client)));
 		}
-		if (state.IsStudent)
-		{
-			tabs.Items.Add(Tab("Results", new ResultsPage(new ResultsViewModel(client), new AttendanceViewModel(client), new ReportCardsViewModel(client))));
-		}
-		if (state.IsParent)
-			tabs.Items.Add(Tab("Children", new ChildrenPage(new ChildrenViewModel(client), client)));
+		if (state.IsStudent || state.IsParent)
+			tabs.Items.Add(Tab("Results", new ResultsPage(new ResultsViewModel(client, selection), new ReportCardsViewModel(client), selection)));
 		tabs.Items.Add(Tab("Notifications", new NotificationsPage(new NotificationsViewModel(client))));
 		tabs.Items.Add(Tab("Settings", new SettingsPage(new SettingsViewModel(client, services.GetRequiredService<IPushTokenProvider>(), settings),
-			client.Session?.Username, client.Session?.Role, settings.ApiBaseUrl)));
+			client.Session?.Username, client.Session?.Role, client.Server)));
 		Items.Add(tabs);
 		Shell.SetBackgroundColor(this, Ui.Brand); // the institution's colour in the title bar
 		FlowDirection = AppText.IsRtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+	}
+
+	private static async Task LoadSelectionAsync(Selection selection)
+	{
+		try { await selection.LoadAsync(); }
+		catch (Exception ex) when (ex is HttpRequestException or ApiException or TaskCanceledException) { /* each tab shows its own error */ }
 	}
 
 	/// <summary>Whether the signed-in role has this tab (routes are the tab keys in lower case).</summary>

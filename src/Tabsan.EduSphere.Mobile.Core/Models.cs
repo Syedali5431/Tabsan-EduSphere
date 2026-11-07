@@ -2,10 +2,17 @@ namespace Tabsan.EduSphere.Mobile.Core;
 
 // Plan M12 — what the app reads from the API (only the fields it shows). Property names follow the API's camelCase JSON.
 
-public sealed record AppSettings(string ApiBaseUrl, string AppVersion, string Platform, string AppName = "EduSphere")
+/// <summary>
+/// What the build says. <paramref name="ApiBaseUrl"/> is the server the app starts with: empty in the standard build, where
+/// each person enters their institute's server on first start (see <see cref="ServerAddress"/>); an institution's own build
+/// sets it, and with <paramref name="ServerLocked"/> nobody can switch it (see mobile/README.md).
+/// </summary>
+public sealed record AppSettings(string ApiBaseUrl, string AppVersion, string Platform, string AppName = "EduSphere", bool ServerLocked = false)
 {
-    /// <summary>White-label builds set the institution's API address and name; see mobile/README.md.</summary>
-    public string ApiBase => ApiBaseUrl.TrimEnd('/');
+    public string ApiBase => (ApiBaseUrl ?? "").Trim().TrimEnd('/');
+
+    /// <summary>People may choose another server (not on a build locked to its institution's server).</summary>
+    public bool CanChangeServer => !(ServerLocked && ApiBase.Length > 0);
 }
 
 public sealed record Session(string AccessToken, string RefreshToken, DateTime AccessTokenExpiry, string Role, Guid UserId, string Username);
@@ -242,9 +249,75 @@ public sealed class CourseSummary
     public Guid OfferingId { get; set; }
     public string CourseCode { get; set; } = "";
     public string CourseTitle { get; set; } = "";
+    /// <summary>The class (School/College) or semester (University).</summary>
     public string? SemesterName { get; set; }
     public string? Teacher { get; set; }
+    public Guid? CampusId { get; set; }
+    public string? CampusName { get; set; }
+    public Guid? TenantId { get; set; }
+    public string? TenantName { get; set; }
     public string Title => string.IsNullOrWhiteSpace(CourseCode) ? CourseTitle : $"{CourseCode} — {CourseTitle}";
+}
+
+/// <summary>Homework (an assignment) of one of the user's courses — or a child's for parents.</summary>
+public sealed class HomeworkItem
+{
+    public Guid AssignmentId { get; set; }
+    public Guid OfferingId { get; set; }
+    public string CourseCode { get; set; } = "";
+    public string CourseTitle { get; set; } = "";
+    public string? SemesterName { get; set; }
+    public string Title { get; set; } = "";
+    public string? Description { get; set; }
+    public DateTime DueDate { get; set; }
+    public decimal MaxMarks { get; set; }
+    public bool Submitted { get; set; }
+    public decimal? Marks { get; set; }
+    public string? Status { get; set; }
+    /// <summary>Teachers: handed-in work without marks yet.</summary>
+    public int ToGrade { get; set; }
+
+    /// <summary>The same homework as the course page's assignment (to open hand-in or grading).</summary>
+    public CourseAssignment ToAssignment() => new()
+    {
+        Id = AssignmentId, Title = Title, Description = Description, DueDate = DueDate, MaxMarks = MaxMarks,
+        Submitted = Submitted, Marks = Marks, Status = Status, ToGrade = ToGrade
+    };
+}
+
+/// <summary>One marked day of attendance in one course.</summary>
+public sealed class AttendanceDay
+{
+    public DateTime Date { get; set; }
+    public Guid OfferingId { get; set; }
+    public string CourseCode { get; set; } = "";
+    public string CourseTitle { get; set; } = "";
+    public string? SemesterName { get; set; }
+    /// <summary>Present, Absent, Late or Excused.</summary>
+    public string Status { get; set; } = "";
+}
+
+/// <summary>An institute and campus the user works in.</summary>
+public sealed class ScopeItem
+{
+    public Guid TenantId { get; set; }
+    public string TenantName { get; set; } = "";
+    public Guid CampusId { get; set; }
+    public string CampusName { get; set; } = "";
+    public string Label => $"{TenantName} — {CampusName}";
+}
+
+/// <summary>A campus at a glance, for admins.</summary>
+public sealed class CampusSummary
+{
+    public Guid? CampusId { get; set; }
+    public string? CampusName { get; set; }
+    public string? TenantName { get; set; }
+    public int Students { get; set; }
+    public int Teachers { get; set; }
+    public int Courses { get; set; }
+    public int AttendanceTodayMarked { get; set; }
+    public decimal? AttendanceTodayPercent { get; set; }
 }
 
 public sealed class CourseMaterial

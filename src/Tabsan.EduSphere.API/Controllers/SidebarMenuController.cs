@@ -35,6 +35,13 @@ public class SidebarMenuController : ControllerBase
             "study_plan"
         };
 
+    // Parents follow School children only, so the Parent Links screen goes with the School institution type.
+    private static readonly HashSet<string> SchoolOnlyMenuKeys =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "parent_links"
+        };
+
     private static readonly IReadOnlyDictionary<string, string> MenuModuleKeyMap =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -57,6 +64,7 @@ public class SidebarMenuController : ControllerBase
             ["students"] = "sis",
             ["user_import"] = "sis",
             ["admin_users"] = "sis",
+            ["parent_links"] = "sis",
             ["student_lifecycle"] = "sis",
             ["payments"] = "sis",
             ["enrollments"] = "sis",
@@ -328,6 +336,9 @@ public class SidebarMenuController : ControllerBase
     private static bool IsAllowedByInstitutionPolicy(string menuKey, InstitutionPolicySnapshot policy)
     {
         if (UniversityOnlyMenuKeys.Contains(menuKey) && !policy.IncludeUniversity)
+            return false;
+
+        if (SchoolOnlyMenuKeys.Contains(menuKey) && !policy.IncludeSchool)
             return false;
 
         if (!MenuModuleKeyMap.TryGetValue(menuKey, out var moduleKey))

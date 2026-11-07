@@ -38,6 +38,11 @@ public partial class PortalController : Controller
         [nameof(Notifications)] = "notifications",
         [nameof(Students)] = "students",
         [nameof(UserImport)] = "user_import",
+        // Parent Links: Parent-role accounts ↔ School students.
+        [nameof(ParentLinks)] = "parent_links",
+        [nameof(LinkParentStudent)] = "parent_links",
+        [nameof(UpdateParentLink)] = "parent_links",
+        [nameof(RemoveParentLink)] = "parent_links",
         [nameof(Departments)] = "departments",
         [nameof(TenantManagement)] = "tenant_management",
         [nameof(CampusManagement)] = "campus_management",
@@ -4474,7 +4479,7 @@ public partial class PortalController : Controller
                                     CourseName = completedFyp.Title,
                                     CourseCode = "FYP",
                                     MarksObtained = null,
-                                    TotalMarks = 0,
+                                    MaxMarks = 0,
                                     LetterGrade = string.IsNullOrWhiteSpace(completedFyp.FinalResult) ? "Completed" : completedFyp.FinalResult,
                                     IsPublished = true,
                                     SemesterName = "Semester 8",
@@ -6987,12 +6992,12 @@ public partial class PortalController : Controller
                     newMarksObtained = matchedResult.MarksObtained.Value;
 
                 var hasNewMaxMarks = TryReadDecimal(root, out var newMaxMarks, "newMaxMarks", "maxMarks", "totalMarks");
-                if (!hasNewMaxMarks && matchedResult is not null && matchedResult.TotalMarks > 0)
-                    newMaxMarks = matchedResult.TotalMarks;
+                if (!hasNewMaxMarks && matchedResult is not null && matchedResult.MaxMarks > 0)
+                    newMaxMarks = matchedResult.MaxMarks;
 
                 var canResolveIdentifiers = studentProfileId != Guid.Empty && courseOfferingId != Guid.Empty;
                 var canResolveMarks = (hasNewMarksObtained || matchedResult?.MarksObtained is not null)
-                                   && (hasNewMaxMarks || (matchedResult is not null && matchedResult.TotalMarks > 0));
+                                   && (hasNewMaxMarks || (matchedResult is not null && matchedResult.MaxMarks > 0));
 
                 Guid? requestedTenantId = null;
                 Guid? requestedCampusId = null;
@@ -10616,22 +10621,31 @@ public partial class PortalController : Controller
             SelectedDepartmentId = departmentId
         };
 
-        var courses = await _api.GetCourseDetailsAsync(departmentId, null, null, null, ct);
-        model.Courses = courses;
-
-        var groups = new List<CoursePrerequisiteGroup>();
-        foreach (var course in courses)
+        // A switched-off Courses module (licence or Module Composition) answers with an error: show it on the page
+        // like the other course pages do, instead of failing the whole request with HTTP 500.
+        try
         {
-            var prereqs = await _api.GetPrerequisitesAsync(course.Id, ct);
-            groups.Add(new CoursePrerequisiteGroup
+            var courses = await _api.GetCourseDetailsAsync(departmentId, null, null, null, ct);
+            model.Courses = courses;
+
+            var groups = new List<CoursePrerequisiteGroup>();
+            foreach (var course in courses)
             {
-                CourseId      = course.Id,
-                CourseCode    = course.Code,
-                CourseTitle   = course.Title,
-                Prerequisites = prereqs
-            });
+                var prereqs = await _api.GetPrerequisitesAsync(course.Id, ct);
+                groups.Add(new CoursePrerequisiteGroup
+                {
+                    CourseId      = course.Id,
+                    CourseCode    = course.Code,
+                    CourseTitle   = course.Title,
+                    Prerequisites = prereqs
+                });
+            }
+            model.CourseGroups = groups;
         }
-        model.CourseGroups = groups;
+        catch (Exception ex) when (ex is InvalidOperationException or HttpRequestException)
+        {
+            model.Message = "Error: " + ex.Message;
+        }
         return View(model);
     }
 

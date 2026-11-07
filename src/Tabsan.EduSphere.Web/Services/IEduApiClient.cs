@@ -3965,33 +3965,34 @@ public partial class EduApiClient : IEduApiClient
     // the per-row Promote button with the correct student identity.
     private static ResultItem MapResult(ResultApiDto r) => new()
     {
-        Id                 = r.Id,
+        Id                 = r.ResultId,
         StudentProfileId   = r.StudentProfileId,
         CourseOfferingId   = r.CourseOfferingId,
         ResultType         = r.ResultType ?? "",
-        CourseName         = r.CourseName ?? "",
+        CourseName         = r.CourseTitle ?? "",
         CourseCode         = r.CourseCode ?? "",
         MarksObtained      = r.MarksObtained,
-        TotalMarks         = r.TotalMarks,
-        LetterGrade        = r.LetterGrade,
+        MaxMarks           = r.MaxMarks,
+        GradePoint         = r.GradePoint,
         IsPublished        = r.IsPublished,
         SemesterName       = r.SemesterName ?? "",
         StudentName        = r.StudentName ?? "",
         RegistrationNumber = r.RegistrationNumber ?? ""
     };
 
+    // Mirrors the API's ResultResponse (api/v1/result/my-results, by-student, by-offering).
     private sealed class ResultApiDto
     {
-        public Guid    Id                 { get; set; }
+        public Guid    ResultId           { get; set; }
         public Guid    StudentProfileId   { get; set; }
         public Guid    CourseOfferingId   { get; set; }
         public string? ResultType         { get; set; }
-        public string? CourseName         { get; set; }
-        public string? CourseCode         { get; set; }
         public decimal? MarksObtained     { get; set; }
-        public int     TotalMarks         { get; set; }
-        public string? LetterGrade        { get; set; }
+        public decimal MaxMarks           { get; set; }
+        public decimal? GradePoint        { get; set; }
         public bool    IsPublished        { get; set; }
+        public string? CourseCode         { get; set; }
+        public string? CourseTitle        { get; set; }
         public string? SemesterName       { get; set; }
         public string? StudentName        { get; set; }
         public string? RegistrationNumber { get; set; }

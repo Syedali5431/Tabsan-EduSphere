@@ -298,6 +298,98 @@ public class MobileIntegrationTests
     }
 
     [Fact]
+    public async Task Classes_Campuses_Homework_DayByDayAttendance_AndTheAdminsCampus()
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..6];
+        var today = DateTime.UtcNow.Date;
+        Guid teacherId, studentId, profileId, parentId, adminId, offeringA, campusA, campusB;
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var tenant = new Tenant($"CCT{suffix}", $"Campus School {suffix}");
+            var north = new Campus(tenant.Id, $"CCN{suffix}", $"North {suffix}");
+            var south = new Campus(tenant.Id, $"CCS{suffix}", $"South {suffix}");
+            var deptNorth = new Department($"North School {suffix}", $"CDN{suffix}", InstitutionType.School);
+            deptNorth.SetTenantCampus(tenant.Id, north.Id);
+            var deptSouth = new Department($"South School {suffix}", $"CDS{suffix}", InstitutionType.School);
+            deptSouth.SetTenantCampus(tenant.Id, south.Id);
+            var program = new AcademicProgram($"Classes {suffix}", $"CCP{suffix}", deptNorth.Id, 10);
+            var class9 = new Semester($"Class 9 {suffix}", today.AddDays(-30), today.AddDays(200));
+            var class8 = new Semester($"Class 8 {suffix}", today.AddDays(-30), today.AddDays(200));
+            var maths = new Course($"Mathematics {suffix}", $"CM{suffix}".ToUpperInvariant(), 3, deptNorth.Id);
+            var science = new Course($"Science {suffix}", $"CS{suffix}".ToUpperInvariant(), 3, deptSouth.Id);
+            var teacher = new User($"cc_t_{suffix}", "integration-hash", db.Roles.First(r => r.Name == "Faculty").Id, $"cc_t_{suffix}@tabsan.local");
+            var inNorth = new CourseOffering(maths.Id, class9.Id, 40, teacher.Id);
+            inNorth.SetInstitutionScope(InstitutionType.School, tenant.Id, north.Id);
+            var inSouth = new CourseOffering(science.Id, class8.Id, 40, teacher.Id);
+            inSouth.SetInstitutionScope(InstitutionType.School, tenant.Id, south.Id);
+            var student = new User($"cc_s_{suffix}", "integration-hash", db.Roles.First(r => r.Name == "Student").Id, $"cc_s_{suffix}@tabsan.local");
+            var profile = new StudentProfile(student.Id, $"CC-9-{suffix}", program.Id, deptNorth.Id, today);
+            var parent = new User($"cc_p_{suffix}", "integration-hash", db.Roles.First(r => r.Name == "Parent").Id, $"cc_p_{suffix}@tabsan.local");
+            var admin = new User($"cc_a_{suffix}", "integration-hash", db.Roles.First(r => r.Name == "Admin").Id, $"cc_a_{suffix}@tabsan.local");
+            var homework = new Assignment(inNorth.Id, "Exercise 3.2", "Questions 1-5.", today.AddDays(3), 20);
+            homework.Publish();
+            var southHomework = new Assignment(inSouth.Id, "Plant cells", null, today.AddDays(5), 10);
+            southHomework.Publish();
+            db.AddRange(tenant, north, south, deptNorth, deptSouth, program, class9, class8, maths, science, teacher, inNorth, inSouth,
+                student, profile, parent, admin, homework, southHomework,
+                new Enrollment(profile.Id, inNorth.Id), new AssignmentSubmission(homework.Id, profile.Id, null, "My answers"),
+                new AttendanceRecord(profile.Id, inNorth.Id, today.AddDays(-1), AttendanceStatus.Absent, teacher.Id),
+                new AttendanceRecord(profile.Id, inNorth.Id, today, AttendanceStatus.Present, teacher.Id),
+                new AdminDepartmentAssignment(admin.Id, deptNorth.Id));
+            await db.SaveChangesAsync();
+            (teacherId, studentId, profileId, parentId, adminId, offeringA, campusA, campusB) =
+                (teacher.Id, student.Id, profile.Id, parent.Id, admin.Id, inNorth.Id, north.Id, south.Id);
+        }
+
+        // Courses carry their class and campus (the app's class and campus pickers).
+        var app = Client("Student", studentId, profileId);
+        var course = (await app.GetFromJsonAsync<JsonElement>("api/v1/mobile/courses")).EnumerateArray().Single();
+        Assert.Equal(($"Class 9 {suffix}", $"North {suffix}", $"Campus School {suffix}"),
+            (course.GetProperty("semesterName").GetString(), course.GetProperty("campusName").GetString(), course.GetProperty("tenantName").GetString()));
+
+        // Homework across courses, with the student's own state; a teacher sees what is left to grade in both campuses.
+        var mine = (await app.GetFromJsonAsync<JsonElement>("api/v1/mobile/homework")).EnumerateArray().Single();
+        Assert.Equal(("Exercise 3.2", true), (mine.GetProperty("title").GetString(), mine.GetProperty("submitted").GetBoolean()));
+        var teaching = (await Client("Faculty", teacherId).GetFromJsonAsync<JsonElement>("api/v1/mobile/homework")).EnumerateArray()
+            .ToDictionary(h => h.GetProperty("title").GetString()!, h => h.GetProperty("toGrade").GetInt32());
+        Assert.Equal((1, 0), (teaching["Exercise 3.2"], teaching["Plant cells"]));
+
+        // Day-by-day attendance, newest first, optionally for one course.
+        var days = (await app.GetFromJsonAsync<JsonElement>("api/v1/mobile/attendance/records")).EnumerateArray().ToList();
+        Assert.Equal(["Present", "Absent"], days.Select(d => d.GetProperty("status").GetString()));
+        Assert.Equal(2, (await app.GetFromJsonAsync<JsonElement>($"api/v1/mobile/attendance/records?offeringId={offeringA}")).GetArrayLength());
+
+        // Parents see a linked child's courses, timetable, homework and attendance, and nobody else's.
+        Assert.Equal(HttpStatusCode.OK, (await Client("SuperAdmin", Guid.NewGuid()).PutAsJsonAsync("api/v1/parent-portal/links",
+            new { parentUserId = parentId, studentProfileId = profileId, relationship = "Father" })).StatusCode);
+        var parentApp = Client("Parent", parentId);
+        Assert.Equal(1, (await parentApp.GetFromJsonAsync<JsonElement>($"api/v1/mobile/courses?studentProfileId={profileId}")).GetArrayLength());
+        Assert.Equal(HttpStatusCode.OK, (await parentApp.GetAsync($"api/v1/mobile/timetable?studentProfileId={profileId}")).StatusCode);
+        Assert.True((await parentApp.GetFromJsonAsync<JsonElement>($"api/v1/mobile/homework?studentProfileId={profileId}")).EnumerateArray().Single().GetProperty("submitted").GetBoolean());
+        Assert.Equal(2, (await parentApp.GetFromJsonAsync<JsonElement>($"api/v1/mobile/attendance/records?studentProfileId={profileId}")).GetArrayLength());
+        var childCourse = await parentApp.GetFromJsonAsync<JsonElement>($"api/v1/mobile/courses/{offeringA}?studentProfileId={profileId}");
+        Assert.True(childCourse.GetProperty("assignments").EnumerateArray().Single().GetProperty("submitted").GetBoolean());
+        var stranger = Client("Parent", Guid.NewGuid());
+        foreach (var path in new[] { "courses", "timetable", "homework", "attendance/records" })
+            Assert.Equal(HttpStatusCode.Forbidden, (await stranger.GetAsync($"api/v1/mobile/{path}?studentProfileId={profileId}")).StatusCode);
+
+        // Campuses: the teacher's two (through their courses), the admin's one (through their department).
+        var teacherScopes = (await Client("Faculty", teacherId).GetFromJsonAsync<JsonElement>("api/v1/mobile/scopes")).EnumerateArray()
+            .Select(s => s.GetProperty("campusId").GetGuid()).ToHashSet();
+        Assert.True(teacherScopes.SetEquals([campusA, campusB]));
+        var adminApp = Client("Admin", adminId);
+        Assert.Equal([campusA], (await adminApp.GetFromJsonAsync<JsonElement>("api/v1/mobile/scopes")).EnumerateArray().Select(s => s.GetProperty("campusId").GetGuid()));
+
+        // The admin's campus at a glance; a campus they do not manage is refused, and other roles cannot ask.
+        var summary = await adminApp.GetFromJsonAsync<JsonElement>($"api/v1/mobile/campus-summary?campusId={campusA}&date={today:yyyy-MM-dd}");
+        Assert.Equal((1, 1, 1, 1, 100m), (summary.GetProperty("students").GetInt32(), summary.GetProperty("teachers").GetInt32(),
+            summary.GetProperty("courses").GetInt32(), summary.GetProperty("attendanceTodayMarked").GetInt32(), summary.GetProperty("attendanceTodayPercent").GetDecimal()));
+        Assert.Equal(HttpStatusCode.Forbidden, (await adminApp.GetAsync($"api/v1/mobile/campus-summary?campusId={campusB}")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await app.GetAsync("api/v1/mobile/campus-summary")).StatusCode);
+    }
+
+    [Fact]
     public async Task Devices_CrashReports_AndTheMinimumVersion()
     {
         var seed = await SeedAsync();

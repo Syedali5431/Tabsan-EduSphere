@@ -14,6 +14,9 @@ namespace Tabsan.EduSphere.Application.Academic;
 
 public class ParentPortalService : IParentPortalService
 {
+    /// <summary>Column size of parent_student_links.Relationship.</summary>
+    public const int MaxRelationshipLength = 60;
+
     private readonly IParentStudentLinkRepository _linkRepo;
     private readonly IStudentProfileRepository _studentRepo;
     private readonly IUserRepository _userRepo;
@@ -169,6 +172,7 @@ public class ParentPortalService : IParentPortalService
     {
         var links = await _linkRepo.GetByParentUserIdAsync(parentUserId, ct);
         return links
+            .Where(l => !l.IsDeleted)
             .Select(l => new ParentStudentLinkDto(l.ParentUserId, l.StudentProfileId, l.Relationship, l.IsActive))
             .ToList();
     }
@@ -177,6 +181,9 @@ public class ParentPortalService : IParentPortalService
         UpsertParentStudentLinkRequest request,
         CancellationToken ct = default)
     {
+        if (request.Relationship?.Trim().Length > MaxRelationshipLength)
+            throw new InvalidOperationException($"Relationship must be {MaxRelationshipLength} characters or fewer.");
+
         var parentUser = await _userRepo.GetByIdAsync(request.ParentUserId, ct)
             ?? throw new KeyNotFoundException($"Parent user {request.ParentUserId} not found.");
 
@@ -204,6 +211,9 @@ public class ParentPortalService : IParentPortalService
             return new ParentStudentLinkDto(created.ParentUserId, created.StudentProfileId, created.Relationship, created.IsActive);
         }
 
+        // A removed link keeps its row (one per parent and student), so linking again brings it back.
+        if (existing.IsDeleted)
+            existing.Restore();
         existing.Update(request.Relationship, request.IsActive);
         _linkRepo.Update(existing);
         await _linkRepo.SaveChangesAsync(ct);
@@ -213,10 +223,24 @@ public class ParentPortalService : IParentPortalService
     public async Task<bool> DeactivateLinkAsync(Guid parentUserId, Guid studentProfileId, CancellationToken ct = default)
     {
         var existing = await _linkRepo.GetByParentAndStudentAsync(parentUserId, studentProfileId, ct);
-        if (existing is null)
+        if (existing is null || existing.IsDeleted)
             return false;
 
         existing.Update(existing.Relationship, false);
+        _linkRepo.Update(existing);
+        await _linkRepo.SaveChangesAsync(ct);
+        return true;
+    }
+
+    public async Task<bool> RemoveLinkAsync(Guid parentUserId, Guid studentProfileId, CancellationToken ct = default)
+    {
+        var existing = await _linkRepo.GetByParentAndStudentAsync(parentUserId, studentProfileId, ct);
+        if (existing is null || existing.IsDeleted)
+            return false;
+
+        // Inactive as well, so every reader that only checks IsActive (alerts, broadcasts, the app) ignores it.
+        existing.Update(existing.Relationship, false);
+        existing.SoftDelete();
         _linkRepo.Update(existing);
         await _linkRepo.SaveChangesAsync(ct);
         return true;

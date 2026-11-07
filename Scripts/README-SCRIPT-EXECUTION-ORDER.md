@@ -35,26 +35,28 @@ Run scripts in this exact order for a fresh deployment.
 - There is no `09-Restructure-Sidebar-Menu.sql` — that step was superseded by `07-Fix-Sidebar-Role-Visibility.sql`, which is what actually ships in this folder.
 - `student-journey-class1-10.sql` demonstrates a full school lifecycle with certificate eligibility (class 1-10 completion + attendance ≥85%). It resolves the target student, faculty, and its own dedicated department dynamically at runtime — it does not depend on any fixed GUIDs, so it stays valid across `03-FullDummyData.sql` re-runs.
 
-## Example Commands (LocalDB)
+## Example Commands (SQL Server Express, `localhost\SQLEXPRESS`, Windows authentication)
+
+`-C` trusts SQL Express's own certificate (current `sqlcmd` versions encrypt by default).
 
 ```powershell
-$server = "(localdb)\MSSQLLocalDB"
+$server = "localhost\SQLEXPRESS"
 
 # Step 0-1: Run against master
-sqlcmd -S $server -d master -i "Scripts/00-Cleanup-Master-Mistake.sql"
-sqlcmd -S $server -d master -i "Scripts/01-Schema-Current.sql"
+sqlcmd -S $server -C -d master -i "Scripts/00-Cleanup-Master-Mistake.sql"
+sqlcmd -S $server -C -d master -i "Scripts/01-Schema-Current.sql"
 
 # Steps 2-5: Run against Tabsan-EduSphere
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/02-Seed-Core.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/03-FullDummyData.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/04-Maintenance-Indexes-And-Views.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/05-PostDeployment-Checks.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/02-Seed-Core.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/03-FullDummyData.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/04-Maintenance-Indexes-And-Views.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/05-PostDeployment-Checks.sql"
 
 # Optional
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/06-Create-SuperAdmin-User.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/07-Fix-Sidebar-Role-Visibility.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/student-journey-class1-10.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/08-Create-Test-Admin-User.sql"
-sqlcmd -S $server -d "Tabsan-EduSphere" -i "Scripts/09-Institution-Dummy-Data.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/06-Create-SuperAdmin-User.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/07-Fix-Sidebar-Role-Visibility.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/student-journey-class1-10.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/08-Create-Test-Admin-User.sql"
+sqlcmd -S $server -C -d "Tabsan-EduSphere" -i "Scripts/09-Institution-Dummy-Data.sql"
 ```
 

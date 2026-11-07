@@ -721,6 +721,8 @@ builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISchoolStream
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IReportCardService, Tabsan.EduSphere.Application.Academic.ReportCardService>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IBulkPromotionService, Tabsan.EduSphere.Application.Academic.BulkPromotionService>();
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IParentPortalService, Tabsan.EduSphere.Application.Academic.ParentPortalService>();
+// Parent links screen: name searches for Parent accounts and School students (2026-10-30).
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Academic.IParentLinkDirectory, Tabsan.EduSphere.Infrastructure.Repositories.ParentLinkDirectory>();
 // ── Phase 27: University Portal Parity and Student Experience ───────────────
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.IPortalCapabilityMatrixService, Tabsan.EduSphere.Application.Services.PortalCapabilityMatrixService>();
 // ── Phase 30: Integration Gateway Layer ─────────────────────────────────────
@@ -902,7 +904,8 @@ var app = builder.Build();
 
 // ── Seed database on startup ─────────────────────────────────────────────────────
 var setupService = app.Services.GetRequiredService<IDatabaseSetupService>();
-var startupDatabaseValidation = await setupService.ValidateCurrentConnectionAsync(force: true, CancellationToken.None);
+// A missing database is fine here: DatabaseSeeder's migrations create it (fresh install, dropped test database).
+var startupDatabaseValidation = await setupService.ValidateCurrentConnectionAsync(force: true, CancellationToken.None, allowMissingDatabase: true);
 if (startupDatabaseValidation.Success)
 {
     await DatabaseSeeder.SeedAsync(app.Services);

@@ -25,4 +25,7 @@ public interface IParentPortalService
     Task<ParentStudentLinkDto> UpsertLinkAsync(UpsertParentStudentLinkRequest request, CancellationToken ct = default);
 
     Task<bool> DeactivateLinkAsync(Guid parentUserId, Guid studentProfileId, CancellationToken ct = default);
+
+    /// <summary>Removes the link (soft delete, also inactive); false when there is none. Linking again restores it.</summary>
+    Task<bool> RemoveLinkAsync(Guid parentUserId, Guid studentProfileId, CancellationToken ct = default);
 }

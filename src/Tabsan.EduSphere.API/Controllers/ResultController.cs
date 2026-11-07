@@ -231,7 +231,7 @@ public class ResultController : ControllerBase
 
         var results = await _service.GetPublishedByStudentAsync(studentProfileId, ct);
         results = await FilterResultsByScopeAsync(results, scope.TenantId, scope.CampusId, ct);
-        return Ok(results);
+        return Ok(await WithLabelsAsync(results, ct));
     }
 
     /// <summary>Returns all results (draft + published) for a student (Faculty/Admin view).</summary>
@@ -249,7 +249,7 @@ public class ResultController : ControllerBase
 
         var results = await _service.GetByStudentAsync(studentProfileId, ct);
         results = await FilterResultsByScopeAsync(results, scope.TenantId, scope.CampusId, ct);
-        return Ok(results);
+        return Ok(await WithLabelsAsync(results, ct));
     }
 
     /// <summary>Returns all results for a course offering (Faculty/Admin view).</summary>
@@ -267,7 +267,7 @@ public class ResultController : ControllerBase
 
         var results = await _service.GetByOfferingAsync(courseOfferingId, ct);
         results = await FilterResultsByScopeAsync(results, scope.TenantId, scope.CampusId, ct);
-        return Ok(results);
+        return Ok(await WithLabelsAsync(results, ct));
     }
 
     // ── Transcript ────────────────────────────────────────────────────────────
@@ -418,5 +418,45 @@ public class ResultController : ControllerBase
 
         var allowed = allowedOfferingIds.ToHashSet();
         return results.Where(r => allowed.Contains(r.CourseOfferingId)).ToList();
+    }
+
+    /// <summary>
+    /// Adds the course, period and student labels a results table shows; the result service
+    /// returns ids only, which left the portal's Results page with blank course and student columns.
+    /// </summary>
+    private async Task<IReadOnlyList<ResultResponse>> WithLabelsAsync(
+        IReadOnlyList<ResultResponse> results,
+        CancellationToken ct)
+    {
+        if (results.Count == 0)
+            return results;
+
+        var offeringIds = results.Select(r => r.CourseOfferingId).Distinct().ToList();
+        var offerings = await _db.CourseOfferings
+            .AsNoTracking()
+            .Where(o => offeringIds.Contains(o.Id))
+            .Select(o => new { o.Id, o.Course.Code, o.Course.Title, Semester = o.Semester.Name })
+            .ToDictionaryAsync(o => o.Id, ct);
+
+        var studentIds = results.Select(r => r.StudentProfileId).Distinct().ToList();
+        var students = await _db.StudentProfiles
+            .AsNoTracking()
+            .Where(s => studentIds.Contains(s.Id))
+            .Join(_db.Users, s => s.UserId, u => u.Id, (s, u) => new { s.Id, s.RegistrationNumber, Name = u.FullName ?? u.Username })
+            .ToDictionaryAsync(s => s.Id, ct);
+
+        return results.Select(r =>
+        {
+            offerings.TryGetValue(r.CourseOfferingId, out var offering);
+            students.TryGetValue(r.StudentProfileId, out var student);
+            return r with
+            {
+                CourseCode = offering?.Code,
+                CourseTitle = offering?.Title,
+                SemesterName = offering?.Semester,
+                StudentName = student?.Name,
+                RegistrationNumber = student?.RegistrationNumber
+            };
+        }).ToList();
     }
 }

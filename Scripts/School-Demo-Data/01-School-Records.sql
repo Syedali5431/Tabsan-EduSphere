@@ -363,7 +363,7 @@ PRINT CONCAT(N'Timetable periods added: ', @@ROWCOUNT);
 -- ═════════════════════════════════════════════════════════════════════════════════════
 INSERT INTO course_announcements (Id, OfferingId, AuthorId, Title, Body, PostedAt, CreatedAt, IsDeleted)
 SELECT NEWID(), o.Id, o.FacultyUserId, CONCAT(N'Welcome to ', x.Title),
-       CONCAT(N'Assalam-o-Alaikum! This term in ', x.Title, N' we follow the Punjab Textbook Board book chapter by chapter. ',
+       CONCAT(N'This term in ', x.Title, N' we follow the Punjab Textbook Board book chapter by chapter. ',
               N'Bring your notebook to every class; homework is set on Mondays and checked on Thursdays.'),
        DATEADD(DAY, -60, @Now), @Now, 0
 FROM course_offerings o

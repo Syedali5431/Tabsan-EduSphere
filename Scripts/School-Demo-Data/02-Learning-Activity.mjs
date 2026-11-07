@@ -118,8 +118,8 @@ function questions(subject, cls) {
           mc('Complete: "He is good ___ mathematics."', 'at', 'in', 'on'),
           mc('Which is a complex sentence?', 'I stayed home because it was raining.', 'I stayed home.', 'Stay home!'), tf('A paragraph should have one main idea.', true)]
     }[band];
-    case 'URD': return [mc('اردو حروفِ تہجی کا پہلا حرف کون سا ہے؟', 'ا', 'ب', 'پ'), mc('"کتاب" کی جمع کیا ہے؟', 'کتابیں', 'کتابا', 'کتابہ'),
-      mc('"دن" کا متضاد کیا ہے؟', 'رات', 'صبح', 'دوپہر'), tf('علامہ اقبال پاکستان کے قومی شاعر ہیں۔', true)];
+    case 'URD': return [mc('Which is the first letter of the Urdu alphabet?', 'Alif', 'Bay', 'Pay'), mc('What is the plural of "kitab" (book)?', 'Kitabein', 'Kitaba', 'Kitabah'),
+      mc('What is the opposite of "din" (day)?', 'Night', 'Morning', 'Noon'), tf('Allama Iqbal is the national poet of Pakistan.', true)];
     case 'MTH': {
       const a = cls + 3, b = cls + 5;
       return [mc(`What is ${a} × ${b}?`, String(a * b), String(a * b + a), String(a * b - b)),
@@ -142,7 +142,7 @@ function questions(subject, cls) {
 const homework = {
   ENG: [['Homework 1: My favourite place', 'Write a paragraph of 8 to 10 sentences about your favourite place. Use at least three adjectives.'],
         ['Homework 2: Letter to a friend', 'Write a short letter to a friend about your school sports day.']],
-  URD: [['Homework 1: مضمون "میرا گھر"', 'اپنے گھر کے بارے میں آٹھ سے دس جملے لکھیں۔'], ['Homework 2: کہانی لکھیں', 'کسی جانور کے بارے میں ایک چھوٹی کہانی لکھیں۔']],
+  URD: [['Homework 1: Essay "My Home"', 'Write eight to ten sentences about your home.'], ['Homework 2: Write a story', 'Write a short story about an animal.']],
   MTH: [['Homework 1: Exercise 2.1, questions 1-10', 'Solve questions 1 to 10 of Exercise 2.1. Show your working for every question.'],
         ['Homework 2: Word problems', 'Solve the five word problems on page 34. Write the answer with its unit.']],
   SCI: [['Homework 1: Parts of a plant', 'Draw a plant and label the root, stem, leaf and flower. Write one line about what each part does.'],
@@ -157,7 +157,7 @@ const homework = {
 };
 const answers = {
   ENG: n => `My favourite place is the park near my house. It has tall green trees and colourful flowers. Every evening I go there with my ${n % 2 ? 'brother' : 'sister'}. We play cricket on the soft grass. The air is fresh and cool. Many birds sing in the trees. I feel happy and calm there. I love my favourite place.`,
-  URD: () => 'میرا گھر بہت خوبصورت ہے۔ اس میں تین کمرے اور ایک صحن ہے۔ صحن میں ایک آم کا درخت ہے۔ میں اپنے امی ابو اور بہن بھائیوں کے ساتھ رہتا ہوں۔ ہم سب مل کر کھانا کھاتے ہیں۔ مجھے اپنا گھر بہت پسند ہے۔',
+  URD: () => 'My home is very beautiful. It has three rooms and a courtyard. There is a mango tree in the courtyard. I live with my parents, brothers and sisters. We all eat together. I love my home.',
   MTH: n => `Q1 = 12, Q2 = 45, Q3 = 7, Q4 = 81, Q5 = 3/4, Q6 = 0.25, Q7 = 150, Q8 = 9, Q9 = ${16 + (n % 3)}, Q10 = 64. Working is shown in my notebook (photo attached in class).`,
   SCI: () => 'Root: takes water from the soil. Stem: carries water to the leaves. Leaf: makes food using sunlight. Flower: makes seeds.',
   PHY: n => `1) speed = 120 / 2 = 60 km/h. 2) distance = 15 × 4 = 60 m. 3) time = 100 / 25 = 4 s. 4) ${20 + n} m/s. 5) velocity has direction. 6) average speed = total distance / total time.`,

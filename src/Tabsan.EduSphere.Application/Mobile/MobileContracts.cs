@@ -115,7 +115,24 @@ public interface INativePushSender
     Task<NativePushResult> SendAsync(string token, NativePushMessage message, CancellationToken ct = default);
 }
 
-public sealed record MobileCourse(Guid OfferingId, string CourseCode, string CourseTitle, string? SemesterName, string? Teacher);
+/// <summary>A course offering; SemesterName is the class (School/College) or semester (University). Campus and institute let staff with
+/// several campuses choose one in the app.</summary>
+public sealed record MobileCourse(Guid OfferingId, string CourseCode, string CourseTitle, string? SemesterName, string? Teacher,
+    Guid? CampusId = null, string? CampusName = null, Guid? TenantId = null, string? TenantName = null);
+
+/// <summary>Homework (an assignment) of a course: for students and parents with their own state, for teachers what is left to grade.</summary>
+public sealed record MobileHomework(Guid AssignmentId, Guid OfferingId, string CourseCode, string CourseTitle, string? SemesterName,
+    string Title, string? Description, DateTime DueDate, decimal MaxMarks, bool Submitted, decimal? Marks, string? Status, int ToGrade);
+
+/// <summary>One marked day of attendance in one course.</summary>
+public sealed record MobileAttendanceRecord(DateTime Date, Guid OfferingId, string CourseCode, string CourseTitle, string? SemesterName, string Status);
+
+/// <summary>An institute (tenant) and campus the user works in.</summary>
+public sealed record MobileScope(Guid TenantId, string TenantName, Guid CampusId, string CampusName);
+
+/// <summary>An administrator's view of a campus (or of everything they manage when no campus is chosen).</summary>
+public sealed record MobileCampusSummary(Guid? CampusId, string? CampusName, string? TenantName, int Students, int Teachers, int Courses,
+    int AttendanceTodayMarked, decimal? AttendanceTodayPercent);
 
 public sealed record MobileMaterial(Guid Id, string Title, string? Description, string Type, string? LinkUrl, bool HasFile);
 
@@ -159,17 +176,34 @@ public interface IMobileQueries
     /// </summary>
     Task<IReadOnlyList<MobileAnnouncement>?> StudentAnnouncementsAsync(Guid userId, string role, Guid? studentProfileId, CancellationToken ct = default);
 
-    Task<IReadOnlyList<MobileCourse>> CoursesAsync(Guid userId, string role, CancellationToken ct = default);
+    /// <summary>The courses the user studies or teaches (parents: of a linked child, ?studentProfileId=); null when not allowed.</summary>
+    Task<IReadOnlyList<MobileCourse>?> CoursesAsync(Guid userId, string role, Guid? studentProfileId = null, CancellationToken ct = default);
 
-    /// <summary>Null when the user neither studies nor teaches this course.</summary>
-    Task<MobileCourseResponse?> CourseAsync(Guid userId, string role, Guid offeringId, CancellationToken ct = default);
+    /// <summary>Null when the user neither studies nor teaches this course (parents: when it is not a linked child's course).</summary>
+    Task<MobileCourseResponse?> CourseAsync(Guid userId, string role, Guid offeringId, Guid? studentProfileId = null, CancellationToken ct = default);
+
+    /// <summary>Homework of all the user's courses (parents: of a linked child), soonest due first; null when not allowed.</summary>
+    Task<IReadOnlyList<MobileHomework>?> HomeworkAsync(Guid userId, string role, Guid? studentProfileId = null, CancellationToken ct = default);
+
+    /// <summary>Day-by-day attendance of the student (or a parent's linked child), newest first, optionally of one course; null when not allowed.</summary>
+    Task<IReadOnlyList<MobileAttendanceRecord>?> AttendanceRecordsAsync(Guid userId, string role, Guid? studentProfileId, Guid? offeringId,
+        int take = 100, CancellationToken ct = default);
+
+    /// <summary>Institutes and campuses the user works in: teachers through their courses and departments, admins through their
+    /// departments, SuperAdmins all active campuses.</summary>
+    Task<IReadOnlyList<MobileScope>> ScopesAsync(Guid userId, string role, CancellationToken ct = default);
+
+    /// <summary>Admins and SuperAdmins: students, teachers, courses and today's attendance of a campus they manage (all of them when
+    /// <paramref name="campusId"/> is null); null for other roles or a campus outside their scope.</summary>
+    Task<MobileCampusSummary?> CampusSummaryAsync(Guid userId, string role, Guid? campusId, DateTime today, CancellationToken ct = default);
 
     /// <summary>
     /// <paramref name="dayOfWeek"/> is today on the phone (0 Sunday … 6 Saturday): timetables hold the school's local times,
     /// so "today's classes" follow the user's day, not the server's UTC day (used when the app does not send it).
     /// </summary>
     Task<MobileHomeResponse> HomeAsync(Guid userId, string role, int? dayOfWeek = null, CancellationToken ct = default);
-    Task<IReadOnlyList<MobileClass>> TimetableAsync(Guid userId, string role, CancellationToken ct = default);
+    /// <summary>The week's classes (parents: of a linked child, ?studentProfileId=); null when not allowed.</summary>
+    Task<IReadOnlyList<MobileClass>?> TimetableAsync(Guid userId, string role, Guid? studentProfileId = null, CancellationToken ct = default);
     Task<IReadOnlyList<MobileChildSummary>> ChildrenAsync(Guid parentUserId, CancellationToken ct = default);
 }
 

@@ -14,6 +14,9 @@ public sealed class SignInPage : ContentPage
 
 	public event EventHandler? SignedIn;
 
+	/// <summary>"Change server" was tapped (the app opens the server page).</summary>
+	public event EventHandler? ChangeServer;
+
 	public SignInPage(SignInViewModel vm, ILauncherService launcher, MauiProgram.WhiteLabel label)
 	{
 		_vm = vm;
@@ -26,18 +29,7 @@ public sealed class SignInPage : ContentPage
 		var institution = Ui.OnBanner(null, 22, bold: true);
 		institution.HorizontalTextAlignment = TextAlignment.Center;
 		institution.SetBinding(Label.TextProperty, new Binding("Config.InstitutionName") { FallbackValue = label.AppName, TargetNullValue = label.AppName });
-		var tagline = Ui.OnBanner(Ui.T("AppTagline"), 14, opacity: 0.85);
-		tagline.HorizontalTextAlignment = TextAlignment.Center;
-		var header = new Border
-		{
-			StrokeThickness = 0, Background = Ui.BannerBrush(), Padding = new Thickness(24, 56, 24, 76),
-			StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(0, 0, 32, 32) },
-			Content = new VerticalStackLayout
-			{
-				Spacing = 10,
-				Children = { new Image { Source = "tabsan_wordmark.png", HeightRequest = 60, Aspect = Aspect.AspectFit, Margin = new Thickness(0, 0, 0, 10) }, institution, tagline }
-			}
-		};
+		var header = Ui.Header(institution);
 
 		// No suggestions or spell-check: keyboards must not change a username (Samsung added a space after the dot in "tmsgul.c9s1").
 		var username = new Entry { Placeholder = Ui.T("Username"), Keyboard = Keyboard.Email, IsTextPredictionEnabled = false, IsSpellCheckEnabled = false, AutomationId = "username" };
@@ -86,24 +78,22 @@ public sealed class SignInPage : ContentPage
 		};
 		vm.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(SignInViewModel.VersionState)) update.IsVisible = vm.VersionState != VersionPolicy.State.Current; };
 
+		// Which institute's server this is, and (unless the build is locked to one) a way to switch.
+		var server = Ui.Server(vm.Server, vm.CanChangeServer ? () => ChangeServer?.Invoke(this, EventArgs.Empty) : null);
+		server.Margin = new Thickness(0, 4, 0, 0);
+
 		var form = Ui.Card(new VerticalStackLayout
 		{
 			Spacing = 12,
 			Children =
 			{
 				Ui.Title(Ui.T("SignInTitle"), 20), Ui.Small(Ui.T("SignInHint")), Ui.Busy(), Ui.Status(vm), Ui.Notice(),
-				Ui.Field(username), Ui.Field(password), mfaField, newPasswordField, confirmField, signIn, or, providers, update
+				Ui.Field(username), Ui.Field(password), mfaField, newPasswordField, confirmField, signIn, or, providers, update, server
 			}
 		}, padding: 20);
 		form.Margin = new Thickness(18, -48, 18, 0);
 
-		var footer = new HorizontalStackLayout
-		{
-			Spacing = 8, HorizontalOptions = LayoutOptions.Center, Margin = new Thickness(0, 22, 0, 28),
-			Children = { new Image { Source = "tabsan_mark.png", HeightRequest = 20 }, Ui.Small($"{Ui.T("PoweredBy")} · {label.AppVersion}") }
-		};
-
-		Content = new ScrollView { Content = new VerticalStackLayout { Children = { header, form, footer } } };
+		Content = new ScrollView { Content = new VerticalStackLayout { Children = { header, form, Ui.Footer(label.AppVersion) } } };
 		Ui.ApplyDirection(this);
 	}
 
@@ -111,6 +101,56 @@ public sealed class SignInPage : ContentPage
 	{
 		base.OnAppearing();
 		await _vm.LoadAsync();
+	}
+}
+
+/// <summary>
+/// The institute's server: the first page of the standard build (one app for every institute; each person enters their
+/// institute's address once) and the page behind "Change server". The address is checked with the server before it is kept.
+/// </summary>
+public sealed class ServerPage : ContentPage
+{
+	public event EventHandler<MobileConfig>? Connected;
+
+	public ServerPage(ServerViewModel vm, MauiProgram.WhiteLabel label, bool canGoBack)
+	{
+		BindingContext = vm;
+		Title = Ui.T("Server");
+		NavigationPage.SetHasNavigationBar(this, false);
+		vm.Connected += (_, config) => Connected?.Invoke(this, config);
+
+		var title = Ui.OnBanner(Ui.T("ServerTitle"), 22, bold: true);
+		title.HorizontalTextAlignment = TextAlignment.Center;
+
+		// A web address: no suggestions, spell-check or capitals (keyboards would change "edu.myschool.com").
+		var address = new Entry
+		{
+			Placeholder = Ui.T("ServerAddress"), Keyboard = Keyboard.Url, IsTextPredictionEnabled = false, IsSpellCheckEnabled = false,
+			ReturnType = ReturnType.Go, AutomationId = "server"
+		};
+		address.SetBinding(Entry.TextProperty, nameof(ServerViewModel.Address));
+		address.ReturnCommand = vm.ConnectCommand;
+		var connect = Ui.Primary(Ui.T("Connect"));
+		connect.AutomationId = "connect";
+		connect.Margin = new Thickness(0, 6, 0, 0);
+		connect.SetBinding(Button.CommandProperty, nameof(ServerViewModel.ConnectCommand));
+
+		var stack = new VerticalStackLayout
+		{
+			Spacing = 12,
+			Children = { Ui.Title(Ui.T("ServerAddress"), 20), Ui.Small(Ui.T("ServerHint")), Ui.Busy(), Ui.Status(vm), Ui.Field(address), connect, Ui.Small(Ui.T("ServerExamples")) }
+		};
+		if (canGoBack)
+		{
+			var cancel = Ui.Secondary(Ui.T("Cancel"));
+			cancel.Clicked += async (_, _) => await Navigation.PopAsync();
+			stack.Add(cancel);
+		}
+		var form = Ui.Card(stack, padding: 20);
+		form.Margin = new Thickness(18, -48, 18, 0);
+
+		Content = new ScrollView { Content = new VerticalStackLayout { Children = { Ui.Header(title), form, Ui.Footer(label.AppVersion) } } };
+		Ui.ApplyDirection(this);
 	}
 }
 
@@ -124,14 +164,20 @@ public sealed class HomePage : ContentPage
 	private readonly ILauncherService _launcher;
 	private readonly IPickers _pickers;
 	private readonly Func<string?> _portal;
+	private readonly Selection _selection;
+	private readonly CampusViewModel? _campus;
+	private readonly View _scopeBar;
 
-	public HomePage(HomeViewModel vm, EduSphereClient client, ILauncherService launcher, IPickers pickers, Func<string?> portal)
+	public HomePage(HomeViewModel vm, Selection selection, EduSphereClient client, ILauncherService launcher, IPickers pickers, Func<string?> portal)
 	{
 		_vm = vm;
+		_selection = selection;
 		_client = client;
 		_launcher = launcher;
 		_pickers = pickers;
 		_portal = portal;
+		_scopeBar = Ui.ScopeBar(selection);
+		_scopeBar.Margin = new Thickness(0, 0, 0, 4);
 		BindingContext = vm;
 		Title = Ui.T("Home");
 		var refresh = new RefreshView { Content = new ScrollView { Content = _body } };
@@ -139,13 +185,19 @@ public sealed class HomePage : ContentPage
 		refresh.Command = vm.LoadCommand;
 		Content = refresh;
 		vm.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(HomeViewModel.Home)) Render(); };
+		selection.Changed += (_, _) => Render();
+		if (selection.IsAdmin)
+		{
+			_campus = new CampusViewModel(client, selection);
+			_campus.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(CampusViewModel.Summary)) Render(); };
+		}
 		Ui.ApplyDirection(this);
 	}
 
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
-		await _vm.LoadAsync();
+		await Task.WhenAll(_vm.LoadAsync(), _campus?.LoadAsync() ?? Task.CompletedTask);
 	}
 
 	private void Render()
@@ -165,6 +217,18 @@ public sealed class HomePage : ContentPage
 			greeting.Add(unread);
 		}
 		_body.Add(Ui.Banner(greeting));
+		if (_selection.IsTeacher || _selection.IsAdmin) _body.Add(_scopeBar);
+		if (_campus?.Summary is { } campus)
+		{
+			// Admins: the chosen campus (or all of theirs) at a glance.
+			_body.Add(Ui.Heading(campus.CampusName is { } name ? $"{campus.TenantName} — {name}" : Ui.T("AllCampuses")));
+			_body.Add(Ui.Stats(
+				Ui.Stat(Ui.T("Students"), campus.Students.ToString("N0"), Ui.Sky),
+				Ui.Stat(Ui.T("Teachers"), campus.Teachers.ToString("N0"), Ui.Sky),
+				Ui.Stat(Ui.T("Courses"), campus.Courses.ToString("N0"), Ui.Sky)));
+			_body.Add(Ui.Stats(Ui.Stat($"{Ui.T("AttendanceToday")} · {string.Format(Ui.T("MarksToday"), campus.AttendanceTodayMarked)}",
+				campus.AttendanceTodayPercent is { } p ? $"{p:0.#}%" : "—", Ui.PercentColor(campus.AttendanceTodayPercent))));
+		}
 		if (home is null) return;
 
 		if (home.Student is { } s)
@@ -194,15 +258,18 @@ public sealed class HomePage : ContentPage
 			}
 		}
 
-		if (!_vm.IsParent)
+		if (!_vm.IsParent && !_selection.IsAdmin)
 		{
+			// Teachers with several classes or campuses see the ones chosen above.
+			var today = home.Today.Where(c => _selection.Includes(c.OfferingId)).ToList();
+			var due = home.Due.Where(d => _selection.Includes(d.OfferingId)).ToList();
 			_body.Add(Ui.Heading(Ui.T("Today")));
-			if (home.Today.Count == 0) _body.Add(Ui.Empty(Ui.T("NoClassesToday")));
-			foreach (var c in home.Today) _body.Add(Ui.ClassCard(c));
+			if (today.Count == 0) _body.Add(Ui.Empty(Ui.T("NoClassesToday")));
+			foreach (var c in today) _body.Add(Ui.ClassCard(c));
 
 			_body.Add(Ui.Heading(Ui.T("Due")));
-			if (home.Due.Count == 0) _body.Add(Ui.Empty(Ui.T("NothingDue")));
-			foreach (var d in home.Due)
+			if (due.Count == 0) _body.Add(Ui.Empty(Ui.T("NothingDue")));
+			foreach (var d in due)
 			{
 				var label = HomeViewModel.DueLabel(d, DateTime.UtcNow);
 				var color = d.Done ? Ui.Good : label == Ui.T("Overdue") ? Ui.Bad : Ui.Accent;
@@ -251,7 +318,7 @@ public sealed class TimetablePage : ContentPage
 {
 	private readonly TimetableViewModel _vm;
 
-	public TimetablePage(TimetableViewModel vm)
+	public TimetablePage(TimetableViewModel vm, Selection selection)
 	{
 		_vm = vm;
 		BindingContext = vm;
@@ -283,10 +350,10 @@ public sealed class TimetablePage : ContentPage
 				}));
 				return new VerticalStackLayout { Padding = new Thickness(16, 0), Children = { header, classes } };
 			}),
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoClasses")) },
 			Footer = new ContentView { HeightRequest = 24 }
 		};
-		Content = new Grid { RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) }, Children = { Ui.Status(vm), list } };
-		Grid.SetRow(list, 1);
+		Content = Ui.ListLayout(vm, Ui.ScopeBar(selection), list);
 		Ui.ApplyDirection(this);
 	}
 
@@ -303,7 +370,7 @@ public sealed class CoursesPage : ContentPage
 {
 	private readonly CoursesViewModel _vm;
 
-	public CoursesPage(CoursesViewModel vm, EduSphereClient client, ILauncherService launcher, IPickers pickers, Func<string?> portal)
+	public CoursesPage(CoursesViewModel vm, Selection selection, EduSphereClient client, ILauncherService launcher, IPickers pickers, Func<string?> portal)
 	{
 		_vm = vm;
 		BindingContext = vm;
@@ -312,7 +379,8 @@ public sealed class CoursesPage : ContentPage
 		{
 			ItemsSource = vm.Courses,
 			SelectionMode = SelectionMode.Single,
-			Header = new ContentView { HeightRequest = 8 },
+			Footer = new ContentView { HeightRequest = 16 },
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoCourses")) },
 			ItemTemplate = new DataTemplate(() =>
 			{
 				var initials = new Label();
@@ -331,18 +399,18 @@ public sealed class CoursesPage : ContentPage
 			if (e.CurrentSelection.FirstOrDefault() is CourseSummary course)
 			{
 				list.SelectedItem = null;
-				await Navigation.PushAsync(new CoursePage(new CourseViewModel(client, launcher, portal), course.OfferingId, client, pickers));
+				var childId = selection.IsParent ? selection.ChildId : null;
+				await Navigation.PushAsync(new CoursePage(new CourseViewModel(client, launcher, portal) { ChildId = childId }, course.OfferingId, client, pickers));
 			}
 		};
-		Content = new Grid { RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) }, Children = { Ui.Status(vm), list } };
-		Grid.SetRow(list, 1);
+		Content = Ui.ListLayout(vm, Ui.ScopeBar(selection), list);
 		Ui.ApplyDirection(this);
 	}
 
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
-		if (_vm.Courses.Count == 0) await _vm.LoadAsync();
+		await _vm.LoadAsync();
 	}
 }
 
@@ -395,8 +463,9 @@ public sealed class CoursePage : ContentPage
 			Action(Ui.Primary(Ui.T("TakeAttendance")), () => Navigation.PushAsync(new TakeAttendancePage(new TakeAttendanceViewModel(_client), _offeringId)));
 			Action(Ui.Secondary(Ui.T("NewAnnouncement")), () => Navigation.PushAsync(new AnnouncementPage(new AnnouncementViewModel(_client) { OfferingId = _offeringId })));
 		}
-		Action(Ui.Secondary(Ui.T("Discussions")), () => Navigation.PushAsync(new DiscussionsPage(new DiscussionsViewModel(_client), _offeringId, _client)));
-		_body.Add(actions);
+		var parent = _vm.ChildId is not null;
+		if (!parent) Action(Ui.Secondary(Ui.T("Discussions")), () => Navigation.PushAsync(new DiscussionsPage(new DiscussionsViewModel(_client), _offeringId, _client)));
+		if (actions.Children.Count > 0) _body.Add(actions);
 
 		if (d.Assignments.Count > 0) _body.Add(Ui.Heading(Ui.T("Assignments")));
 		foreach (var a in d.Assignments)
@@ -409,7 +478,7 @@ public sealed class CoursePage : ContentPage
 			tap.Tapped += async (_, _) =>
 			{
 				if (d.IsTeacher) await Navigation.PushAsync(new GradingPage(new GradingViewModel(_client), a, _offeringId));
-				else await Navigation.PushAsync(new SubmitPage(new SubmitAssignmentViewModel(_client, _pickers) { Assignment = a }));
+				else if (!parent) await Navigation.PushAsync(new SubmitPage(new SubmitAssignmentViewModel(_client, _pickers) { Assignment = a }));
 			};
 			card.GestureRecognizers.Add(tap);
 			_body.Add(card);
@@ -712,17 +781,19 @@ public sealed class AnnouncementPage : ContentPage
 public sealed class ResultsPage : ContentPage
 {
 	private readonly ResultsViewModel _results;
-	private readonly AttendanceViewModel _attendance;
 	private readonly ReportCardsViewModel _reportCards;
+	private readonly Selection _selection;
 
-	public ResultsPage(ResultsViewModel results, AttendanceViewModel attendance, ReportCardsViewModel reportCards)
+	/// <summary>The Results tab: results of the class in view, then report cards (attendance has its own tab).</summary>
+	public ResultsPage(ResultsViewModel results, ReportCardsViewModel reportCards, Selection selection)
 	{
 		_results = results;
-		_attendance = attendance;
 		_reportCards = reportCards;
+		_selection = selection;
 		BindingContext = results;
 		Title = Ui.T("Results");
-		Content = new ScrollView { Content = Build(results, attendance, reportCards) };
+		Content = new ScrollView { Content = new VerticalStackLayout { Children = { Ui.ScopeBar(selection), Build(results, null, reportCards) } } };
+		selection.Changed += (_, _) => _ = reportCards.LoadAsync(selection.IsParent ? selection.ChildId : null);
 		Ui.ApplyDirection(this);
 	}
 
@@ -759,7 +830,7 @@ public sealed class ResultsPage : ContentPage
 	}
 
 	/// <summary>A course with a figure and a progress bar coloured by the percentage (results and attendance).</summary>
-	private static View PercentCard(Label course, Label detail, string percentPath)
+	internal static View PercentCard(Label course, Label detail, string percentPath)
 	{
 		var percent = new Label { FontSize = 18, FontFamily = "OpenSansSemibold", VerticalOptions = LayoutOptions.Center };
 		percent.SetBinding(Label.TextProperty, percentPath, stringFormat: "{0:0.#}%");
@@ -770,24 +841,45 @@ public sealed class ResultsPage : ContentPage
 		return Ui.Card(new VerticalStackLayout { Children = { Ui.Row(null, Ui.Lines(course, detail), percent), bar } });
 	}
 
-	internal static View Build(ResultsViewModel results, AttendanceViewModel attendance, ReportCardsViewModel reportCards)
+	/// <summary>Results, attendance per course (when given; the child page shows it, the Results tab has its own Attendance tab) and report cards.</summary>
+	internal static View Build(ResultsViewModel results, AttendanceViewModel? attendance, ReportCardsViewModel reportCards)
 	{
+		var layout = new VerticalStackLayout { Padding = new Thickness(16, 4, 16, 24), Spacing = 4 };
+		var resultsEmpty = Ui.Empty(Ui.T("NoResults"));
+		layout.Add(Ui.Status(results));
+		layout.Add(Ui.Heading(Ui.T("Results")));
 		var resultList = new VerticalStackLayout { Spacing = 0, BindingContext = results };
 		BindableLayout.SetItemsSource(resultList, results.Results);
 		BindableLayout.SetItemTemplate(resultList, new DataTemplate(() =>
 		{
 			var course = Ui.Title();
 			course.SetBinding(Label.TextProperty, new MultiBinding { Bindings = { new Binding(nameof(ResultItem.CourseCode)), new Binding(nameof(ResultItem.CourseTitle)) }, StringFormat = "{0} — {1}" });
+			// "Class 8 · Final: 91/100": the class tells apart the same subject in different years (School children).
 			var marks = Ui.Small();
-			marks.SetBinding(Label.TextProperty, new MultiBinding
+			marks.BindingContextChanged += (_, _) =>
 			{
-				Bindings = { new Binding(nameof(ResultItem.ResultType)), new Binding(nameof(ResultItem.MarksObtained)), new Binding(nameof(ResultItem.MaxMarks)) },
-				StringFormat = "{0}: {1:0.##}/{2:0.##}"
-			});
+				if (marks.BindingContext is not ResultItem r) return;
+				marks.Text = string.Join(" · ", new[] { r.SemesterName, $"{r.ResultType}: {r.MarksObtained:0.##}/{r.MaxMarks:0.##}" }.Where(x => !string.IsNullOrWhiteSpace(x)));
+			};
 			return PercentCard(course, marks, nameof(ResultItem.Percentage));
 		}));
-		var attendanceList = new VerticalStackLayout { Spacing = 0, BindingContext = attendance };
-		BindableLayout.SetItemsSource(attendanceList, attendance.Courses);
+		BindableLayout.SetEmptyView(resultList, resultsEmpty);
+		layout.Add(resultList);
+		if (attendance is not null)
+		{
+			layout.Add(Ui.Heading(Ui.T("Attendance")));
+			layout.Add(AttendanceCourses(attendance.Courses, attendance));
+		}
+		layout.Add(ReportCards(reportCards));
+		return layout;
+	}
+
+	/// <summary>Attendance per course: attended out of marked classes, with a coloured bar.</summary>
+	internal static View AttendanceCourses(System.Collections.IEnumerable courses, object bindingContext)
+	{
+		var attendanceList = new VerticalStackLayout { Spacing = 0, BindingContext = bindingContext };
+		BindableLayout.SetItemsSource(attendanceList, courses);
+		BindableLayout.SetEmptyView(attendanceList, Ui.Empty(Ui.T("NoAttendance")));
 		BindableLayout.SetItemTemplate(attendanceList, new DataTemplate(() =>
 		{
 			var course = Ui.Title();
@@ -800,17 +892,168 @@ public sealed class ResultsPage : ContentPage
 			});
 			return PercentCard(course, rate, nameof(AttendanceCourse.Percent));
 		}));
-		return new VerticalStackLayout
-		{
-			Padding = new Thickness(16, 4, 16, 24), Spacing = 4,
-			Children = { Ui.Status(results), Ui.Heading(Ui.T("Results")), resultList, Ui.Heading(Ui.T("Attendance")), attendanceList, ReportCards(reportCards) }
-		};
+		return attendanceList;
 	}
 
 	protected override async void OnAppearing()
 	{
 		base.OnAppearing();
-		await Task.WhenAll(_results.LoadAsync(null), _attendance.LoadAsync(null), _reportCards.LoadAsync(null));
+		var child = _selection.IsParent ? _selection.ChildId : null;
+		if (_selection.IsParent && child is null) return;
+		await Task.WhenAll(_results.LoadAsync(child), _reportCards.LoadAsync(child));
+	}
+}
+
+// ── attendance and homework tabs ──────────────────────────────────────────────────────────────
+
+/// <summary>
+/// Attendance for the class in view. Students and parents: overall figure, each course, and day by day (date, course, status).
+/// Teachers: their courses in that class, each opening Take attendance.
+/// </summary>
+public sealed class AttendancePage : ContentPage
+{
+	private readonly AttendanceScreenViewModel _vm;
+	private readonly Selection _selection;
+
+	public AttendancePage(AttendanceScreenViewModel vm, Selection selection, EduSphereClient client)
+	{
+		_vm = vm;
+		_selection = selection;
+		BindingContext = vm;
+		Title = Ui.T("Attendance");
+		var body = new VerticalStackLayout { Padding = new Thickness(16, 4, 16, 24), Spacing = 4 };
+		if (selection.IsTeacher)
+		{
+			// Teachers: the courses they teach in the chosen class and campus.
+			var courses = new VerticalStackLayout { Spacing = 0 };
+			void ShowCourses()
+			{
+				courses.Clear();
+				var shown = selection.Courses.Where(c => selection.Includes(c.OfferingId)).OrderBy(c => c.SemesterName, Selection.ClassOrder.Instance).ToList();
+				if (shown.Count == 0) courses.Add(Ui.Empty(Ui.T("NoCourses")));
+				foreach (var c in shown)
+				{
+					var take = Ui.Primary(Ui.T("TakeAttendance"));
+					take.Padding = new Thickness(12, 8);
+					take.MinimumHeightRequest = 40;
+					take.FontSize = 13;
+					take.Clicked += async (_, _) => await Navigation.PushAsync(new TakeAttendancePage(new TakeAttendanceViewModel(client), c.OfferingId));
+					courses.Add(Ui.Card(Ui.Row(null, Ui.Lines(Ui.Title(c.CourseTitle), Ui.Small(string.Join(" · ", new[] { c.CourseCode, c.CampusName }.Where(x => !string.IsNullOrWhiteSpace(x))))), take), padding: 12));
+				}
+			}
+			selection.Changed += (_, _) => ShowCourses();
+			ShowCourses();
+			body.Add(Ui.Small(Ui.T("TakeAttendanceHint")));
+			body.Add(courses);
+		}
+		else
+		{
+			var overall = Ui.Stat(Ui.T("Overall"), "—", Ui.Sky);
+			var overallValue = (Label)((VerticalStackLayout)overall.Content!).Children[0];
+			vm.PropertyChanged += (_, e) =>
+			{
+				if (e.PropertyName != nameof(AttendanceScreenViewModel.Overall)) return;
+				overallValue.Text = vm.Overall is { } p ? $"{p:0.#}%" : "—";
+				overallValue.TextColor = Ui.PercentColor(vm.Overall);
+			};
+			var days = new VerticalStackLayout { Spacing = 0 };
+			BindableLayout.SetItemsSource(days, vm.Days);
+			BindableLayout.SetEmptyView(days, Ui.Empty(Ui.T("NoAttendance")));
+			BindableLayout.SetItemTemplate(days, new DataTemplate(() =>
+			{
+				var date = Ui.Title(size: 14);
+				date.SetBinding(Label.TextProperty, nameof(AttendanceDay.Date), stringFormat: "{0:ddd d MMM yyyy}");
+				var course = Ui.Small();
+				course.SetBinding(Label.TextProperty, new MultiBinding { Bindings = { new Binding(nameof(AttendanceDay.CourseCode)), new Binding(nameof(AttendanceDay.CourseTitle)) }, StringFormat = "{0} · {1}" });
+				var chip = Ui.Chip("", Ui.Good);
+				var text = (Label)chip.Content!;
+				chip.BindingContextChanged += (s, _) =>
+				{
+					if ((s as BindableObject)?.BindingContext is not AttendanceDay d) return;
+					var color = Ui.StatusColor(d.Status);
+					text.Text = Ui.StatusText(d.Status);
+					text.TextColor = color;
+					chip.BackgroundColor = color.WithAlpha(0.13f);
+				};
+				return Ui.Card(Ui.Row(null, Ui.Lines(date, course), chip), padding: 12);
+			}));
+			body.Add(Ui.Status(vm));
+			body.Add(Ui.Stats(overall));
+			body.Add(Ui.Heading(Ui.T("Courses")));
+			body.Add(ResultsPage.AttendanceCourses(vm.Courses, vm));
+			body.Add(Ui.Heading(Ui.T("DayByDay")));
+			body.Add(days);
+		}
+		var refresh = new RefreshView { Content = new ScrollView { Content = new VerticalStackLayout { Children = { Ui.ScopeBar(selection), body } } }, Command = vm.LoadCommand };
+		refresh.SetBinding(RefreshView.IsRefreshingProperty, nameof(PageViewModel.IsBusy));
+		Content = refresh;
+		Ui.ApplyDirection(this);
+	}
+
+	protected override async void OnAppearing()
+	{
+		base.OnAppearing();
+		await _vm.LoadAsync();
+	}
+}
+
+/// <summary>Homework of the class in view: students hand in, teachers grade, parents follow their child's.</summary>
+public sealed class HomeworkPage : ContentPage
+{
+	private readonly HomeworkViewModel _vm;
+
+	public HomeworkPage(HomeworkViewModel vm, Selection selection, EduSphereClient client, IPickers pickers)
+	{
+		_vm = vm;
+		BindingContext = vm;
+		Title = Ui.T("Homework");
+		var list = new CollectionView
+		{
+			ItemsSource = vm.Items,
+			SelectionMode = SelectionMode.Single,
+			Footer = new ContentView { HeightRequest = 16 },
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoHomework")) },
+			ItemTemplate = new DataTemplate(() =>
+			{
+				var title = Ui.Title();
+				var course = Ui.Small();
+				var due = Ui.Small();
+				var chip = Ui.Chip("", Ui.Accent);
+				var text = (Label)chip.Content!;
+				var card = Ui.Card(Ui.Row(null, Ui.Lines(title, course, due), chip));
+				card.BindingContextChanged += (_, _) =>
+				{
+					if (card.BindingContext is not HomeworkItem h) return;
+					var now = DateTime.UtcNow;
+					title.Text = h.Title;
+					course.Text = string.Join(" · ", new[] { h.CourseCode, h.SemesterName }.Where(x => !string.IsNullOrWhiteSpace(x)));
+					due.Text = $"{Ui.T("Due")}: {Ui.Date(h.DueDate)}";
+					var color = selection.IsTeacher ? (h.ToGrade > 0 ? Ui.Warn : Ui.Good)
+						: h.Marks is not null ? Ui.Good : h.Submitted ? Ui.Sky : h.DueDate < now ? Ui.Bad : Ui.Accent;
+					text.Text = HomeworkViewModel.State(h, selection.IsTeacher, now, selection.IsParent);
+					text.TextColor = color;
+					chip.BackgroundColor = color.WithAlpha(0.13f);
+				};
+				return new ContentView { Padding = new Thickness(16, 0), Content = card };
+			})
+		};
+		list.SelectionChanged += async (_, e) =>
+		{
+			if (e.CurrentSelection.FirstOrDefault() is not HomeworkItem h) return;
+			list.SelectedItem = null;
+			if (selection.IsTeacher) await Navigation.PushAsync(new GradingPage(new GradingViewModel(client), h.ToAssignment(), h.OfferingId));
+			else if (!selection.IsParent) await Navigation.PushAsync(new SubmitPage(new SubmitAssignmentViewModel(client, pickers) { Assignment = h.ToAssignment() }));
+		};
+		var refresh = new RefreshView { Content = list, Command = vm.LoadCommand };
+		refresh.SetBinding(RefreshView.IsRefreshingProperty, nameof(PageViewModel.IsBusy));
+		Content = Ui.ListLayout(vm, Ui.ScopeBar(selection), refresh);
+		Ui.ApplyDirection(this);
+	}
+
+	protected override async void OnAppearing()
+	{
+		base.OnAppearing();
+		await _vm.LoadAsync();
 	}
 }
 
@@ -970,41 +1213,92 @@ public sealed class NotificationsPage : ContentPage
 
 public sealed class SettingsPage : ContentPage
 {
-	public SettingsPage(SettingsViewModel vm, string? userName, string? role, string server)
+	public SettingsPage(SettingsViewModel vm, string? userName, string? role, string? server)
 	{
 		BindingContext = vm;
 		Title = Ui.T("Settings");
 
 		var account = Ui.Card(Ui.Row(Ui.Avatar(userName, Ui.Accent, 48), Ui.Lines(Ui.Title(userName, 17), Ui.Small(Ui.RoleName(role)))), padding: 16);
 
-		var languages = new Picker { Title = Ui.T("Language"), ItemsSource = new[] { "English", "اردو", "العربية" } };
-		var codes = new[] { "en", "ur", "ar" };
-		languages.SelectedIndex = Math.Max(0, Array.IndexOf(codes, vm.Language));
-		languages.SelectedIndexChanged += (_, _) =>
+		// Light, dark or the phone's own setting; kept on the phone (App.ApplyTheme at start-up).
+		var themes = new Picker { Title = Ui.T("Theme"), ItemsSource = new[] { Ui.T("ThemeSystem"), Ui.T("ThemeLight"), Ui.T("ThemeDark") } };
+		themes.SelectedIndex = Math.Max(0, Array.IndexOf(App.Themes, Preferences.Default.Get(App.ThemeKey, App.Themes[0])));
+		themes.SelectedIndexChanged += (_, _) =>
 		{
-			if (languages.SelectedIndex < 0) return;
-			vm.Language = codes[languages.SelectedIndex];
-			Preferences.Default.Set("language", vm.Language);
-			(Application.Current as App)?.ShowApp(); // rebuild the tabs in the new language and direction
+			if (themes.SelectedIndex < 0) return;
+			Preferences.Default.Set(App.ThemeKey, App.Themes[themes.SelectedIndex]);
+			App.ApplyTheme();
 		};
-		var language = Ui.Card(new VerticalStackLayout { Spacing = 8, Children = { Ui.Title(Ui.T("Language")), Ui.Field(languages) } }, padding: 16);
+		var theme = Ui.Card(new VerticalStackLayout { Spacing = 8, Children = { Ui.Title(Ui.T("Theme")), Ui.Field(themes) } }, padding: 16);
 
-		var about = Ui.Card(new VerticalStackLayout
+		var changePassword = Ui.Secondary(Ui.T("ChangePassword"));
+		changePassword.Clicked += async (_, _) => await Navigation.PushAsync(new ChangePasswordPage(new ChangePasswordViewModel(vm.Client)));
+		var security = Ui.Card(new VerticalStackLayout { Spacing = 8, Children = { Ui.Title(Ui.T("Password")), changePassword } }, padding: 16);
+
+		var serverLine = Ui.Small($"{Ui.T("Server")}: {ServerAddress.Display(server)}");
+		var aboutLines = Ui.Lines(Ui.Title("Tabsan EduSphere", 14), Ui.Small(vm.VersionText), serverLine);
+		if (ServerAddress.IsUnencrypted(server))
+		{
+			var warning = Ui.Small(Ui.T("NotEncrypted"));
+			warning.TextColor = Ui.Warn;
+			aboutLines.Add(warning);
+		}
+		var aboutStack = new VerticalStackLayout
 		{
 			Spacing = 8,
-			Children =
+			Children = { Ui.Title(Ui.T("About")), Ui.Row(new Image { Source = "tabsan_mark.png", HeightRequest = 40 }, aboutLines) }
+		};
+		if (vm.Client.CanChangeServer)
+		{
+			// Another institute's server: its accounts are different, so this signs out first.
+			var changeServer = Ui.Secondary(Ui.T("ChangeServer"));
+			changeServer.AutomationId = "changeserver";
+			changeServer.Clicked += async (_, _) =>
 			{
-				Ui.Title(Ui.T("About")),
-				Ui.Row(new Image { Source = "tabsan_mark.png", HeightRequest = 40 }, Ui.Lines(Ui.Title("Tabsan EduSphere", 14), Ui.Small(vm.VersionText), Ui.Small($"{Ui.T("Server")}: {server}")))
-			}
-		}, padding: 16);
+				if (!await DisplayAlert(Ui.T("ChangeServer"), Ui.T("ChangeServerConfirm"), Ui.T("ChangeServer"), Ui.T("Cancel"))) return;
+				if (Application.Current is App app) await app.ChangeServerAsync(vm.SignOutAsync);
+			};
+			aboutStack.Add(changeServer);
+		}
+		var about = Ui.Card(aboutStack, padding: 16);
 
 		var signOut = Ui.Danger(Ui.T("SignOut"));
 		signOut.Command = vm.SignOutCommand;
 		var footer = Ui.Small(Ui.T("PoweredBy"));
 		footer.HorizontalTextAlignment = TextAlignment.Center;
 		footer.Margin = new Thickness(0, 8, 0, 16);
-		Content = Ui.Page(Title, vm, account, language, about, signOut, footer).Content;
+		Content = Ui.Page(Title, vm, account, theme, security, about, signOut, footer).Content;
+		Ui.ApplyDirection(this);
+	}
+}
+
+/// <summary>Changing the password: current password, then the new one twice.</summary>
+public sealed class ChangePasswordPage : ContentPage
+{
+	public ChangePasswordPage(ChangePasswordViewModel vm)
+	{
+		BindingContext = vm;
+		Title = Ui.T("ChangePassword");
+		Entry Password(string placeholder, string property, string id)
+		{
+			var entry = new Entry { Placeholder = Ui.T(placeholder), IsPassword = true, AutomationId = id, IsTextPredictionEnabled = false, IsSpellCheckEnabled = false };
+			entry.SetBinding(Entry.TextProperty, property);
+			return entry;
+		}
+		var save = Ui.Primary(Ui.T("ChangePassword"));
+		save.Command = vm.SaveCommand;
+		var form = Ui.Card(new VerticalStackLayout
+		{
+			Spacing = 12,
+			Children =
+			{
+				Ui.Field(Password("CurrentPassword", nameof(ChangePasswordViewModel.CurrentPassword), "currentpassword")),
+				Ui.Field(Password("NewPassword", nameof(ChangePasswordViewModel.NewPassword), "newpassword")),
+				Ui.Field(Password("ConfirmPassword", nameof(ChangePasswordViewModel.ConfirmPassword), "confirmpassword")),
+				save
+			}
+		}, padding: 16);
+		Content = Ui.Page(Title, vm, form).Content;
 		Ui.ApplyDirection(this);
 	}
 }

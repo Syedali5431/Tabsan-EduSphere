@@ -4,14 +4,18 @@
 		Plan M12 — the EduSphere app for students, teachers and parents (.NET MAUI; decision: Docs/Decisions/ADR-M12-mobile-technology.md).
 		All behaviour lives in src/Tabsan.EduSphere.Mobile.Core (tested with the main solution); this project draws the screens.
 
+		The standard build has no server: each person enters their institute's server on first start (any EduSphere API, on
+		the internet over https or on the institute's own network), so one APK serves every institute.
+		ApiBaseUrl presets a server (people can still change it); LockServer=true fixes it.
+
 		White-label builds (one app per institution): pass the properties below, e.g.
-		  dotnet publish -f net9.0-android -c Release -p:AppName="City University" -p:AppId=edu.cityuni.edusphere -p:ApiBaseUrl=https://api.cityuni.edu
+		  dotnet publish -f net9.0-android -c Release -p:AppName="City University" -p:AppId=edu.cityuni.edusphere -p:ApiBaseUrl=https://api.cityuni.edu -p:LockServer=true
 		or run mobile/build-whitelabel.ps1. See mobile/README.md.
 	-->
 	<PropertyGroup>
 		<AppName Condition="'$(AppName)' == ''">EduSphere</AppName>
 		<AppId Condition="'$(AppId)' == ''">com.tabsan.edusphere</AppId>
-		<ApiBaseUrl Condition="'$(ApiBaseUrl)' == ''">https://localhost:7061</ApiBaseUrl>
+		<LockServer Condition="'$(LockServer)' == ''">false</LockServer>
 		<AppColor Condition="'$(AppColor)' == ''">#0F2A4A</AppColor>
 		<AppScheme Condition="'$(AppScheme)' == ''">edusphere</AppScheme>
 		<!-- Semantic version shown to users and checked against the API's minimum version; ApplicationVersion must grow with every store release. -->
@@ -95,8 +99,10 @@
 
 	<!-- The institution's settings, read at start-up (whitelabel.json in the app package). -->
 	<Target Name="WriteWhiteLabel" BeforeTargets="ResizetizeCollectItems;_CollectMauiAssets;PrepareForBuild">
+		<Error Condition="'$(LockServer)' != 'true' and '$(LockServer)' != 'false'" Text="LockServer must be true or false (got '$(LockServer)')." />
+		<Error Condition="'$(LockServer)' == 'true' and '$(ApiBaseUrl)' == ''" Text="LockServer=true needs the institution's server: pass -p:ApiBaseUrl=https://…" />
 		<WriteLinesToFile File="Resources\Raw\whitelabel.json" Overwrite="true" WriteOnlyWhenDifferent="true"
-			Lines="{ &quot;appName&quot;: &quot;$(AppName)&quot;, &quot;apiBaseUrl&quot;: &quot;$(ApiBaseUrl)&quot;, &quot;appColor&quot;: &quot;$(AppColor)&quot;, &quot;appScheme&quot;: &quot;$(AppScheme)&quot;, &quot;appVersion&quot;: &quot;$(AppVersion)&quot; }" />
+			Lines="{ &quot;appName&quot;: &quot;$(AppName)&quot;, &quot;apiBaseUrl&quot;: &quot;$(ApiBaseUrl)&quot;, &quot;lockServer&quot;: $(LockServer), &quot;appColor&quot;: &quot;$(AppColor)&quot;, &quot;appScheme&quot;: &quot;$(AppScheme)&quot;, &quot;appVersion&quot;: &quot;$(AppVersion)&quot; }" />
 		<!-- Generated (not in git), so added here: the Resources\Raw glob runs before the file exists on a fresh checkout. -->
 		<ItemGroup>
 			<MauiAsset Include="Resources\Raw\whitelabel.json" LogicalName="whitelabel.json" />

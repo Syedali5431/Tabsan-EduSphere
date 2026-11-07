@@ -67,6 +67,9 @@ public sealed class SignInViewModel : PageViewModel
     public MobileConfig? Config { get => _config; private set => Set(ref _config, value); }
     public VersionPolicy.State VersionState { get => _version; private set => Set(ref _version, value); }
     public ObservableCollection<SsoProvider> Providers { get; } = [];
+    /// <summary>The institute's server, as shown under the form (with "Change server" unless the build is locked to it).</summary>
+    public string? Server => _client.Server;
+    public bool CanChangeServer => _client.CanChangeServer;
 
     public AsyncCommand SignInCommand { get; }
     public AsyncCommand SingleSignOnCommand { get; }
@@ -162,6 +165,47 @@ public sealed class SignInViewModel : PageViewModel
     }
 }
 
+/// <summary>
+/// The institute's server, entered once (first start of the standard build, or "Change server"): checked before it is
+/// kept, so a typo or an unreachable address is caught here and not on the sign-in page.
+/// </summary>
+public sealed class ServerViewModel : PageViewModel
+{
+    private readonly EduSphereClient _client;
+    private string _address;
+
+    public ServerViewModel(EduSphereClient client)
+    {
+        _client = client;
+        _address = client.Server ?? "";
+        ConnectCommand = new AsyncCommand(ConnectAsync);
+    }
+
+    /// <summary>What was typed: "edu.myschool.com", "192.168.1.10:5181", "https://api.myschool.edu" …</summary>
+    public string Address { get => _address; set => Set(ref _address, value); }
+
+    public AsyncCommand ConnectCommand { get; }
+
+    /// <summary>Raised once the server is checked and kept, with its app configuration (institution name, sign-in options).</summary>
+    public event EventHandler<MobileConfig>? Connected;
+
+    public async Task ConnectAsync()
+    {
+        IsBusy = true;
+        Error = null;
+        try
+        {
+            var check = await _client.CheckServerAsync(Address);
+            if (!check.IsEduSphere) { Error = check.Error; return; }
+            await _client.UseServerAsync(check.Server!);
+            Address = check.Server!;
+            Connected?.Invoke(this, check.Config!);
+        }
+        catch (TaskCanceledException) { Error = AppText.Get("NoConnection"); }
+        finally { IsBusy = false; }
+    }
+}
+
 public sealed class HomeViewModel : PageViewModel
 {
     private readonly EduSphereClient _client;
@@ -207,11 +251,14 @@ public sealed class HomeViewModel : PageViewModel
 public sealed class TimetableViewModel : PageViewModel
 {
     private readonly EduSphereClient _client;
+    private readonly Selection? _selection;
 
-    public TimetableViewModel(EduSphereClient client)
+    public TimetableViewModel(EduSphereClient client, Selection? selection = null)
     {
         _client = client;
+        _selection = selection;
         LoadCommand = new AsyncCommand(LoadAsync);
+        if (selection is not null) selection.Changed += (_, _) => _ = LoadAsync();
     }
 
     /// <summary>Classes grouped by day, starting with today.</summary>
@@ -220,9 +267,9 @@ public sealed class TimetableViewModel : PageViewModel
 
     public Task LoadAsync() => RunAsync(async () =>
     {
-        var slots = await _client.GetTimetableAsync();
+        var slots = await _client.GetTimetableAsync(_selection?.IsParent == true ? _selection.ChildId : null);
         Days.Clear();
-        foreach (var day in Group(slots, (int)DateTime.Now.DayOfWeek)) Days.Add(day);
+        foreach (var day in Group(slots.Where(s => _selection?.Includes(s.OfferingId) ?? true), (int)DateTime.Now.DayOfWeek)) Days.Add(day);
     });
 
     public static IReadOnlyList<TimetableDay> Group(IEnumerable<ClassSlot> slots, int today, string? language = null)
@@ -241,11 +288,14 @@ public sealed record TimetableDay(string Day, bool IsToday, IReadOnlyList<ClassS
 public sealed class CoursesViewModel : PageViewModel
 {
     private readonly EduSphereClient _client;
+    private readonly Selection? _selection;
 
-    public CoursesViewModel(EduSphereClient client)
+    public CoursesViewModel(EduSphereClient client, Selection? selection = null)
     {
         _client = client;
+        _selection = selection;
         LoadCommand = new AsyncCommand(LoadAsync);
+        if (selection is not null) selection.Changed += (_, _) => _ = LoadAsync();
     }
 
     public ObservableCollection<CourseSummary> Courses { get; } = [];
@@ -253,9 +303,9 @@ public sealed class CoursesViewModel : PageViewModel
 
     public Task LoadAsync() => RunAsync(async () =>
     {
-        var courses = await _client.GetCoursesAsync();
+        var courses = await _client.GetCoursesAsync(_selection?.IsParent == true ? _selection.ChildId : null);
         Courses.Clear();
-        foreach (var c in courses) Courses.Add(c);
+        foreach (var c in courses.Where(c => _selection?.Includes(c.OfferingId) ?? true)) Courses.Add(c);
     });
 }
 
@@ -276,6 +326,8 @@ public sealed class CourseViewModel : PageViewModel
     }
 
     public Guid OfferingId { get; private set; }
+    /// <summary>Parents: the child whose course this is (they see the child's work and cannot hand in).</summary>
+    public Guid? ChildId { get; init; }
     public CourseDetail? Detail { get => _detail; private set => Set(ref _detail, value); }
     public AsyncCommand OpenMaterialCommand { get; }
     public AsyncCommand OpenQuizCommand { get; }
@@ -283,7 +335,7 @@ public sealed class CourseViewModel : PageViewModel
     public Task LoadAsync(Guid offeringId) => RunAsync(async () =>
     {
         OfferingId = offeringId;
-        Detail = await _client.GetCourseAsync(offeringId);
+        Detail = await _client.GetCourseAsync(offeringId, ChildId);
     });
 
     /// <summary>Links open in the browser; uploaded files are served by the API (the portal shows them to signed-in users).</summary>
@@ -358,11 +410,14 @@ public sealed class SubmitAssignmentViewModel : PageViewModel
 public sealed class ResultsViewModel : PageViewModel
 {
     private readonly EduSphereClient _client;
+    private readonly Selection? _selection;
 
-    public ResultsViewModel(EduSphereClient client)
+    public ResultsViewModel(EduSphereClient client, Selection? selection = null)
     {
         _client = client;
+        _selection = selection;
         LoadCommand = new AsyncCommand(LoadAsync);
+        if (selection is not null) selection.Changed += (_, _) => _ = LoadAsync(selection.IsParent ? selection.ChildId : null);
     }
 
     public ObservableCollection<ResultItem> Results { get; } = [];
@@ -371,12 +426,20 @@ public sealed class ResultsViewModel : PageViewModel
     /// <summary>The signed-in student's results, or a child's (parents).</summary>
     public Task LoadAsync(Guid? childProfileId = null) => RunAsync(async () =>
     {
+        if (_selection?.IsParent == true && childProfileId is null) { Results.Clear(); return; }
         var rows = await _client.GetResultsAsync(childProfileId);
+        _selection?.AddClasses(rows.Select(r => r.SemesterName));
         Results.Clear();
-        foreach (var r in rows) Results.Add(r);
+        // A School child has the same subject in every class (CS001 in Class 1 … Class 10): newest class first, so the
+        // current year leads and each class's subjects stay together; the card shows the class name.
+        var ordered = rows.Where(r => _selection?.Includes(r.OfferingId, r.SemesterName) ?? true)
+            .OrderBy(r => string.IsNullOrWhiteSpace(r.SemesterName))
+            .ThenByDescending(r => r.SemesterName ?? "", Selection.ClassOrder.Instance)
+            .ThenBy(r => r.CourseCode, StringComparer.OrdinalIgnoreCase);
+        foreach (var r in ordered) Results.Add(r);
     });
 
-    private Task LoadAsync() => LoadAsync(null);
+    private Task LoadAsync() => LoadAsync(_selection?.IsParent == true ? _selection.ChildId : null);
 }
 
 public sealed class AttendanceViewModel : PageViewModel
@@ -750,6 +813,7 @@ public sealed class SettingsViewModel : PageViewModel
     }
 
     public string VersionText => string.Format(AppText.Get("Version"), _settings.AppVersion);
+    public EduSphereClient Client => _client;
     public string Language { get => _client.Language; set { _client.Language = AppText.Language = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsRtl)); } }
     public bool IsRtl => AppText.IsRtl;
     public AsyncCommand SignOutCommand { get; }
@@ -762,5 +826,147 @@ public sealed class SettingsViewModel : PageViewModel
         var token = await _push.GetTokenAsync();
         if (string.IsNullOrEmpty(token) || !_client.IsSignedIn) return;
         await RunAsync(() => _client.RegisterDeviceAsync(token, deviceModel));
+    }
+}
+
+/// <summary>Homework of all courses in view (class and campus): students and parents with its state, teachers with what is left to grade.</summary>
+public sealed class HomeworkViewModel : PageViewModel
+{
+    private readonly EduSphereClient _client;
+    private readonly Selection _selection;
+
+    public HomeworkViewModel(EduSphereClient client, Selection selection)
+    {
+        _client = client;
+        _selection = selection;
+        LoadCommand = new AsyncCommand(LoadAsync);
+        selection.Changed += (_, _) => _ = LoadAsync();
+    }
+
+    public ObservableCollection<HomeworkItem> Items { get; } = [];
+    public AsyncCommand LoadCommand { get; }
+
+    public Task LoadAsync() => RunAsync(async () =>
+    {
+        var rows = _selection.IsParent && _selection.ChildId is null ? [] : await _client.GetHomeworkAsync(_selection.IsParent ? _selection.ChildId : null);
+        Items.Clear();
+        foreach (var h in Order(rows.Where(h => _selection.Includes(h.OfferingId, h.SemesterName)), DateTime.UtcNow)) Items.Add(h);
+    });
+
+    /// <summary>Still to do (soonest first), then the rest (most recent first).</summary>
+    public static IEnumerable<HomeworkItem> Order(IEnumerable<HomeworkItem> items, DateTime now)
+    {
+        var list = items.ToList();
+        bool Open(HomeworkItem h) => h.ToGrade > 0 || (!h.Submitted && h.DueDate >= now);
+        return list.Where(Open).OrderBy(h => h.DueDate).Concat(list.Where(h => !Open(h)).OrderByDescending(h => h.DueDate));
+    }
+
+    /// <summary>The homework's state as the student, parent or teacher reads it (parents are not told to hand in).</summary>
+    public static string State(HomeworkItem h, bool isTeacher, DateTime now, bool isParent = false)
+        => isTeacher ? (h.ToGrade > 0 ? string.Format(AppText.Get("ToGradeCount"), h.ToGrade) : AppText.Get("NothingToGrade"))
+           : h.Marks is { } m ? $"{AppText.Get("Marks")}: {m:0.##}/{h.MaxMarks:0.##}"
+           : h.Submitted ? AppText.Get("NotGradedYet")
+           : h.DueDate < now ? AppText.Get("Overdue") : AppText.Get(isParent ? "NotHandedIn" : "HandIn");
+}
+
+/// <summary>Attendance in view (class and campus): per course, overall and day by day — a student's own or a parent's child's.</summary>
+public sealed class AttendanceScreenViewModel : PageViewModel
+{
+    private readonly EduSphereClient _client;
+    private readonly Selection _selection;
+    private decimal? _overall;
+
+    public AttendanceScreenViewModel(EduSphereClient client, Selection selection)
+    {
+        _client = client;
+        _selection = selection;
+        LoadCommand = new AsyncCommand(LoadAsync);
+        selection.Changed += (_, _) => _ = LoadAsync();
+    }
+
+    public ObservableCollection<AttendanceCourse> Courses { get; } = [];
+    public ObservableCollection<AttendanceDay> Days { get; } = [];
+    /// <summary>Attended (present or late) out of all marked classes in view.</summary>
+    public decimal? Overall { get => _overall; private set => Set(ref _overall, value); }
+    public AsyncCommand LoadCommand { get; }
+
+    public Task LoadAsync() => RunAsync(async () =>
+    {
+        if (_selection.IsTeacher || (_selection.IsParent && _selection.ChildId is null))
+        {
+            Courses.Clear();
+            Days.Clear();
+            Overall = null;
+            return;
+        }
+        var child = _selection.IsParent ? _selection.ChildId : null;
+        var courses = await _client.GetAttendanceAsync(child);
+        var days = await _client.GetAttendanceDaysAsync(child);
+        _selection.AddClasses(days.Select(d => d.SemesterName));
+        var shown = courses.Where(c => _selection.Includes(c.OfferingId, days.FirstOrDefault(d => d.OfferingId == c.OfferingId)?.SemesterName)).ToList();
+        Courses.Clear();
+        foreach (var c in shown) Courses.Add(c);
+        Days.Clear();
+        foreach (var d in days.Where(d => _selection.Includes(d.OfferingId, d.SemesterName)).Take(60)) Days.Add(d);
+        Overall = OverallPercent(shown);
+    });
+
+    public static decimal? OverallPercent(IEnumerable<AttendanceCourse> courses)
+    {
+        var list = courses.ToList();
+        var total = list.Sum(c => c.Total);
+        return total == 0 ? null : Math.Round(100m * list.Sum(c => c.Attended) / total, 1);
+    }
+}
+
+/// <summary>Admins: the chosen campus (or all of theirs) at a glance.</summary>
+public sealed class CampusViewModel : PageViewModel
+{
+    private readonly EduSphereClient _client;
+    private readonly Selection _selection;
+    private CampusSummary? _summary;
+
+    public CampusViewModel(EduSphereClient client, Selection selection)
+    {
+        _client = client;
+        _selection = selection;
+        selection.Changed += (_, _) => _ = LoadAsync();
+    }
+
+    public CampusSummary? Summary { get => _summary; private set => Set(ref _summary, value); }
+
+    public Task LoadAsync() => RunAsync(async () => Summary = await _client.GetCampusSummaryAsync(_selection.Scope?.CampusId, DateTime.Now.Date));
+}
+
+/// <summary>Changing the password: the current one, then the new one twice (the API checks the password rules).</summary>
+public sealed class ChangePasswordViewModel : PageViewModel
+{
+    private readonly EduSphereClient _client;
+    private string _current = "", _new = "", _confirm = "";
+
+    public ChangePasswordViewModel(EduSphereClient client)
+    {
+        _client = client;
+        SaveCommand = new AsyncCommand(SaveAsync);
+    }
+
+    public string CurrentPassword { get => _current; set => Set(ref _current, value ?? ""); }
+    public string NewPassword { get => _new; set => Set(ref _new, value ?? ""); }
+    public string ConfirmPassword { get => _confirm; set => Set(ref _confirm, value ?? ""); }
+    public AsyncCommand SaveCommand { get; }
+
+    public async Task SaveAsync()
+    {
+        Notice = null;
+        Error = string.IsNullOrEmpty(CurrentPassword) || string.IsNullOrEmpty(NewPassword) || string.IsNullOrEmpty(ConfirmPassword) ? AppText.Get("FillAllPasswords")
+            : NewPassword != ConfirmPassword ? AppText.Get("PasswordsDiffer")
+            : NewPassword == CurrentPassword ? AppText.Get("SamePassword")
+            : null;
+        if (Error is not null) return;
+        if (await RunAsync(() => _client.ChangePasswordAsync(CurrentPassword, NewPassword)))
+        {
+            CurrentPassword = NewPassword = ConfirmPassword = "";
+            Notice = AppText.Get("PasswordChanged");
+        }
     }
 }

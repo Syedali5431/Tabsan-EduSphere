@@ -1,6 +1,6 @@
 -- =============================================================================
 -- Fix sidebar menu role visibility per user specification
--- Run against: Tabsan-EduSphere (localdb)\MSSQLLocalDB
+-- Run against: Tabsan-EduSphere on localhost\SQLEXPRESS
 -- =============================================================================
 
 -- Step 1: Ensure all 5 roles exist for every active menu item

@@ -39,6 +39,14 @@
 			</array>
 		</dict>
 	</array>
+	<!-- A server on the institute's own network may use plain http; the app accepts http only for local addresses. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Connect to your institute's EduSphere server on its own network.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Take photos of your work to hand in.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

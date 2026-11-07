@@ -1008,7 +1008,10 @@ public class ResultItem
     public string CourseName         { get; set; } = "";
     public string CourseCode         { get; set; } = "";
     public decimal? MarksObtained    { get; set; }
-    public int    TotalMarks         { get; set; }
+    public decimal MaxMarks          { get; set; }
+    // GPA grade point (University results); School and College results have none.
+    public decimal? GradePoint       { get; set; }
+    // Only set for the synthetic FYP row (its final result); API results carry a grade point instead.
     public string? LetterGrade       { get; set; }
     public bool   IsPublished        { get; set; }
     public string SemesterName       { get; set; } = "";

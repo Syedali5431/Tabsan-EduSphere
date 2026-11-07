@@ -119,6 +119,60 @@ internal static class Ui
 		};
 	}
 
+	/// <summary>The top of the sign-in and server pages: the Tabsan wordmark, the given line and what the app is for.</summary>
+	public static Border Header(View title)
+	{
+		var tagline = OnBanner(T("AppTagline"), 14, opacity: 0.85);
+		tagline.HorizontalTextAlignment = TextAlignment.Center;
+		return new Border
+		{
+			StrokeThickness = 0, Background = BannerBrush(), Padding = new Thickness(24, 56, 24, 76),
+			StrokeShape = new RoundRectangle { CornerRadius = new CornerRadius(0, 0, 32, 32) },
+			Content = new VerticalStackLayout
+			{
+				Spacing = 10,
+				Children = { new Image { Source = "tabsan_wordmark.png", HeightRequest = 60, Aspect = Aspect.AspectFit, Margin = new Thickness(0, 0, 0, 10) }, title, tagline }
+			}
+		};
+	}
+
+	/// <summary>"Powered by Tabsan EduSphere · version" under the sign-in and server pages.</summary>
+	public static HorizontalStackLayout Footer(string version) => new()
+	{
+		Spacing = 8, HorizontalOptions = LayoutOptions.Center, Margin = new Thickness(0, 22, 0, 28),
+		Children = { new Image { Source = "tabsan_mark.png", HeightRequest = 20 }, Small($"{T("PoweredBy")} · {version}") }
+	};
+
+	/// <summary>
+	/// "Server: edu.myschool.com", a warning when the connection is plain http, and a "Change server" link when
+	/// <paramref name="change"/> is given (not on a build locked to its institution's server).
+	/// </summary>
+	public static View Server(string? server, Action? change)
+	{
+		var stack = new VerticalStackLayout { Spacing = 2 };
+		var line = Small($"{T("Server")}: {ServerAddress.Display(server)}");
+		line.HorizontalTextAlignment = TextAlignment.Center;
+		stack.Add(line);
+		if (ServerAddress.IsUnencrypted(server))
+		{
+			var warning = Small(T("NotEncrypted"));
+			warning.TextColor = Warn;
+			warning.HorizontalTextAlignment = TextAlignment.Center;
+			stack.Add(warning);
+		}
+		if (change is not null)
+		{
+			var link = new Label
+			{
+				Text = T("ChangeServer"), FontSize = 14, FontFamily = "OpenSansSemibold", TextColor = Accent, Padding = new Thickness(8, 6),
+				HorizontalOptions = LayoutOptions.Center, AutomationId = "changeserver"
+			};
+			link.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(change) });
+			stack.Add(link);
+		}
+		return stack;
+	}
+
 	public static Brush BannerBrush() => new LinearGradientBrush(
 		[new GradientStop(Brand, 0), new GradientStop(Color.FromArgb("#1D5C99"), 1)], new Point(0, 0), new Point(1, 1));
 
@@ -284,6 +338,96 @@ internal static class Ui
 		button.SetAppThemeColor(VisualElement.BackgroundColorProperty, SurfaceLight, SurfaceDark);
 		return button;
 	}
+
+	// ── child, class and campus pickers ───────────────────────────────────────────────────────
+
+	/// <summary>
+	/// The pickers at the top of the Timetable, Courses, Homework, Attendance, Results and (staff) Home tabs: child (parents), class (all classes or one) and institute and campus (teachers and admins with several). Hidden when there is
+	/// no class or child yet. All tabs share the same <see cref="Selection"/>, so a class chosen once applies everywhere.
+	/// </summary>
+	/// <summary>
+	/// A list page: the error line, the child/class/campus lists, then the list. The lists sit above the CollectionView, not in
+	/// its Header, so they stay in view while the list scrolls or shows its EmptyView.
+	/// </summary>
+	public static Grid ListLayout(PageViewModel vm, View bar, View list)
+	{
+		var grid = new Grid { RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) }, Children = { Status(vm), bar, list } };
+		Grid.SetRow(bar, 1);
+		Grid.SetRow(list, 2);
+		return grid;
+	}
+
+	public static View ScopeBar(Selection sel)
+	{
+		var child = new Picker { Title = T("Child") };
+		var cls = new Picker { Title = T("Class") };
+		var campus = new Picker { Title = T("Campus") };
+		// Each picker gets its box once: putting a picker into a new box while the old one still holds it crashes Android.
+		var childBox = Labelled(T("Child"), child);
+		var clsBox = Labelled(T("Class"), cls);
+		var top = new Grid { ColumnSpacing = 10, ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Star) } };
+		top.Add(childBox, 0);
+		top.Add(clsBox, 1);
+		var campusBox = Labelled(T("Campus"), campus);
+		var stack = new VerticalStackLayout { Spacing = 8, Children = { top, campusBox } };
+		var card = Card(stack, padding: 12);
+		card.Margin = new Thickness(16, 10, 16, 2);
+		var updating = false;
+
+		void Refresh()
+		{
+			updating = true;
+			child.ItemsSource = sel.Children.Select(c => c.Name).ToList();
+			child.SelectedIndex = sel.Child is { } c ? sel.Children.ToList().FindIndex(x => x.StudentProfileId == c.StudentProfileId) : -1;
+			cls.ItemsSource = new[] { T("AllClasses") }.Concat(sel.Classes).ToList();
+			cls.SelectedIndex = sel.ClassName is null ? 0 : 1 + sel.Classes.IndexOf(sel.ClassName);
+			campus.ItemsSource = new[] { T("AllCampuses") }.Concat(sel.Scopes.Select(s => s.Label)).ToList();
+			campus.SelectedIndex = sel.Scope is null ? 0 : 1 + sel.Scopes.ToList().FindIndex(s => s.CampusId == sel.Scope.CampusId);
+			var showChild = sel.IsParent && sel.Children.Count > 0;
+			var showCls = sel.Classes.Count > 0;
+			childBox.IsVisible = showChild;
+			clsBox.IsVisible = showCls;
+			Grid.SetColumnSpan(childBox, showCls ? 1 : 2);
+			Grid.SetColumn(clsBox, showChild ? 1 : 0);
+			Grid.SetColumnSpan(clsBox, showChild ? 1 : 2);
+			top.IsVisible = showChild || showCls;
+			campusBox.IsVisible = sel.Scopes.Count > 1;
+			card.IsVisible = top.IsVisible || campusBox.IsVisible;
+			updating = false;
+		}
+
+		child.SelectedIndexChanged += async (_, _) =>
+		{
+			if (!updating && child.SelectedIndex >= 0 && child.SelectedIndex < sel.Children.Count) await sel.SetChildAsync(sel.Children[child.SelectedIndex]);
+		};
+		cls.SelectedIndexChanged += (_, _) =>
+		{
+			if (!updating && cls.SelectedIndex >= 0) sel.SetClass(cls.SelectedIndex == 0 ? null : sel.Classes[cls.SelectedIndex - 1]);
+		};
+		campus.SelectedIndexChanged += (_, _) =>
+		{
+			if (!updating && campus.SelectedIndex >= 0) sel.SetScope(campus.SelectedIndex == 0 ? null : sel.Scopes[campus.SelectedIndex - 1]);
+		};
+		sel.Children.CollectionChanged += (_, _) => Refresh();
+		sel.Classes.CollectionChanged += (_, _) => Refresh();
+		sel.Scopes.CollectionChanged += (_, _) => Refresh();
+		sel.Changed += (_, _) => Refresh();
+		Refresh();
+		return card;
+	}
+
+	private static VerticalStackLayout Labelled(string caption, View input)
+	{
+		var label = Small(caption);
+		label.FontSize = 12;
+		return new VerticalStackLayout { Spacing = 4, Children = { label, Field(input) } };
+	}
+
+	/// <summary>Colour of an attendance status (Present, Absent, Late, Excused).</summary>
+	public static Color StatusColor(string? status) => status switch { "Absent" => Bad, "Late" => Warn, "Excused" => Sky, _ => Good };
+
+	/// <summary>An attendance status in the app's words.</summary>
+	public static string StatusText(string? status) => status is "Absent" or "Late" or "Excused" ? T(status) : T("Present");
 
 	// ── pages ─────────────────────────────────────────────────────────────────────────────────
 

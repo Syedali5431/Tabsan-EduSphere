@@ -1,9 +1,9 @@
 # Fills the demo schools with data: 01-School-Records.sql with sqlcmd, then 02-Learning-Activity.mjs through the API.
-# Usage:  .\Run-School-Demo-Data.ps1 [-Server "(localdb)\MSSQLLocalDB"] [-Database "Tabsan-EduSphere"] [-Api "http://localhost:5181/api/v1"]
+# Usage:  .\Run-School-Demo-Data.ps1 [-Server "localhost\SQLEXPRESS"] [-Database "Tabsan-EduSphere"] [-Api "http://localhost:5181/api/v1"]
 #                                    [-RecordsOnly | -ActivityOnly]
 # The API must be running for 02 (it is skipped with -RecordsOnly).
 param(
-    [string]$Server = "(localdb)\MSSQLLocalDB",
+    [string]$Server = "localhost\SQLEXPRESS",
     [string]$Database = "Tabsan-EduSphere",
     [string]$Api = "http://localhost:5181/api/v1",
     [switch]$RecordsOnly,
@@ -14,8 +14,8 @@ $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 if (-not $ActivityOnly) {
     Write-Host "== 01-School-Records.sql" -ForegroundColor Cyan
-    # -b stops on SQL errors; -f 65001 reads the file as UTF-8.
-    & sqlcmd -S $Server -d $Database -b -f 65001 -W -i (Join-Path $here "01-School-Records.sql")
+    # -b stops on SQL errors; -f 65001 reads the file as UTF-8; -C trusts the server's own certificate (SQL Express).
+    & sqlcmd -S $Server -d $Database -C -b -f 65001 -W -i (Join-Path $here "01-School-Records.sql")
     if ($LASTEXITCODE -ne 0) { throw "01-School-Records.sql failed (sqlcmd exit code $LASTEXITCODE)." }
 }
 

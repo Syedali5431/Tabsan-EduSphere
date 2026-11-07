@@ -20,6 +20,29 @@
             : semesterName;
     }
 
+    string GetCourseLabel(Tabsan.EduSphere.Web.Models.Portal.ResultItem result)
+    {
+        var parts = new[] { result.CourseCode, result.CourseName }.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+        return parts.Count == 0 ? "—" : string.Join(" — ", parts);
+    }
+
+    string GetMarksLabel(Tabsan.EduSphere.Web.Models.Portal.ResultItem result)
+    {
+        if (!result.MarksObtained.HasValue)
+        {
+            return "–";
+        }
+
+        var obtained = result.MarksObtained.Value.ToString("0.##");
+        return result.MaxMarks > 0 ? $"{obtained}/{result.MaxMarks:0.##}" : obtained;
+    }
+
+    // FYP rows carry a final result label; API results carry a GPA grade point (University only).
+    string? GetGradeLabel(Tabsan.EduSphere.Web.Models.Portal.ResultItem result)
+        => !string.IsNullOrWhiteSpace(result.LetterGrade)
+            ? result.LetterGrade
+            : result.GradePoint?.ToString("0.00");
+
     string NormalizeProposedDataLabel(string key)
     {
         if (string.IsNullOrWhiteSpace(key))
@@ -551,14 +574,14 @@ else
                             @foreach (var r in Model.Results)
                             {
                                 <tr>
-                                    <td>@r.CourseCode — @r.CourseName</td>
-                                    <td>@(string.IsNullOrWhiteSpace(r.StudentName) ? "—" : $"{r.StudentName} ({r.RegistrationNumber})")</td>
+                                    <td>@GetCourseLabel(r)</td>
+                                    <td>@(string.IsNullOrWhiteSpace(r.StudentName) ? "—" : string.IsNullOrWhiteSpace(r.RegistrationNumber) ? r.StudentName : $"{r.StudentName} ({r.RegistrationNumber})")</td>
                                     <td>@GetSemesterLabel(r.SemesterName)</td>
-                                    <td>@(r.MarksObtained.HasValue ? $"{r.MarksObtained}/{r.TotalMarks}" : "–")</td>
+                                    <td>@GetMarksLabel(r)</td>
                                     <td>
-                                        @if (!string.IsNullOrWhiteSpace(r.LetterGrade))
+                                        @if (GetGradeLabel(r) is { } grade)
                                         {
-                                            <span class="badge stat-pill bg-primary">@r.LetterGrade</span>
+                                            <span class="badge stat-pill bg-primary">@grade</span>
                                         }
                                     </td>
                                     <td>
@@ -576,7 +599,7 @@ else
                                                 <button type="button" class="btn btn-xs btn-outline-warning btn-sm"
                                                         data-bs-toggle="modal" data-bs-target="#requestResultModificationModal"
                                                         data-resultid="@r.Id" data-studentid="@r.StudentProfileId" data-resulttype="@r.ResultType"
-                                                        data-marksobtained="@(r.MarksObtained ?? 0)" data-maxmarks="@r.TotalMarks">
+                                                        data-marksobtained="@(r.MarksObtained ?? 0)" data-maxmarks="@r.MaxMarks">
                                                     @T["Request Modify"]
                                                 </button>
                                             }
@@ -585,7 +608,7 @@ else
                                                 <button type="button" class="btn btn-xs btn-outline-secondary btn-sm"
                                                         data-bs-toggle="modal" data-bs-target="#correctResultModal"
                                                         data-studentid="@r.StudentProfileId" data-resulttype="@r.ResultType"
-                                                        data-marksobtained="@(r.MarksObtained ?? 0)" data-maxmarks="@r.TotalMarks">
+                                                        data-marksobtained="@(r.MarksObtained ?? 0)" data-maxmarks="@r.MaxMarks">
                                                     @T["Update Result"]
                                                 </button>
                                             }

@@ -462,6 +462,80 @@ public class ParentPortalServiceTests
 
         items.Should().BeEmpty();
     }
+
+    // ── Parent Links screen (2026-10-30): pause, remove and link again ──────────────────────────
+
+    [Fact]
+    public async Task RemoveLink_HidesTheLink_AndTheChildFromTheParent()
+    {
+        var parent = Guid.NewGuid();
+        var student = TestData.MakeStudent(semester: 3, institutionType: InstitutionType.School);
+        var linkRepo = new StubParentLinkRepository([new ParentStudentLink(parent, student.Id, "Father")]);
+        var sut = new ParentPortalService(linkRepo, new StubStudentProfileRepository([student]), new StubPortalUserRepository(parent, "Parent"),
+            resultService: new StubResultService([]));
+
+        (await sut.RemoveLinkAsync(parent, student.Id)).Should().BeTrue();
+
+        var link = await linkRepo.GetByParentAndStudentAsync(parent, student.Id);
+        link!.IsDeleted.Should().BeTrue();
+        link.IsActive.Should().BeFalse("readers that only check IsActive (alerts, broadcasts, the app) must ignore it");
+        (await sut.GetLinksByParentAsync(parent)).Should().BeEmpty();
+        (await sut.GetLinkedStudentsAsync(parent)).Should().BeEmpty();
+        await FluentActions.Invoking(() => sut.GetLinkedStudentResultsAsync(parent, student.Id))
+            .Should().ThrowAsync<UnauthorizedAccessException>();
+        (await sut.RemoveLinkAsync(parent, student.Id)).Should().BeFalse("it is already removed");
+        (await sut.DeactivateLinkAsync(parent, student.Id)).Should().BeFalse("a removed link cannot be paused");
+        (await sut.RemoveLinkAsync(parent, Guid.NewGuid())).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task UpsertLink_AfterRemove_RestoresTheSameRow()
+    {
+        var parent = Guid.NewGuid();
+        var student = TestData.MakeStudent(semester: 3, institutionType: InstitutionType.School);
+        var original = new ParentStudentLink(parent, student.Id, "Father");
+        var linkRepo = new StubParentLinkRepository([original]);
+        var sut = new ParentPortalService(linkRepo, new StubStudentProfileRepository([student]), new StubPortalUserRepository(parent, "Parent"));
+        await sut.RemoveLinkAsync(parent, student.Id);
+
+        var dto = await sut.UpsertLinkAsync(new UpsertParentStudentLinkRequest(parent, student.Id, "Guardian"));
+
+        dto.IsActive.Should().BeTrue();
+        dto.Relationship.Should().Be("Guardian");
+        (await linkRepo.GetByParentUserIdAsync(parent)).Should().ContainSingle()
+            .Which.Should().BeSameAs(original, "the unique (parent, student) row is reused, not duplicated");
+        original.IsDeleted.Should().BeFalse();
+        (await sut.GetLinkedStudentsAsync(parent)).Should().ContainSingle().Which.Relationship.Should().Be("Guardian");
+    }
+
+    [Fact]
+    public async Task UpsertLink_PauseAndResume_KeepsTheRelationship()
+    {
+        var parent = Guid.NewGuid();
+        var student = TestData.MakeStudent(semester: 3, institutionType: InstitutionType.School);
+        var sut = new ParentPortalService(new StubParentLinkRepository([]), new StubStudentProfileRepository([student]), new StubPortalUserRepository(parent, "Parent"));
+        await sut.UpsertLinkAsync(new UpsertParentStudentLinkRequest(parent, student.Id, " Mother "));
+
+        var paused = await sut.UpsertLinkAsync(new UpsertParentStudentLinkRequest(parent, student.Id, "Mother", IsActive: false));
+        paused.IsActive.Should().BeFalse();
+        (await sut.GetLinkedStudentsAsync(parent)).Should().BeEmpty();
+        (await sut.GetLinksByParentAsync(parent)).Should().ContainSingle().Which.IsActive.Should().BeFalse("a paused link stays on the list");
+
+        await sut.UpsertLinkAsync(new UpsertParentStudentLinkRequest(parent, student.Id, "Mother", IsActive: true));
+        (await sut.GetLinkedStudentsAsync(parent)).Should().ContainSingle().Which.Relationship.Should().Be("Mother");
+    }
+
+    [Fact]
+    public async Task UpsertLink_WithTooLongRelationship_ThrowsInvalidOperation()
+    {
+        var parent = Guid.NewGuid();
+        var student = TestData.MakeStudent(semester: 3, institutionType: InstitutionType.School);
+        var sut = new ParentPortalService(new StubParentLinkRepository([]), new StubStudentProfileRepository([student]), new StubPortalUserRepository(parent, "Parent"));
+
+        var act = () => sut.UpsertLinkAsync(new UpsertParentStudentLinkRequest(parent, student.Id, new string('x', ParentPortalService.MaxRelationshipLength + 1)));
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*60 characters*");
+    }
 }
 
 file static class TestData

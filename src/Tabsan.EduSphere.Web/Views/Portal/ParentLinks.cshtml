@@ -1,0 +1,228 @@
+@model Tabsan.EduSphere.Web.Models.Portal.ParentLinksPageModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    ViewData["Title"] = T.Text("Parent Links");
+    var parent = Model.Parent;
+    var parentName = parent is null ? null : parent.FullName ?? parent.Username;
+}
+@* Parent Links (2026-10-30) — link Parent-role accounts to School students; the API checks the role, the School and the Admin's departments. *@
+<div class="container-fluid py-3">
+    <h1 class="h4">@T["Parent Links"]</h1>
+    <p class="text-muted mb-1">@T["A parent linked to a School student follows that child's results, attendance, fees and announcements in the EduSphere mobile app. One parent can have several children, and a child can have several parents."]</p>
+    <p class="text-muted small">@T["Parent accounts are created on User Import with the role Parent."] <a asp-action="UserImport">@T["Open User Import"]</a></p>
+
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert @(Model.MessageIsError ? "alert-warning" : "alert-success")" role="status">@T.Text(Model.Message)</div>
+    }
+    @if (!Model.IsConnected)
+    {
+        <div class="alert alert-info">@T["Connect to the API to manage parent links."]</div>
+    }
+    else
+    {
+        <div class="row g-3">
+            <div class="col-xl-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h2 class="h5">@T["1. Find the parent"]</h2>
+                        <form asp-action="ParentLinks" method="get" class="d-flex gap-2 mb-3" role="search">
+                            <label class="visually-hidden" for="parent-search">@T["Search parents"]</label>
+                            <input id="parent-search" name="parentSearch" value="@Model.ParentSearch" class="form-control form-control-sm" placeholder="@T["Username, name, email or phone"]" />
+                            <button class="btn btn-sm btn-primary">@T["Search"]</button>
+                        </form>
+                        @if (Model.Parents.Count == 0)
+                        {
+                            <p class="small text-muted mb-0">@(Model.ParentSearch is null ? T.Text("No parent accounts yet. Create them on User Import with the role Parent.") : T.Text("No parent account matches this search."))</p>
+                        }
+                        else
+                        {
+                            <div class="list-group list-group-flush small">
+                                @foreach (var p in Model.Parents)
+                                {
+                                    var selected = parent?.UserId == p.UserId;
+                                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start @(selected ? "active" : "")"
+                                       asp-action="ParentLinks" asp-route-parentId="@p.UserId" asp-route-parentSearch="@Model.ParentSearch" aria-current="@(selected ? "true" : null)">
+                                        <span>
+                                            <span class="fw-semibold d-block">@(p.FullName ?? p.Username)</span>
+                                            <span dir="ltr" class="@(selected ? "" : "text-muted")">@p.Username</span>
+                                            @if (!p.IsActive) { <span class="badge bg-secondary ms-1">@T["Inactive account"]</span> }
+                                        </span>
+                                        <span class="badge rounded-pill @(selected ? "bg-light text-dark" : "bg-primary")" title="@T["Linked children"]">@p.LinkedStudents</span>
+                                    </a>
+                                }
+                            </div>
+                            @if (Model.Parents.Count >= 25)
+                            {
+                                <p class="small text-muted mt-2 mb-0">@T["Showing the first 25. Type more of the name to narrow the list."]</p>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-8">
+                @if (parent is null)
+                {
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body d-flex align-items-center">
+                            <p class="text-muted mb-0">@T["Choose a parent from the list to see their children and link more."]</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <h2 class="h5 mb-1">@T.Format("Children of {0}", parentName)</h2>
+                            <p class="small text-muted"><span dir="ltr">@parent.Username</span>@if (!string.IsNullOrEmpty(parent.Email)) { <span> · <span dir="ltr">@parent.Email</span></span> }@if (!string.IsNullOrEmpty(parent.PhoneNumber)) { <span> · <span dir="ltr">@parent.PhoneNumber</span></span> }</p>
+                            @if (!parent.IsActive)
+                            {
+                                <div class="alert alert-warning small py-2">@T["This account is inactive, so the parent cannot sign in until it is activated again."]</div>
+                            }
+                            @if (Model.Links.Count == 0)
+                            {
+                                <p class="small text-muted mb-0">@T["No children linked yet. Search for a student below."]</p>
+                            }
+                            else
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead>
+                                            <tr><th scope="col">@T["Student"]</th><th scope="col">@T["Relationship"]</th><th scope="col">@T["Status"]</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var link in Model.Links)
+                                            {
+                                                var formId = "rel-" + link.StudentProfileId.ToString("N");
+                                                <tr class="@(link.IsActive ? "" : "text-muted")">
+                                                    <td style="min-width: 11rem">
+                                                        <span class="fw-semibold d-block">@link.StudentName</span>
+                                                        <span dir="ltr" class="small d-block">@link.RegistrationNumber</span>
+                                                        <span class="small text-muted d-block">@T.Format("Class {0}", link.ClassNumber) · @link.DepartmentName</span>
+                                                    </td>
+                                                    <td style="min-width: 13rem">
+                                                        <form id="@formId" asp-action="UpdateParentLink" method="post" class="d-flex gap-1">
+                                                            @Html.AntiForgeryToken()
+                                                            <input type="hidden" name="parentId" value="@parent.UserId" />
+                                                            <input type="hidden" name="studentProfileId" value="@link.StudentProfileId" />
+                                                            <input type="hidden" name="active" value="@(link.IsActive ? "true" : "false")" />
+                                                            <input type="hidden" name="change" value="relationship" />
+                                                            <input type="hidden" name="parentSearch" value="@Model.ParentSearch" />
+                                                            <label class="visually-hidden" for="@(formId)-select">@T["Relationship"]</label>
+                                                            <select id="@(formId)-select" name="relationship" class="form-select form-select-sm">
+                                                                <option value="" selected="@(link.Relationship is null)">@T["Not specified"]</option>
+                                                                @foreach (var choice in ParentLinkRelationships.ChoicesFor(link.Relationship))
+                                                                {
+                                                                    <option value="@choice" selected="@ParentLinkRelationships.IsSelected(choice, link.Relationship)">@T.Text(choice)</option>
+                                                                }
+                                                            </select>
+                                                            <button class="btn btn-sm btn-outline-primary">@T["Save"]</button>
+                                                        </form>
+                                                    </td>
+                                                    <td style="min-width: 12rem">
+                                                        <span class="badge @(link.IsActive ? "bg-success" : "bg-secondary")">@(link.IsActive ? T.Text("Active") : T.Text("Paused"))</span>
+                                                        <div class="d-flex flex-wrap gap-1 mt-1">
+                                                            <form asp-action="UpdateParentLink" method="post">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="parentId" value="@parent.UserId" />
+                                                                <input type="hidden" name="studentProfileId" value="@link.StudentProfileId" />
+                                                                <input type="hidden" name="relationship" value="@link.Relationship" />
+                                                                <input type="hidden" name="active" value="@(link.IsActive ? "false" : "true")" />
+                                                                <input type="hidden" name="change" value="@(link.IsActive ? "pause" : "resume")" />
+                                                                <input type="hidden" name="parentSearch" value="@Model.ParentSearch" />
+                                                                <button class="btn btn-sm btn-outline-secondary">@(link.IsActive ? T.Text("Pause") : T.Text("Resume"))</button>
+                                                            </form>
+                                                            <form asp-action="RemoveParentLink" method="post" onsubmit="return confirm('@T.Js("Remove this link? The parent stops seeing this child at once.")')">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="parentId" value="@parent.UserId" />
+                                                                <input type="hidden" name="studentProfileId" value="@link.StudentProfileId" />
+                                                                <input type="hidden" name="parentSearch" value="@Model.ParentSearch" />
+                                                                <button class="btn btn-sm btn-outline-danger">@T["Remove"]</button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p class="small text-muted mt-2 mb-0">@T["Pause hides the child from the parent until you resume the link. Remove deletes the link."]</p>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h2 class="h5">@T["2. Link a student"]</h2>
+                            <form asp-action="ParentLinks" method="get" class="d-flex gap-2 mb-3" role="search">
+                                <input type="hidden" name="parentId" value="@parent.UserId" />
+                                <input type="hidden" name="parentSearch" value="@Model.ParentSearch" />
+                                <label class="visually-hidden" for="student-search">@T["Search students"]</label>
+                                <input id="student-search" name="studentSearch" value="@Model.StudentSearch" class="form-control form-control-sm" required placeholder="@T["Registration number or student name"]" />
+                                <button class="btn btn-sm btn-primary">@T["Search"]</button>
+                            </form>
+                            @if (Model.StudentSearchRan && Model.Students.Count == 0)
+                            {
+                                <p class="small text-muted mb-0">@T["No School student matches this search. Only students of School departments you manage are listed."]</p>
+                            }
+                            else if (Model.Students.Count > 0)
+                            {
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead>
+                                            <tr><th scope="col">@T["Student"]</th><th scope="col">@T["Linked parents"]</th><th scope="col">@T["Relationship"]</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var s in Model.Students)
+                                            {
+                                                var selectId = "link-" + s.StudentProfileId.ToString("N");
+                                                <tr>
+                                                    <td style="min-width: 11rem">
+                                                        <span class="fw-semibold d-block">@s.Name</span>
+                                                        <span dir="ltr" class="small">@s.RegistrationNumber</span>
+                                                        @if (!string.Equals(s.Status, "Active", StringComparison.OrdinalIgnoreCase)) { <span class="badge bg-secondary ms-1">@T.Text(s.Status)</span> }
+                                                        <span class="small text-muted d-block">@T.Format("Class {0}", s.ClassNumber) · @s.DepartmentName</span>
+                                                    </td>
+                                                    <td>@s.LinkedParents</td>
+                                                    <td style="min-width: 13rem">
+                                                        @if (Model.IsLinked(s.StudentProfileId))
+                                                        {
+                                                            <span class="small text-muted">@T["Already linked to this parent"]</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <form asp-action="LinkParentStudent" method="post" class="d-flex gap-1">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="parentId" value="@parent.UserId" />
+                                                                <input type="hidden" name="studentProfileId" value="@s.StudentProfileId" />
+                                                                <input type="hidden" name="parentSearch" value="@Model.ParentSearch" />
+                                                                <label class="visually-hidden" for="@selectId">@T["Relationship"]</label>
+                                                                <select id="@selectId" name="relationship" class="form-select form-select-sm" required>
+                                                                    <option value="">@T["Choose…"]</option>
+                                                                    @foreach (var choice in ParentLinkRelationships.Standard)
+                                                                    {
+                                                                        <option value="@choice">@T.Text(choice)</option>
+                                                                    }
+                                                                </select>
+                                                                <button class="btn btn-sm btn-success text-nowrap">@T["Link"]</button>
+                                                            </form>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="small text-muted mb-0">@T["Search by registration number or name. Only School students can be linked to parents."]</p>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>

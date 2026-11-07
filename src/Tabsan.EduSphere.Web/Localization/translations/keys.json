@@ -182,6 +182,12 @@
  "1. Courses in {0}": [
   "Views/Portal/Enrollments.cshtml"
  ],
+ "1. Find the parent": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
+ "2. Link a student": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "2. Students": [
   "Views/Portal/Enrollments.cshtml"
  ],
@@ -208,6 +214,9 @@
  ],
  "A new signing key is active. The previous key stays published for a while so tools that cached it keep working.": [
   "Controllers"
+ ],
+ "A parent linked to a School student follows that child's results, attendance, fees and announcements in the EduSphere mobile app. One parent can have several children, and a child can have several parents.": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "A preview is not available for this file. Use Download to open it.": [
   "wwwroot/js/submission-page.js"
@@ -444,6 +453,7 @@
   "Views/Portal/GradingConfig.cshtml",
   "Views/Portal/ModuleComposition.cshtml",
   "Views/Portal/ModuleSettings.cshtml",
+  "Views/Portal/ParentLinks.cshtml",
   "Views/Portal/PortalCapabilityMatrix.cshtml",
   "Views/Portal/ReportSettings.cshtml",
   "Views/Portal/ResultCalculation.cshtml",
@@ -924,6 +934,9 @@
  ],
  "Already in": [
   "Views/Portal/Enrollments.cshtml"
+ ],
+ "Already linked to this parent": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Also configured:": [
   "Views/Portal/SsoSettings.cshtml"
@@ -1696,6 +1709,9 @@
  "Checks handed-in assignment work for copied text. Turn it on per assignment in the assignment's options.": [
   "Views/Portal/SimilaritySettings.cshtml"
  ],
+ "Children of {0}": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Choose a bank to see and edit its questions.": [
   "Views/Portal/QuestionBanks.cshtml"
  ],
@@ -1713,6 +1729,9 @@
  ],
  "Choose a level first.": [
   "wwwroot/js/grading-workspace.js"
+ ],
+ "Choose a parent from the list to see their children and link more.": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Choose a part from the contents to begin.": [
   "Views/ScormPlay/Ended.cshtml",
@@ -1759,6 +1778,7 @@
  "Choose…": [
   "Views/Portal/AssignmentOptions.cshtml",
   "Views/Portal/CourseLms.cshtml",
+  "Views/Portal/ParentLinks.cshtml",
   "Views/Portal/QuizBuilder.cshtml",
   "Views/Portal/TakeQuizAttempt.cshtml"
  ],
@@ -1773,6 +1793,9 @@
  ],
  "Class list": [
   "Views (inline expressions)"
+ ],
+ "Class {0}": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Class-based progression with simplified aggregation semantics": [
   "Views/Portal/Dashboard.cshtml"
@@ -2009,6 +2032,9 @@
  ],
  "Connect to the API before importing attendance CSV.": [
   "Controllers"
+ ],
+ "Connect to the API to manage parent links.": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Connected user": [
   "Views (inline expressions)"
@@ -3467,6 +3493,10 @@
  "Failed to load courses.": [
   "Controllers"
  ],
+ "Father": [
+  "Models/Portal/ParentLinkPageModels.cs",
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Father Name": [
   "Views/Portal/UserSettings.cshtml"
  ],
@@ -3874,6 +3904,10 @@
  "Graduation section is available only for university. Use Promote for school/college students.": [
   "Controllers"
  ],
+ "Grandparent": [
+  "Models/Portal/ParentLinkPageModels.cs",
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Group name": [
   "Views/Portal/AssignmentPolicies.cshtml"
  ],
@@ -3903,6 +3937,10 @@
  ],
  "Groups:": [
   "Views/Portal/AssignmentPolicies.cshtml"
+ ],
+ "Guardian": [
+  "Models/Portal/ParentLinkPageModels.cs",
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Guest": [
   "Views (inline expressions)"
@@ -4052,6 +4090,9 @@
   "Views/Portal/Assignments.cshtml",
   "Views/Portal/ModuleSettings.cshtml",
   "Views/Portal/ReportSettings.cshtml"
+ ],
+ "Inactive account": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Inbox": [
   "Views/Portal/Notifications.cshtml",
@@ -4420,7 +4461,17 @@
   "Views/Shared/_Layout.cshtml"
  ],
  "Link": [
-  "Views/Portal/CourseMaterial.cshtml"
+  "Views/Portal/CourseMaterial.cshtml",
+  "Views/Portal/ParentLinks.cshtml"
+ ],
+ "Link paused. The parent no longer sees this child until the link is resumed.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
+ "Link removed.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
+ "Link resumed.": [
+  "Controllers/PortalController.ParentLinks.cs"
  ],
  "Link to the account with the same institution ID on first sign-in": [
   "Views/Portal/SsoSettings.cshtml"
@@ -4430,6 +4481,12 @@
  ],
  "Link/File": [
   "Views/Portal/CourseMaterial.cshtml"
+ ],
+ "Linked children": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
+ "Linked parents": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Linked sign-in accounts": [
   "Views/Portal/TwoFactorSettings.cshtml"
@@ -4911,6 +4968,10 @@
  "Months": [
   "Views/Portal/Courses.cshtml"
  ],
+ "Mother": [
+  "Models/Portal/ParentLinkPageModels.cs",
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Move down": [
   "Views/Portal/TakeQuizAttempt.cshtml"
  ],
@@ -5074,6 +5135,9 @@
  "No SCORM packages in this course yet.": [
   "Views/Shared/Components/ScormPackages/Default.cshtml"
  ],
+ "No School student matches this search. Only students of School departments you manage are listed.": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "No accounts are linked. If your institution offers single sign-on, sign out and use its button on the login page.": [
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
@@ -5127,6 +5191,9 @@
  ],
  "No campuses found for current filter.": [
   "Views/Portal/CampusManagement.cshtml"
+ ],
+ "No children linked yet. Search for a student below.": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "No comments yet.": [
   "Views/Portal/AssignmentSubmission.cshtml",
@@ -5269,6 +5336,12 @@
  ],
  "No outcomes yet. Add one below or import them from Excel.": [
   "Views/Portal/Outcomes.cshtml"
+ ],
+ "No parent account matches this search.": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
+ "No parent accounts yet. Create them on User Import with the role Parent.": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "No passing results found.": [
   "Views/Portal/DegreeAudit.cshtml"
@@ -5560,6 +5633,9 @@
  "Not met": [
   "Views/Portal/OutcomeAttainment.cshtml"
  ],
+ "Not specified": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Not started": [
   "Views (inline expressions)",
   "wwwroot/js/scorm-page.js"
@@ -5813,6 +5889,9 @@
  "Open Timetable Admin": [
   "Views/Portal/Dashboard.cshtml"
  ],
+ "Open User Import": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Open grading workspace": [
   "Views/Portal/Assignments.cshtml"
  ],
@@ -5921,6 +6000,10 @@
  "Organiser / host user": [
   "Views/Portal/LiveClassSettings.cshtml"
  ],
+ "Other": [
+  "Models/Portal/ParentLinkPageModels.cs",
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Outcome": [
   "Views/Portal/Enrollments.cshtml",
   "Views/Portal/Outcomes.cshtml"
@@ -5985,6 +6068,23 @@
  "Parent": [
   "Sidebar"
  ],
+ "Parent Links": [
+  "Sidebar",
+  "Views/Portal/ParentLinks.cshtml",
+  "Views/Shared/_Layout.cshtml"
+ ],
+ "Parent account not found.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
+ "Parent accounts are created on User Import with the role Parent.": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
+ "Parent accounts could not be loaded.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
+ "Parent links are managed by Admins and Super Admins.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
  "Part of (optional)": [
   "Views/Portal/Outcomes.cshtml"
  ],
@@ -6034,6 +6134,15 @@
  ],
  "Paste the secret": [
   "Views (inline expressions)"
+ ],
+ "Pause": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
+ "Pause hides the child from the parent until you resume the link. Remove deletes the link.": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
+ "Paused": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Payment Analytics": [
   "Views (inline expressions)"
@@ -6766,6 +6875,9 @@
  "Registration URL": [
   "Views/Portal/LtiTools.cshtml"
  ],
+ "Registration number or student name": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Registration:": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
  ],
@@ -6800,6 +6912,15 @@
  "Rejection Reason (optional)": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
  ],
+ "Relationship": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
+ "Relationship must be {0} characters or fewer.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
+ "Relationship saved.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
  "Release and completion": [
   "Views/Portal/_ModuleItemsEditor.cshtml"
  ],
@@ -6820,6 +6941,7 @@
   "Views/Portal/AssignmentOptions.cshtml",
   "Views/Portal/AssignmentPolicies.cshtml",
   "Views/Portal/LmsManage.cshtml",
+  "Views/Portal/ParentLinks.cshtml",
   "Views/Portal/Prerequisites.cshtml",
   "Views/Portal/QuestionBanks.cshtml",
   "Views/Portal/QuizBuilder.cshtml",
@@ -6841,6 +6963,9 @@
  ],
  "Remove this item from the module? The assignment, quiz or file itself is kept.": [
   "Views/Portal/_ModuleItemsEditor.cshtml"
+ ],
+ "Remove this link? The parent stops seeing this child at once.": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Remove this package? Students' attempts and grades are kept.": [
   "Views/Shared/Components/ScormPackages/Default.cshtml"
@@ -7059,6 +7184,7 @@
  ],
  "Resume": [
   "Views (inline expressions)",
+  "Views/Portal/ParentLinks.cshtml",
   "Views/Portal/TakeQuiz.cshtml"
  ],
  "Resume attempt": [
@@ -7318,6 +7444,7 @@
   "Views/Portal/CourseMaterial.cshtml",
   "Views/Portal/Departments.cshtml",
   "Views/Portal/LiveClassSettings.cshtml",
+  "Views/Portal/ParentLinks.cshtml",
   "Views/Portal/QuizReview.cshtml",
   "Views/Portal/ResultCalculation.cshtml",
   "Views/Portal/Results.cshtml",
@@ -7500,6 +7627,7 @@
  "Search": [
   "Views/Portal/AuditLogs.cshtml",
   "Views/Portal/Enrollments.cshtml",
+  "Views/Portal/ParentLinks.cshtml",
   "Views/Portal/Search.cshtml",
   "Views/Portal/UserSettings.cshtml",
   "Views/Shared/_Layout.cshtml"
@@ -7510,6 +7638,9 @@
  "Search Students": [
   "Views/Portal/GenerateCertificates.cshtml"
  ],
+ "Search by registration number or name. Only School students can be linked to parents.": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Search by username or email": [
   "Views/Portal/AdminUsers.cshtml"
  ],
@@ -7518,6 +7649,12 @@
  ],
  "Search failed: {0}": [
   "Views/Portal/Search.cshtml"
+ ],
+ "Search parents": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
+ "Search students": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Search…": [
   "Views/Shared/_Layout.cshtml"
@@ -7994,6 +8131,9 @@
  "Showing the 100 lowest-attendance rows of {0} total (sorted worst first).": [
   "Views/Portal/Analytics.cshtml"
  ],
+ "Showing the first 25. Type more of the name to narrow the list.": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Showing {0} plan(s)": [
   "Views/Portal/StudyPlan.cshtml"
  ],
@@ -8002,6 +8142,10 @@
  ],
  "Shown in the page footer. Tip: include the © symbol and year.": [
   "Views/Portal/DashboardSettings.cshtml"
+ ],
+ "Sibling": [
+  "Models/Portal/ParentLinkPageModels.cs",
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "Sidebar Settings": [
   "Sidebar",
@@ -8189,6 +8333,7 @@
   "Views/Portal/Helpdesk.cshtml",
   "Views/Portal/LicenseUpdate.cshtml",
   "Views/Portal/LtiTools.cshtml",
+  "Views/Portal/ParentLinks.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/Programs.cshtml",
   "Views/Portal/QuizGrading.cshtml",
@@ -8231,6 +8376,7 @@
   "Views/Portal/LiveSessionAttendance.cshtml",
   "Views/Portal/ModuleProgress.cshtml",
   "Views/Portal/OutcomeMastery.cshtml",
+  "Views/Portal/ParentLinks.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/PortalCapabilityMatrix.cshtml",
   "Views/Portal/QuizBuilder.cshtml",
@@ -8314,6 +8460,9 @@
  "Student graduated.": [
   "Controllers"
  ],
+ "Student linked. The parent sees this child in the app the next time it refreshes.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
  "Student name, degree title, CGPA, duration, FYP title, certificate number": [
   "Views/Portal/ReportDegreeCertificate.cshtml"
  ],
@@ -8371,6 +8520,9 @@
  ],
  "Students can see this tool again.": [
   "Controllers"
+ ],
+ "Students could not be searched.": [
+  "Controllers/PortalController.ParentLinks.cs"
  ],
  "Students must work through items in order": [
   "Views/Portal/_ModuleItemsEditor.cshtml"
@@ -8861,6 +9013,12 @@
  "The key could not be rotated.": [
   "Controllers"
  ],
+ "The link could not be changed.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
+ "The link could not be removed.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
  "The live classes could not be loaded.": [
   "Controllers"
  ],
@@ -8890,6 +9048,12 @@
  ],
  "The package has {0} SCOs; students start with the first one.": [
   "Views/Shared/Components/ScormPackages/Default.cshtml"
+ ],
+ "The parent account could not be found.": [
+  "Controllers/PortalController.ParentLinks.cs"
+ ],
+ "The parent's links could not be loaded.": [
+  "Controllers/PortalController.ParentLinks.cs"
  ],
  "The platform address is not set. Put the portal's public address in": [
   "Views/Portal/LtiTools.cshtml"
@@ -8939,6 +9103,9 @@
  ],
  "The setup flow stays additive, and the legacy login screen continues to work as before.": [
   "Views/Portal/TwoFactorSettings.cshtml"
+ ],
+ "The student could not be linked.": [
+  "Controllers/PortalController.ParentLinks.cs"
  ],
  "The submission was not accepted.": [
   "Controllers"
@@ -9007,6 +9174,9 @@
  ],
  "These controls affect": [
   "Views/Portal/SidebarSettings.cshtml"
+ ],
+ "This account is inactive, so the parent cannot sign in until it is activated again.": [
+  "Views/Portal/ParentLinks.cshtml"
  ],
  "This account is not linked to an EduSphere user. Sign in with your username and password, or ask your administrator to link it.": [
   "Controllers"
@@ -9745,6 +9915,9 @@
  "Username, Email, Role": [
   "Views/Portal/UserImport.cshtml"
  ],
+ "Username, name, email or phone": [
+  "Views/Portal/ParentLinks.cshtml"
+ ],
  "Users": [
   "Views/Portal/UserSettings.cshtml"
  ],
@@ -9967,6 +10140,9 @@
  ],
  "You can apply only if you are an active university student in your final semester and your FYP is completed.": [
   "Views/Portal/GraduationApply.cshtml"
+ ],
+ "You can only manage links of students in your assigned departments.": [
+  "Controllers/PortalController.ParentLinks.cs"
  ],
  "You can view enrollments but not change them.": [
   "Views (inline expressions)"

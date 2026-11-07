@@ -7,11 +7,17 @@ namespace Tabsan.EduSphere.Infrastructure.Persistence.Migrations
     /// <inheritdoc />
     public partial class Phase10SqlViews : Migration
     {
+        /// <summary>
+        /// Runs the statement through EXEC: CREATE VIEW must start its batch, and the idempotent migration script
+        /// (dotnet ef migrations script --idempotent → Scripts/01-Schema-Current.sql) wraps every statement in IF … BEGIN … END.
+        /// </summary>
+        private static string Exec(string sql) => "EXEC(N'" + sql.Replace("'", "''") + "');";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // View: student attendance summary per offering
-            migrationBuilder.Sql(@"
+            migrationBuilder.Sql(Exec(@"
 CREATE VIEW vw_student_attendance_summary AS
 SELECT
     ar.StudentProfileId,
@@ -25,10 +31,10 @@ SELECT
     ) AS AttendancePercentage
 FROM attendance_records ar
 GROUP BY ar.StudentProfileId, ar.CourseOfferingId;
-");
+"));
 
             // View: student results summary (published only)
-            migrationBuilder.Sql(@"
+            migrationBuilder.Sql(Exec(@"
 CREATE VIEW vw_student_results_summary AS
 SELECT
     r.StudentProfileId,
@@ -50,10 +56,10 @@ FROM results r
 INNER JOIN course_offerings co ON co.Id = r.CourseOfferingId
 INNER JOIN courses c ON c.Id = co.CourseId
 WHERE r.IsPublished = 1;
-");
+"));
 
             // View: course offering enrollment count and seat availability
-            migrationBuilder.Sql(@"
+            migrationBuilder.Sql(Exec(@"
 CREATE VIEW vw_course_enrollment_summary AS
 SELECT
     co.Id AS CourseOfferingId,
@@ -69,7 +75,7 @@ INNER JOIN courses c ON c.Id = co.CourseId
 LEFT JOIN enrollments e ON e.CourseOfferingId = co.Id AND e.Status = 'Active'
 WHERE co.IsOpen = 1
 GROUP BY co.Id, co.CourseId, c.Code, c.Title, co.SemesterId, co.MaxEnrollment;
-");
+"));
         }
 
         /// <inheritdoc />

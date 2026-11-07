@@ -80,7 +80,10 @@ public sealed record CorrectResultRequest(
     decimal NewMaxMarks,
     string? Reason = null);
 
-/// <summary>Read-model returned for a result entry.</summary>
+/// <summary>
+/// Read-model returned for a result entry. The display labels (course, period, student) are
+/// filled by the result query endpoints so a results table needs no extra lookups.
+/// </summary>
 public sealed record ResultResponse(
     Guid ResultId,
     Guid StudentProfileId,
@@ -91,7 +94,12 @@ public sealed record ResultResponse(
     decimal Percentage,
     decimal? GradePoint,
     bool IsPublished,
-    DateTime? PublishedAt);
+    DateTime? PublishedAt,
+    string? CourseCode = null,
+    string? CourseTitle = null,
+    string? SemesterName = null,
+    string? StudentName = null,
+    string? RegistrationNumber = null);
 
 // ── Transcript DTOs ───────────────────────────────────────────────────────────
 

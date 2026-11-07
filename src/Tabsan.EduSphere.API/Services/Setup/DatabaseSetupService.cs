@@ -52,7 +52,11 @@ public interface IDatabaseSetupService
     DatabaseSetupViewModel BuildViewModel(string? returnUrl = null);
     Task<SetupConnectionTestResult> TestConnectionAsync(DatabaseSetupViewModel input, CancellationToken ct);
     Task<SetupConnectionTestResult> SaveAsync(DatabaseSetupViewModel input, CancellationToken ct);
-    Task<SetupConnectionTestResult> ValidateCurrentConnectionAsync(bool force, CancellationToken ct);
+    /// <param name="allowMissingDatabase">
+    /// Start-up only: a reachable SQL Server whose database does not exist yet counts as healthy, because the
+    /// EF migrations that run next create it (a fresh install or a dropped test database).
+    /// </param>
+    Task<SetupConnectionTestResult> ValidateCurrentConnectionAsync(bool force, CancellationToken ct, bool allowMissingDatabase = false);
     string ExportProfileJson();
     Task<SetupConnectionTestResult> ImportProfileAsync(DatabaseSetupProfileModel profile, CancellationToken ct);
     string BuildDockerEnvTemplate();
@@ -139,7 +143,7 @@ public sealed class DatabaseSetupService : IDatabaseSetupService
         }
     }
 
-    public async Task<SetupConnectionTestResult> ValidateCurrentConnectionAsync(bool force, CancellationToken ct)
+    public async Task<SetupConnectionTestResult> ValidateCurrentConnectionAsync(bool force, CancellationToken ct, bool allowMissingDatabase = false)
     {
         var snapshot = _state.Snapshot();
         if (!force && DateTimeOffset.UtcNow - snapshot.LastValidationUtc < TimeSpan.FromSeconds(30))
@@ -161,7 +165,7 @@ public sealed class DatabaseSetupService : IDatabaseSetupService
             return new SetupConnectionTestResult(false, "Placeholder connection string detected.");
         }
 
-        var probe = await ProbeConnectionAsync(snapshot.ConnectionString, snapshot.Provider, ct);
+        var probe = await ProbeConnectionAsync(snapshot.ConnectionString, snapshot.Provider, ct, allowMissingDatabase);
         _state.Set(snapshot.Provider, snapshot.ConnectionString, requiresSetup: !probe.Success, lastError: probe.Success ? null : probe.Message);
         return probe;
     }
@@ -303,7 +307,7 @@ public sealed class DatabaseSetupService : IDatabaseSetupService
         return RuntimeDatabaseProvider.SqlServer;
     }
 
-    private async Task<SetupConnectionTestResult> ProbeConnectionAsync(string connectionString, RuntimeDatabaseProvider provider, CancellationToken ct)
+    private async Task<SetupConnectionTestResult> ProbeConnectionAsync(string connectionString, RuntimeDatabaseProvider provider, CancellationToken ct, bool allowMissingDatabase = false)
     {
         try
         {
@@ -317,10 +321,53 @@ public sealed class DatabaseSetupService : IDatabaseSetupService
             await connection.CloseAsync();
             return new SetupConnectionTestResult(true, "Connection test succeeded.");
         }
+        catch (SqlException ex) when (allowMissingDatabase && provider == RuntimeDatabaseProvider.SqlServer
+                                      && ex.Number == CannotOpenDatabaseError)
+        {
+            if (await DatabaseIsMissingAsync(connectionString, ct))
+            {
+                var name = new SqlConnectionStringBuilder(connectionString).InitialCatalog;
+                _logger.LogInformation("Database {Database} does not exist yet; the start-up migrations will create it.", name);
+                return new SetupConnectionTestResult(true, $"Server reachable; database '{name}' will be created by the migrations.");
+            }
+
+            _logger.LogWarning(ex, "Database connection test failed for provider {Provider}", provider);
+            return new SetupConnectionTestResult(false, $"Connection test failed: {ex.Message}");
+        }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Database connection test failed for provider {Provider}", provider);
             return new SetupConnectionTestResult(false, $"Connection test failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>SQL Server error 4060: "Cannot open database … requested by the login".</summary>
+    private const int CannotOpenDatabaseError = 4060;
+
+    /// <summary>
+    /// True when the server answers on <c>master</c> and the target database is not there. Any other cause of error 4060
+    /// (the database exists but the login may not open it) stays a failure.
+    /// </summary>
+    private async Task<bool> DatabaseIsMissingAsync(string connectionString, CancellationToken ct)
+    {
+        try
+        {
+            var builder = new SqlConnectionStringBuilder(connectionString);
+            var database = builder.InitialCatalog;
+            if (string.IsNullOrWhiteSpace(database))
+                return false;
+
+            builder.InitialCatalog = "master";
+            await using var master = new SqlConnection(builder.ConnectionString);
+            await master.OpenAsync(ct);
+            await using var command = new SqlCommand("SELECT DB_ID(@name)", master);
+            command.Parameters.AddWithValue("@name", database);
+            return await command.ExecuteScalarAsync(ct) is null or DBNull;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not check on master whether the configured database exists.");
+            return false;
         }
     }
 

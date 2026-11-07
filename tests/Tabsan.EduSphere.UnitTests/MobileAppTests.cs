@@ -156,6 +156,62 @@ public class MobileAppTests
         Assert.Empty(store2.Values);
     }
 
+    /// <summary>Signs in, then fails every other call the way Android's HTTP handler does.</summary>
+    private sealed class Broken(Exception failure) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+            => request.RequestUri!.AbsolutePath == "/api/v1/auth/login"
+                ? Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(Login(), Encoding.UTF8, "application/json") })
+                : throw failure;
+    }
+
+    private static Exception AndroidFailure(string kind) => kind switch
+    {
+        "canceled" => new WebException("Canceled", WebExceptionStatus.RequestCanceled),
+        "refused" => new WebException("Connection refused", WebExceptionStatus.ConnectFailure),
+        _ => new IOException("Connection reset by peer")
+    };
+
+    [Fact]
+    public async Task Results_NewestClassFirst_SoTheSameSubjectInEachYearCanBeToldApart()
+    {
+        var (client, api, _) = Client();
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login(role: "Parent"));
+        await client.SignInAsync("ann", "pw");
+        string Row(string code, string? semester, int marks) => JsonSerializer.Serialize(new
+        {
+            offeringId = Guid.NewGuid(), courseCode = code, courseTitle = "Subject", semesterName = semester, resultType = "Final",
+            marksObtained = marks, maxMarks = 100, percentage = marks
+        });
+        api.On("GET /api/v1/mobile/results", HttpStatusCode.OK,
+            $"[{Row("CS001", "Class 8", 91)},{Row("CS001", "Class 10", 63)},{Row("MA001", null, 70)},{Row("MA001", "Class 10", 80)},{Row("CS001", "Class 9", 76)}]");
+
+        var screen = new ResultsViewModel(client);
+        await screen.LoadAsync(Guid.NewGuid());
+
+        Assert.Null(screen.Error);
+        Assert.Equal(["Class 10/CS001", "Class 10/MA001", "Class 9/CS001", "Class 8/CS001", "/MA001"],
+            screen.Results.Select(r => $"{r.SemesterName}/{r.CourseCode}"));
+    }
+
+    [Theory]
+    [InlineData("canceled", typeof(TaskCanceledException))]
+    [InlineData("refused", typeof(HttpRequestException))]
+    [InlineData("reset", typeof(HttpRequestException))]
+    public async Task AndroidTransportErrors_BecomeTheUsualHttpErrors(string kind, Type expected)
+    {
+        // Seen on the emulator: leaving the Attendance tab while it loaded threw WebException("Canceled") and closed the app.
+        var client = new EduSphereClient(new HttpClient(new Broken(AndroidFailure(kind))) { BaseAddress = new Uri("https://api.test/") }, new Store(), Settings);
+        await client.SignInAsync("ann", "pw");
+        var thrown = await Record.ExceptionAsync(() => client.GetHomeAsync());
+        Assert.IsAssignableFrom(expected, thrown);
+
+        var screen = new HomeViewModel(client);
+        await screen.LoadAsync(); // must not throw
+        Assert.Equal(AppText.Get("NoConnection"), screen.Error);
+        Assert.False(screen.IsBusy);
+    }
+
     [Fact]
     public async Task ErrorAnswers_BecomeMessages_AndUploadsAreMultipart()
     {
@@ -479,6 +535,135 @@ public class MobileAppTests
         Assert.Equal($"?studentProfileId={child}", api.Calls.Last().Request.RequestUri!.Query);
     }
 
+    private static string Course(Guid offering, string className, Guid? campus = null)
+        => JsonSerializer.Serialize(new { offeringId = offering, courseCode = "C" + className[^1], courseTitle = "Maths " + className, semesterName = className, campusId = campus });
+
+    [Fact]
+    public async Task ParentsPickAChild_AndEveryTabFollowsTheChosenClass()
+    {
+        var (client, api, _) = Client();
+        Guid sara = Guid.NewGuid(), ali = Guid.NewGuid(), class9 = Guid.NewGuid(), class10 = Guid.NewGuid(), class2 = Guid.NewGuid();
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login(role: "Parent"))
+           .On("GET /api/v1/mobile/children", HttpStatusCode.OK, $$"""[{"studentProfileId":"{{sara}}","name":"Sara"},{"studentProfileId":"{{ali}}","name":"Ali"}]""")
+           .On("GET /api/v1/mobile/courses", HttpStatusCode.OK, $"[{Course(class10, "Class 10")},{Course(class9, "Class 9")}]")
+           .On("GET /api/v1/mobile/courses", HttpStatusCode.OK, $"[{Course(class2, "Class 2")}]");
+        await client.SignInAsync("sadia", "pw");
+        var selection = new Selection(client);
+        await selection.LoadAsync();
+
+        // The first child is in view; classes in class order ("Class 9" before "Class 10"), all classes until one is chosen.
+        Assert.Equal(sara, selection.ChildId);
+        Assert.Equal($"?studentProfileId={sara}", api.Calls.Last().Request.RequestUri!.Query);
+        Assert.Equal(["Class 9", "Class 10"], selection.Classes);
+        Assert.True(selection.Includes(class9) && selection.Includes(class10));
+
+        selection.SetClass("Class 9");
+        Assert.True(selection.Includes(class9));
+        Assert.False(selection.Includes(class10));
+        Assert.True(selection.Includes(null, "Class 9")); // results and attendance of a course no longer taken name their class
+        // Results of an earlier class add it to the list.
+        selection.AddClasses(["Class 8", null, "Class 9"]);
+        Assert.Equal(["Class 8", "Class 9", "Class 10"], selection.Classes);
+
+        // Another child: their own courses and classes, back to all classes.
+        var changed = 0;
+        selection.Changed += (_, _) => changed++;
+        await selection.SetChildAsync(selection.Children.Single(c => c.Name == "Ali"));
+        Assert.Equal((ali, (string?)null, 1), (selection.ChildId, selection.ClassName, changed));
+        Assert.Equal(["Class 2"], selection.Classes);
+        Assert.Equal($"?studentProfileId={ali}", api.Calls.Last().Request.RequestUri!.Query);
+    }
+
+    [Fact]
+    public async Task TeachersWithSeveralCampuses_PickOne_AndSeeItsClassesOnly()
+    {
+        var (client, api, _) = Client();
+        Guid north = Guid.NewGuid(), south = Guid.NewGuid(), a = Guid.NewGuid(), b = Guid.NewGuid();
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login(role: "Faculty"))
+           .On("GET /api/v1/mobile/scopes", HttpStatusCode.OK,
+               $$"""[{"tenantName":"Tabsan Model School","campusId":"{{north}}","campusName":"North"},{"tenantName":"Tabsan Model School","campusId":"{{south}}","campusName":"South"}]""")
+           .On("GET /api/v1/mobile/courses", HttpStatusCode.OK, $"[{Course(a, "Class 9", north)},{Course(b, "Class 8", south)}]");
+        await client.SignInAsync("ms.noor", "pw");
+        var selection = new Selection(client);
+        await selection.LoadAsync();
+        Assert.Equal("Tabsan Model School — North", selection.Scopes[0].Label);
+        Assert.Equal(["Class 8", "Class 9"], selection.Classes);
+
+        selection.SetScope(selection.Scopes.Single(s => s.CampusName == "South"));
+        Assert.Equal(["Class 8"], selection.Classes);
+        Assert.False(selection.Includes(a));
+        Assert.True(selection.Includes(b));
+        selection.SetScope(null);
+        Assert.True(selection.Includes(a) && selection.Includes(b));
+    }
+
+    [Fact]
+    public async Task HomeworkAndAttendance_ComeForTheChildInView()
+    {
+        var (client, api, _) = Client();
+        var child = Guid.NewGuid();
+        var offering = Guid.NewGuid();
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login(role: "Parent"))
+           .On("GET /api/v1/mobile/homework", HttpStatusCode.OK, $$"""[{"assignmentId":"{{Guid.NewGuid()}}","offeringId":"{{offering}}","title":"Exercise 3.2","dueDate":"2026-11-07T23:00:00Z","maxMarks":20,"submitted":true,"marks":18}]""")
+           .On("GET /api/v1/mobile/attendance/records", HttpStatusCode.OK, $$"""[{"date":"2026-10-30","offeringId":"{{offering}}","courseCode":"MTH09","status":"Absent"}]""")
+           .On("GET /api/v1/mobile/campus-summary", HttpStatusCode.OK, """{"students":120,"attendanceTodayMarked":80,"attendanceTodayPercent":93.8}""");
+        await client.SignInAsync("sadia", "pw");
+
+        var homework = (await client.GetHomeworkAsync(child)).Single();
+        Assert.Equal($"?studentProfileId={child}", api.Calls.Last().Request.RequestUri!.Query);
+        Assert.Equal(("Exercise 3.2", 18m), (homework.ToAssignment().Title, homework.ToAssignment().Marks!.Value));
+        Assert.Equal("Absent", (await client.GetAttendanceDaysAsync(child, offering)).Single().Status);
+        Assert.Equal($"?studentProfileId={child}&offeringId={offering}", api.Calls.Last().Request.RequestUri!.Query);
+        Assert.Equal(93.8m, (await client.GetCampusSummaryAsync(offering, new DateTime(2026, 10, 31)))!.AttendanceTodayPercent);
+        Assert.Equal($"?date=2026-10-31&campusId={offering}", api.Calls.Last().Request.RequestUri!.Query);
+    }
+
+    [Fact]
+    public void Homework_StillToDoComesFirst_AndEachRoleReadsItsState()
+    {
+        var now = new DateTime(2026, 10, 31, 12, 0, 0, DateTimeKind.Utc);
+        HomeworkItem Item(string title, int dueInDays, bool submitted = false, decimal? marks = null, int toGrade = 0)
+            => new() { Title = title, DueDate = now.AddDays(dueInDays), MaxMarks = 20, Submitted = submitted, Marks = marks, ToGrade = toGrade };
+        var items = new[] { Item("graded", -10, true, 18), Item("next week", 7), Item("tomorrow", 1), Item("late", -2) };
+        Assert.Equal(["tomorrow", "next week", "late", "graded"], HomeworkViewModel.Order(items, now).Select(h => h.Title));
+
+        Assert.Equal("Marks: 18/20", HomeworkViewModel.State(items[0], isTeacher: false, now));
+        Assert.Equal(AppText.Get("Overdue"), HomeworkViewModel.State(items[3], isTeacher: false, now));
+        Assert.Equal(AppText.Get("HandIn"), HomeworkViewModel.State(items[2], isTeacher: false, now));
+        Assert.Equal(AppText.Get("NotGradedYet"), HomeworkViewModel.State(Item("in", 3, submitted: true), isTeacher: false, now));
+        Assert.Equal(string.Format(AppText.Get("ToGradeCount"), 2), HomeworkViewModel.State(Item("t", 3, toGrade: 2), isTeacher: true, now));
+
+        Assert.Equal(90m, AttendanceScreenViewModel.OverallPercent([new AttendanceCourse { Total = 10, Attended = 9 }, new AttendanceCourse { Total = 10, Attended = 9 }]));
+        Assert.Null(AttendanceScreenViewModel.OverallPercent([]));
+    }
+
+    [Fact]
+    public async Task ChangingThePassword_NeedsTheCurrentOne_AndTheNewOneTwice()
+    {
+        var (client, api, _) = Client();
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login())
+           .On("PUT /api/v1/auth/change-password", HttpStatusCode.BadRequest, """{"errors":{"NewPassword":["Password must be 12-16 characters."]}}""")
+           .On("PUT /api/v1/auth/change-password", HttpStatusCode.NoContent, "");
+        await client.SignInAsync("ann", "pw");
+        AppText.Language = "en";
+        var vm = new ChangePasswordViewModel(client) { CurrentPassword = "Old-Pass-123!", NewPassword = "New-Pass-456!", ConfirmPassword = "New-Pass-457!" };
+        await vm.SaveAsync();
+        Assert.Equal(AppText.Get("PasswordsDiffer"), vm.Error);
+        vm.ConfirmPassword = "New-Pass-456!";
+        vm.CurrentPassword = "";
+        await vm.SaveAsync();
+        Assert.Equal(AppText.Get("FillAllPasswords"), vm.Error);
+        Assert.DoesNotContain(api.Calls, c => c.Key.Contains("change-password"));
+
+        vm.CurrentPassword = "Old-Pass-123!";
+        await vm.SaveAsync(); // the API's password rules come back as the message
+        Assert.Equal("Password must be 12-16 characters.", vm.Error);
+        await vm.SaveAsync();
+        Assert.Equal((null, AppText.Get("PasswordChanged"), ""), (vm.Error, vm.Notice, vm.NewPassword));
+        using var sent = JsonDocument.Parse(api.Calls.Last().Body!);
+        Assert.Equal(("Old-Pass-123!", "New-Pass-456!"), (sent.RootElement.GetProperty("currentPassword").GetString(), sent.RootElement.GetProperty("newPassword").GetString()));
+    }
+
     [Fact]
     public async Task Notifications_ShowWhenTheyWereSent()
     {
@@ -757,5 +942,203 @@ public class MobileAppTests
         Assert.Equal(NativePushResult.Failed, await sender.SendAsync("device-token", message));
 
         Assert.False(new FcmPushSender(new Factory(google), Options.Create(new MobileOptions())).IsConfigured);
+    }
+
+    // ── the institute's server (one app for every institute) ───────────────────────────────────
+
+    /// <summary>Answers by scheme and host ("https://edu.test"): a body, or a failure (unreachable, untrusted certificate).</summary>
+    private sealed class Servers : HttpMessageHandler
+    {
+        public readonly Dictionary<string, Func<HttpRequestMessage, HttpResponseMessage>> Hosts = new();
+        public readonly List<string> Urls = new();
+
+        public Servers Answer(string origin, HttpStatusCode status, string body, string type = "application/json")
+        {
+            Hosts[origin] = _ => new HttpResponseMessage(status) { Content = new StringContent(body, Encoding.UTF8, type) };
+            return this;
+        }
+
+        public Servers Fail(string origin, Exception failure)
+        {
+            Hosts[origin] = _ => throw failure;
+            return this;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
+        {
+            Urls.Add(request.RequestUri!.ToString());
+            if (Hosts.TryGetValue(request.RequestUri.GetLeftPart(UriPartial.Authority), out var answer)) return answer(request);
+            await Task.Delay(Timeout.Infinite, ct); // no such host: waits like an address nobody answers
+            throw new InvalidOperationException();
+        }
+    }
+
+    private const string EduSphereConfig = """{"institutionName":"Crescent Public School","minimumVersion":"1.0.0","latestVersion":"1.2.0"}""";
+
+    /// <summary>The standard build: no server until one is entered.</summary>
+    private static readonly AppSettings Standard = new("", "1.2.0", "android");
+
+    [Theory]
+    [InlineData("edu.myschool.com", "https://edu.myschool.com")]
+    [InlineData("  EDU.MySchool.com/  ", "https://edu.myschool.com")]
+    [InlineData("https://api.myschool.edu/api/v1/mobile/config", "https://api.myschool.edu")]
+    [InlineData("https://school.edu/edusphere/swagger/index.html", "https://school.edu/edusphere")]
+    [InlineData("https://school.edu:8443/api", "https://school.edu:8443")]
+    [InlineData("http://10.0.2.2:5181/", "http://10.0.2.2:5181")]
+    [InlineData("http://[fd00::5]:5181", "http://[fd00::5]:5181")]
+    [InlineData("192.168.1.10:5181", "https://192.168.1.10:5181", "http://192.168.1.10:5181")]
+    [InlineData("schoolserver", "https://schoolserver", "http://schoolserver")]
+    [InlineData("server.school.local:5181", "https://server.school.local:5181", "http://server.school.local:5181")]
+    [InlineData("100.101.5.7:5181", "https://100.101.5.7:5181", "http://100.101.5.7:5181")]
+    public void ServerAddress_AcceptsWhatPeopleType_AndTriesHttpOnlyOnTheLocalNetwork(string typed, params string[] expected)
+    {
+        var (candidates, error) = ServerAddress.Parse(typed);
+        Assert.Null(error);
+        Assert.Equal(expected, candidates);
+    }
+
+    [Theory]
+    [InlineData("", "EnterServer")]
+    [InlineData("   ", "EnterServer")]
+    [InlineData("my school", "InvalidServer")]
+    [InlineData("ftp://files.myschool.com", "InvalidServer")]
+    [InlineData("https://user:pw@edu.myschool.com", "InvalidServer")]
+    [InlineData("http://edu.myschool.com", "HttpsRequired")]
+    [InlineData("http://8.8.8.8:5181", "HttpsRequired")]
+    [InlineData("http://172.32.0.1", "HttpsRequired")]
+    public void ServerAddress_RefusesNonsense_AndPlainHttpOverTheInternet(string typed, string error)
+    {
+        var (candidates, reason) = ServerAddress.Parse(typed);
+        Assert.Empty(candidates);
+        Assert.Equal(error, reason);
+        Assert.NotEqual(error, AppText.Get(error)); // a text the app shows
+    }
+
+    [Fact]
+    public async Task CheckServer_FindsALocalServerOverHttp_ThenTheAppUsesIt_AndRemembersIt()
+    {
+        AppText.Language = "en";
+        var servers = new Servers()
+            .Fail("https://192.168.1.10:5181", new HttpRequestException("The SSL connection could not be established."))
+            .Answer("http://192.168.1.10:5181", HttpStatusCode.OK, EduSphereConfig);
+        var store = new Store();
+        var client = new EduSphereClient(new HttpClient(servers), store, Standard);
+        Assert.False(client.HasServer);
+        Assert.False(await client.RestoreAsync());
+
+        var check = await client.CheckServerAsync("192.168.1.10:5181");
+        Assert.True(check.IsEduSphere);
+        Assert.Equal(("http://192.168.1.10:5181", "Crescent Public School"), (check.Server, check.Config!.InstitutionName));
+        Assert.Equal(["https://192.168.1.10:5181/api/v1/mobile/config", "http://192.168.1.10:5181/api/v1/mobile/config"], servers.Urls);
+        Assert.False(client.HasServer); // checking keeps nothing
+
+        await client.UseServerAsync(check.Server!);
+        servers.Answer("http://192.168.1.10:5181", HttpStatusCode.OK, Login());
+        Assert.Equal(SignInStatus.Success, (await client.SignInAsync("ann", "pw")).Status);
+        Assert.Equal("http://192.168.1.10:5181/api/v1/auth/login", servers.Urls.Last());
+
+        // Next start: the same server and session.
+        var restarted = new EduSphereClient(new HttpClient(servers), store, Standard);
+        Assert.True(await restarted.RestoreAsync());
+        Assert.Equal("http://192.168.1.10:5181", restarted.Server);
+        Assert.True(restarted.IsSignedIn);
+    }
+
+    [Fact]
+    public async Task CheckServer_SaysWhatIsWrong_NotAnEduSphereServer_Unreachable_OrAnUntrustedCertificate()
+    {
+        AppText.Language = "en";
+        var previous = EduSphereClient.ServerCheckTimeout;
+        EduSphereClient.ServerCheckTimeout = TimeSpan.FromMilliseconds(200);
+        try
+        {
+            var servers = new Servers()
+                .Answer("https://www.myschool.com", HttpStatusCode.OK, "<html>Welcome</html>", "text/html")
+                .Answer("https://portal.myschool.com", HttpStatusCode.NotFound, "")
+                .Answer("https://other.test", HttpStatusCode.OK, """{"status":"Healthy"}""")
+                .Fail("https://down.myschool.com", new HttpRequestException("Connection refused"))
+                .Fail("https://selfsigned.myschool.com", new HttpRequestException("The SSL connection could not be established.",
+                    new System.Security.Authentication.AuthenticationException("The remote certificate is invalid.")));
+            var client = new EduSphereClient(new HttpClient(servers), new Store(), Standard);
+
+            foreach (var site in new[] { "www.myschool.com", "portal.myschool.com", "other.test" })
+                Assert.Equal(AppText.Get("NotEduSphere"), (await client.CheckServerAsync(site)).Error);
+            Assert.Equal(string.Format(AppText.Get("ServerUnreachable"), "down.myschool.com"), (await client.CheckServerAsync("down.myschool.com")).Error);
+            Assert.Equal(string.Format(AppText.Get("ServerUnreachable"), "silent.myschool.com"), (await client.CheckServerAsync("silent.myschool.com")).Error);
+            Assert.Equal(string.Format(AppText.Get("ServerCertificate"), "selfsigned.myschool.com"), (await client.CheckServerAsync("https://selfsigned.myschool.com")).Error);
+            Assert.Equal(AppText.Get("HttpsRequired"), (await client.CheckServerAsync("http://edu.myschool.com")).Error);
+            Assert.False(client.HasServer);
+        }
+        finally { EduSphereClient.ServerCheckTimeout = previous; }
+    }
+
+    [Fact]
+    public async Task ChangingTheServer_ForgetsTheOtherServersSession_AndTheStandardBuildNeedsAServerFirst()
+    {
+        AppText.Language = "en";
+        var servers = new Servers().Answer("https://one.test", HttpStatusCode.OK, Login()).Answer("https://two.test", HttpStatusCode.OK, EduSphereConfig);
+        var store = new Store();
+        var client = new EduSphereClient(new HttpClient(servers), store, Standard);
+        var noServer = await Assert.ThrowsAsync<ApiException>(() => client.GetConfigAsync());
+        Assert.Equal(AppText.Get("EnterServer"), noServer.Message);
+
+        await client.UseServerAsync("https://one.test/");
+        Assert.Equal(SignInStatus.Success, (await client.SignInAsync("ann", "pw")).Status);
+        await client.UseServerAsync("https://one.test"); // the same server: still signed in
+        Assert.True(client.IsSignedIn);
+
+        await client.UseServerAsync("https://two.test");
+        Assert.False(client.IsSignedIn); // tokens of one.test mean nothing to two.test
+        Assert.False(store.Values.ContainsKey("edusphere.session"));
+        Assert.Equal("https://two.test", store.Values["edusphere.server"]);
+        Assert.Equal("Crescent Public School", (await client.GetConfigAsync())!.InstitutionName);
+        Assert.Equal("https://two.test/api/v1/mobile/config", servers.Urls.Last());
+    }
+
+    [Fact]
+    public async Task AnInstitutionsLockedBuild_KeepsItsServer_AndAPresetBuildCanStillChange()
+    {
+        var store = new Store();
+        await store.SetAsync("edusphere.server", "https://elsewhere.test");
+
+        var locked = new EduSphereClient(new HttpClient(new Servers()), store, new AppSettings("https://api.cityuni.edu/", "1.2.0", "android", "City University", ServerLocked: true));
+        await locked.RestoreAsync();
+        Assert.Equal(("https://api.cityuni.edu", false), (locked.Server, locked.CanChangeServer));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => locked.UseServerAsync("https://elsewhere.test"));
+
+        var preset = new EduSphereClient(new HttpClient(new Servers()), store, new AppSettings("http://10.0.2.2:5181", "1.2.0", "android"));
+        Assert.Equal("http://10.0.2.2:5181", preset.Server); // before anything is chosen on the device
+        await preset.RestoreAsync();
+        Assert.Equal(("https://elsewhere.test", true), (preset.Server, preset.CanChangeServer)); // the device's own choice wins
+
+        Assert.True(new AppSettings("", "1.2.0", "android", ServerLocked: true).CanChangeServer); // nothing to lock to
+    }
+
+    [Fact]
+    public async Task ServerViewModel_ChecksTheAddress_ThenKeepsIt()
+    {
+        AppText.Language = "en";
+        var servers = new Servers().Answer("https://edu.myschool.com", HttpStatusCode.OK, EduSphereConfig);
+        var client = new EduSphereClient(new HttpClient(servers), new Store(), Standard);
+        var vm = new ServerViewModel(client);
+        MobileConfig? connected = null;
+        vm.Connected += (_, config) => connected = config;
+
+        await vm.ConnectAsync();
+        Assert.Equal(AppText.Get("EnterServer"), vm.Error);
+        vm.Address = "http://edu.myschool.com";
+        await vm.ConnectAsync();
+        Assert.Equal(AppText.Get("HttpsRequired"), vm.Error);
+        Assert.Null(connected);
+
+        vm.Address = "edu.myschool.com/";
+        await vm.ConnectAsync();
+        Assert.Null(vm.Error);
+        Assert.False(vm.IsBusy);
+        Assert.Equal("Crescent Public School", connected!.InstitutionName);
+        Assert.Equal(("https://edu.myschool.com", "https://edu.myschool.com"), (client.Server, vm.Address));
+        Assert.Equal("edu.myschool.com", ServerAddress.Display(client.Server));
+        Assert.Equal("http://10.0.2.2:5181", ServerAddress.Display("http://10.0.2.2:5181")); // plain http stays visible
+        Assert.Equal("https://edu.myschool.com", new ServerViewModel(client).Address); // Change server starts from the current one
     }
 }

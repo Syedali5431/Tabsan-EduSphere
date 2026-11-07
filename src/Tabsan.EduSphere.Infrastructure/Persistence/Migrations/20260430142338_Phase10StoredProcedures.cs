@@ -7,11 +7,17 @@ namespace Tabsan.EduSphere.Infrastructure.Persistence.Migrations
     /// <inheritdoc />
     public partial class Phase10StoredProcedures : Migration
     {
+        /// <summary>
+        /// Runs the statement through EXEC: CREATE PROCEDURE must start its batch, and the idempotent migration script
+        /// (dotnet ef migrations script --idempotent → Scripts/01-Schema-Current.sql) wraps every statement in IF … BEGIN … END.
+        /// </summary>
+        private static string Exec(string sql) => "EXEC(N'" + sql.Replace("'", "''") + "');";
+
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             // Stored procedure: get students below attendance threshold for a given offering
-            migrationBuilder.Sql(@"
+            migrationBuilder.Sql(Exec(@"
 CREATE OR ALTER PROCEDURE sp_get_attendance_below_threshold
     @ThresholdPercent DECIMAL(5,2) = 75.0,
     @CourseOfferingId UNIQUEIDENTIFIER = NULL
@@ -37,10 +43,10 @@ BEGIN
              ELSE (SUM(CASE WHEN ar.Status = 'Present' THEN 1.0 ELSE 0.0 END) / COUNT(*)) * 100.0
         END < @ThresholdPercent;
 END;
-");
+"));
 
             // Stored procedure: recalculate and update CGPA for a student from published results
-            migrationBuilder.Sql(@"
+            migrationBuilder.Sql(Exec(@"
 CREATE OR ALTER PROCEDURE sp_recalculate_student_cgpa
     @StudentProfileId UNIQUEIDENTIFIER
 AS
@@ -72,7 +78,7 @@ BEGIN
 
     SELECT @NewCgpa AS NewCgpa;
 END;
-");
+"));
         }
 
         /// <inheritdoc />

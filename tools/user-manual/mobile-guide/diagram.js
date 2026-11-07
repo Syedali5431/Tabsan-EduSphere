@@ -17,12 +17,12 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="860" v
   <rect width="1600" height="860" fill="#FFFFFF"/>
   <rect x="20" y="20" width="1560" height="820" rx="24" fill="${SOFT}"/>
   <text x="800" y="76" text-anchor="middle" font-family="Segoe UI Semibold, Segoe UI" font-size="32" fill="${NAVY}">One EduSphere server — two ways in</text>
-  ${box(70, 150, 360, 210, 'Mobile app', ['Students · Teachers · Parents', 'Android and iOS', 'Tabsan EduSphere app'])}
+  ${box(70, 150, 360, 210, 'Mobile app', ['Students · Teachers · Parents', 'Android and iOS', 'server address entered once'])}
   ${box(70, 520, 360, 210, 'Web portal', ['Any browser', 'Admins and all users', 'https://portal.your-school'])}
-  ${box(620, 300, 380, 280, 'EduSphere API', ['https://api.your-school', 'accounts · sign-in', 'courses · results · attendance', 'announcements · notifications'], '#FFFFFF', TEAL)}
+  ${box(620, 300, 380, 280, 'EduSphere API', ['edu.your-school.com', 'or 192.168.1.10:5181', 'accounts · courses · results', 'attendance · notifications'], '#FFFFFF', TEAL)}
   ${box(1180, 340, 330, 200, 'Database', ['one copy of every record', '(SQL Server)'])}
   ${box(1180, 620, 330, 160, 'Firebase (optional)', ['push notifications', 'to phones'], '#FFFFFF', LINE)}
-  ${arrow(434, 300, 616, 380, '', TEAL)}${label(522, 252, ['HTTPS', '/api/v1/mobile/…'], TEAL)}
+  ${arrow(434, 300, 616, 380, '', TEAL)}${label(522, 222, ['HTTPS, or HTTP', 'on the institute’s', 'own network'], TEAL)}
   ${arrow(434, 600, 616, 520, '', TEAL)}${label(522, 604, ['portal pages', 'call the API'], TEAL)}
   ${arrow(1004, 440, 1176, 440, 'reads &amp; writes', SKY, -18)}
   ${arrow(1002, 560, 1176, 690, 'push', '#B97912', 36, false, -30)}

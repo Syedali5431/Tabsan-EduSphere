@@ -22,10 +22,26 @@ public partial class App : Application
 		_client = client;
 		_crashes = crashes;
 		AppText.Language = client.Language;
+		ApplyTheme();
 		AppDomain.CurrentDomain.UnhandledException += (_, e) => { if (e.ExceptionObject is Exception ex) _ = _crashes.RecordAsync(ex); };
 		TaskScheduler.UnobservedTaskException += (_, e) => { _ = _crashes.RecordAsync(e.Exception); e.SetObserved(); };
 		_client.SignedOut += (_, _) => MainThread.BeginInvokeOnMainThread(ShowSignIn);
 		PushTokenProvider.TokenChanged += (_, _) => { if (_client.IsSignedIn) _ = RegisterForPushAsync(); };
+	}
+
+	/// <summary>Settings › Theme: "system" follows the phone; "light" and "dark" fix it.</summary>
+	public const string ThemeKey = "theme";
+	public static readonly string[] Themes = ["system", "light", "dark"];
+
+	public static void ApplyTheme()
+	{
+		if (Current is null) return;
+		Current.UserAppTheme = Preferences.Default.Get(ThemeKey, Themes[0]) switch
+		{
+			"light" => AppTheme.Light,
+			"dark" => AppTheme.Dark,
+			_ => AppTheme.Unspecified
+		};
 	}
 
 	private static string? _pendingScreen;
@@ -46,8 +62,9 @@ public partial class App : Application
 		_pendingScreen = null;
 		var route = screen switch
 		{
-			"assignments" => "courses",
-			"results" or "attendance" => shell.HasRoute("results") ? "results" : "children",
+			"assignments" => shell.HasRoute("homework") ? "homework" : "courses",
+			"results" => shell.HasRoute("results") ? "results" : "home",
+			"attendance" => shell.HasRoute("attendance") ? "attendance" : "home",
 			"home" => "home",
 			_ => "notifications"
 		};
@@ -72,15 +89,45 @@ public partial class App : Application
 	private async Task StartAsync()
 	{
 		if (await _client.RestoreAsync()) ShowApp();
+		else if (!_client.HasServer) ShowServer(); // the standard build's first start: which institute?
 		else ShowSignIn();
+	}
+
+	/// <summary>The institute's server page as the first page (nothing to go back to).</summary>
+	public void ShowServer()
+	{
+		var page = NewServerPage(canGoBack: false);
+		SetRoot(new NavigationPage(page));
+	}
+
+	private ServerPage NewServerPage(bool canGoBack)
+	{
+		var page = new ServerPage(new ServerViewModel(_client), _services.GetRequiredService<MauiProgram.WhiteLabel>(), canGoBack);
+		page.Connected += (_, _) => MainThread.BeginInvokeOnMainThread(ShowSignIn);
+		return page;
+	}
+
+	private bool _serverNext;
+
+	/// <summary>Settings › Change server: signs out, then opens the server page over the sign-in page (Cancel goes back to it).</summary>
+	public async Task ChangeServerAsync(Func<Task> signOut)
+	{
+		_serverNext = true;
+		await signOut(); // raises SignedOut → ShowSignIn, which opens the server page while _serverNext is set
+		MainThread.BeginInvokeOnMainThread(() => { if (_serverNext) ShowSignIn(); });
 	}
 
 	public void ShowSignIn()
 	{
+		var openServer = _serverNext;
+		_serverNext = false;
 		var page = new SignInPage(new SignInViewModel(_client, _services.GetRequiredService<IBrowserAuthenticator>(), _services.GetRequiredService<AppSettings>()),
 			_services.GetRequiredService<ILauncherService>(), _services.GetRequiredService<MauiProgram.WhiteLabel>());
+		var navigation = new NavigationPage(page);
 		page.SignedIn += (_, _) => ShowApp();
-		SetRoot(new NavigationPage(page));
+		page.ChangeServer += async (_, _) => await navigation.PushAsync(NewServerPage(canGoBack: true));
+		SetRoot(navigation);
+		if (openServer) _ = navigation.PushAsync(NewServerPage(canGoBack: true), animated: false);
 	}
 
 	public void ShowApp()

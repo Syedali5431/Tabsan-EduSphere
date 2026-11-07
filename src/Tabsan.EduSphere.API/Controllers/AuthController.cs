@@ -132,7 +132,8 @@ public class AuthController : ControllerBase
         var success = await _auth.ChangePasswordAsync(userId, request, ct);
 
         if (!success)
-            return BadRequest(new { message = "Current password is incorrect." });
+            // The service also refuses one of the last five passwords, so say both (the portal and the app show this).
+            return BadRequest(new { message = "Current password is incorrect, or the new password is one of your last five passwords." });
 
         return NoContent();
     }

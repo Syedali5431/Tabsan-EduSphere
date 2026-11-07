@@ -2,7 +2,11 @@
 # Dot-source it:  . ./phone.ps1   then use Start-EduApp, Tap, Type-Text, Shot …
 # Screenshots go to shots/phone/<name>.png with the phone's status bar cut off (no other apps' notifications in the guide).
 $ErrorActionPreference = 'Stop'
-$script:Adb = 'E:\Android\Sdk\platform-tools\adb.exe'
+# adb: $env:ADB, else the Android SDK in ANDROID_HOME, else the usual install places.
+$script:Adb = @($env:ADB, "$env:ANDROID_HOME\platform-tools\adb.exe", 'F:\Android\Sdk\platform-tools\adb.exe', 'E:\Android\Sdk\platform-tools\adb.exe',
+	"$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe", 'C:\Program Files (x86)\Android\android-sdk\platform-tools\adb.exe') |
+	Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+if (-not $script:Adb) { throw 'adb not found: set $env:ADB to adb.exe of the Android SDK.' }
 $script:Package = 'com.tabsan.edusphere'
 $script:ShotDir = Join-Path $PSScriptRoot 'shots\phone'
 New-Item -ItemType Directory -Force $script:ShotDir | Out-Null
@@ -78,7 +82,13 @@ function Type-Into([string]$field, [string]$text) {
 	Type-Text $text
 }
 
-function Hide-Keyboard { Adb shell input keyevent 111 | Out-Null; Start-Sleep -Milliseconds 400 }   # KEYCODE_ESCAPE
+# Closes the on-screen keyboard (Back, only while it is shown: Escape does not close every keyboard, e.g. the emulator's Gboard,
+# and a tap meant for a button then types a letter instead).
+function Keyboard-Shown { (Adb shell dumpsys input_method | Out-String) -match 'mInputShown=true' }
+function Hide-Keyboard {
+	Start-Sleep -Milliseconds 300
+	if (Keyboard-Shown) { Adb shell input keyevent 4 | Out-Null; Start-Sleep -Milliseconds 700 }
+}
 function Back { Adb shell input keyevent 4 | Out-Null; Start-Sleep -Milliseconds 800 }
 
 function Scroll-Down([double]$fraction = 0.55) {

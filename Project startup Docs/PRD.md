@@ -1,5 +1,23 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-11-08 — PRD consolidation (School installations, Parent Links, one mobile app for every institute)
+- Added §27 with the requirements delivered after Plan M (26 October – 7 November 2026) and moved Approval to §28; updated the version header, §3 roles, §4 scope, §7 sign-in, §8 (Admin, new §8.7 Parent), §20, §21, §23, §25, §26.0, §26.14, §26.18 and §26.19 to match.
+
+### 2026-11-07 — Product Requirements Synchronization (mobile app for any institute's server, on-premises network, SQL Server Express, Connection Guide v1.1)
+- The standard mobile app has no server built in: people type their institute's server address once; the app checks that it is an EduSphere API, keeps it on the phone and can change it later. Internet servers must use HTTPS; plain HTTP is accepted only for the institute's own network. Branded builds can lock the server (§27.5). The API and portal can listen on the network so phones on the school Wi-Fi reach them (§27.6). Development uses SQL Server Express (`localhost\SQLEXPRESS`, Windows authentication); the API creates a missing database at start-up and the idempotent schema script runs on a new server (§27.7). Mobile App Connection Guide v1.1 (53 pages, every screenshot from the standard APK). Tests after a clean full build: unit 717/717, integration 387/388 (1 long-standing skip), web-integration 111/111, contract 1/1 (§27.8).
+
+### 2026-10-31 — Product Requirements Synchronization (mobile app redesign, Homework and Attendance tabs, admin campus view, Connection Guide v1.0)
+- The app has the Tabsan look (logo, navy/teal, light and dark), Homework and Attendance tabs for students, teachers and parents, one child/class/campus choice shared by every tab, a campus overview for Admins and SuperAdmins, and change-password in Settings. School students and parents see average marks, not CGPA. Fixes found on School data and a real Android phone (§27.4). Mobile App Connection Guide v1.0 (41 pages). The School demo texts are in English (§27.2).
+
+### 2026-10-30 — Product Requirements Synchronization (Parent Links screen, labelled results)
+- Administrators link Parent accounts to School students on a new **Parent Links** screen: find by name, link with a relationship, pause, remove, link again. Admins work only with students of their own departments (§27.3). The Results page shows course, class/semester and student, marks out of the real maximum, and the grade point for University results (§27.7).
+
+### 2026-10-27 — Product Requirements Synchronization (School demo data, Payments institute filter)
+- `Scripts/School-Demo-Data` fills the schools with a term of demo data for every page and role (§27.2). The Payments Institute filter uses the shared institution options, so School-only installations see School receipts (§27.1).
+
+### 2026-10-26 — Product Requirements Synchronization (School-only installations)
+- The portal shows only the institution types that are enabled and have departments, so a School-only installation shows no College or University options until their first department is added. This changes display only; validation, modules and data are unchanged (§27.1). `Scripts/Schools-And-Campuses` adds schools, campuses and Class 1–10 sections (§27.2).
+
 ### 2026-10-25 — Product Requirements Synchronization (SCORM parts, Course Content, real IdP check, user manual v1.5)
 - SCORM packages with several parts show a contents list with each part's status and Previous/Next; each part keeps its own progress and the package rolls up from its parts (§26.15, FR-M13.5). Students open their course modules from a **Course Content** menu with a course chooser (FR-M7.4). Single sign-on was checked against a real identity provider (Keycloak, OIDC and SAML) and the illustrated user manual now covers every Plan M feature (§26.18). Fixed: quiz essay grading with bank-drawn questions, notification dates and mark-read in the portal.
 
@@ -1671,10 +1689,10 @@
 # Product Requirements Document (PRD)
 ## University Portal (License-Based, Department-Oriented System)
 
-**Version:** 1.75 (Phase 38 final publish-separation baseline complete)  
+**Version:** 1.76 (Plans K–M, School installations, Parent Links and the mobile app for every institute)  
 **Status:** Approved  
 **Prepared By:** Product Team  
-**Last Updated:** 15 May 2026  
+**Last Updated:** 8 November 2026  
 
 ## Institute Parity Stage Documentation Rule (2026-05-13)
 
@@ -5404,7 +5422,7 @@ To deliver a scalable, long‑term university management system that preserves a
 - Admin (All departments access)
 - Super Admin (System authority)
 - Finance (Payment and receipt management)
-- Parent (linked children's results, attendance, report cards and fees — portal and mobile app)
+- Parent (linked School children's results, attendance, homework, timetable, report cards and fees — portal and mobile app; links managed by administrators on Parent Links, §27.3)
 - External users (limited access)
 - Integrations (systems calling the REST API with a personal API token that acts as its owner — §26.16)
 
@@ -5438,9 +5456,12 @@ To deliver a scalable, long‑term university management system that preserves a
 - Mobile-responsive, WCAG 2.1 AA accessible UI
 - LMS parity (Plan M, §26): single sign-on, quiz engine with banks and auto-graded question types, grading workspace, installable app with push, LTI 1.3 tools, learning outcomes, module progress, assignment policies/groups/peer review, similarity checking, live classes, SCORM/xAPI
 - English, Urdu and Arabic with right-to-left layout (§26.13)
-- Native mobile app for students, teachers and parents (Android/iOS, §26.14)
+- Native mobile app for students, teachers, parents and administrators (Android/iOS, §26.14, §27.4); one app for every institute, connecting to the server the user enters (cloud or the institute's own network, §27.5–§27.6)
 - Degree/transcript generation from Word templates (§26.1) and TOTP two-factor sign-in (§26.2)
 - Public REST API with personal access tokens and OpenAPI documentation (§26.16)
+- School-only (and School + College) installations that show only the institution types in use (§27.1)
+- Parent Links screen for linking parent accounts to School students (§27.3)
+- Schools-and-campuses and School demo data scripts (§27.2)
 
 ### 4.2 Out of Scope
 - Alumni management
@@ -5564,7 +5585,7 @@ If license expires or becomes invalid:
 ### Sign-in options (Plans L, M1, M12, M14)
 - Password sign-in with optional TOTP two-factor authentication (§26.2).
 - Single sign-on with Microsoft Entra ID, Google Workspace, other OpenID Connect providers or SAML 2.0, per tenant, with an "enforce SSO only" option (§26.3).
-- Mobile app sign-in with password + code or SSO through the portal (PKCE hand-off, §26.14).
+- Mobile app sign-in with password + code or SSO through the portal (PKCE hand-off, §26.14), on the institute's server entered once in the app (§27.5). An imported account's first sign-in in the app asks for a new password (§27.4).
 - Integrations use personal API tokens instead of passwords (§26.16).
 
 ---
@@ -5621,6 +5642,8 @@ If license expires or becomes invalid:
 - Configure Result Calculation rules: GPA-to-score mappings and assessment component weightages
 - Unlock and reset passwords for non-admin locked accounts
 - View license status (read-only)
+- Link parent accounts to School students of their assigned departments on Parent Links (§27.3)
+- See a campus at a glance in the mobile app (students, teachers, courses, today's attendance — §27.4)
 - No role or system configuration access
 
 ---
@@ -5645,6 +5668,11 @@ If license expires or becomes invalid:
 
 ### 8.6 External Users
 - Limited read-only access as defined by admin configuration
+
+### 8.7 Parent
+- Account created on User Import with the role Parent; linked by an administrator to one or more School students (Parent Links, §27.3). A child can have several parents.
+- Follows each linked child in the portal's parent read model and in the mobile app: home summary, timetable, courses, homework, attendance (overall, per course, day by day), results and report cards, fee status, announcements and notifications (§27.4).
+- A paused or removed link hides the child at once; the parent cannot see or change any other student's data (API answers 403).
 
 ---
 
@@ -5857,6 +5885,8 @@ Accessible from the top navigation as a dedicated "Settings" menu:
 - Optional TOTP two-factor sign-in and single sign-on with full token/assertion validation (§26.2, §26.3)
 - API tokens, LTI access tokens and xAPI secrets stored only as hashes; provider secrets encrypted at rest and never returned (§26.17)
 - Third-party content isolated: LTI launches single-use and user-bound; SCORM packages checked before storage and playable from a separate content origin (§26.7, §26.15)
+- Mobile app transport: HTTPS with a trusted certificate for every server on the internet; plain HTTP only to the institute's own network (private/loopback/VPN addresses and local names), marked "not encrypted" in the app; a branded build can lock its server (§27.5)
+- Parent links are scoped: Admins change only links of students in their assigned departments; parent data endpoints refuse unlinked children (§27.3, §27.4)
 
 ---
 
@@ -5870,6 +5900,8 @@ Accessible from the top navigation as a dedicated "Settings" menu:
 - Horizontal scaling-ready (stateless API layer)
 - Exam-day target: 5,000 students starting, autosaving and submitting one quiz — p95 start < 2 s, autosave < 1 s, submit < 3 s, < 1 % errors (k6 `tests/load/k6-exam-day.js`; §26.16)
 - Several API servers share Redis (distributed cache) and an object store (Azure Blob or S3) for files; foreign keys indexed (§26.16)
+- Deployment for the mobile app: cloud/hosted (HTTPS address) or on the institute's own network (API and portal listening on the network, firewall rule, fixed server address) — §27.6
+- A new installation needs only a reachable SQL Server: the API creates the database on first start (§27.7)
 
 ---
 
@@ -5886,7 +5918,7 @@ Accessible from the top navigation as a dedicated "Settings" menu:
 - Responsive UI: tested at 360 px, 768 px, 1280 px viewports
 - WCAG 2.1 AA compliance — verified with axe-core on every portal page (0 serious/critical findings), keyboard operation with a visible focus ring, published Accessibility Conformance Report (§26.16)
 - Touch-friendly controls (44×44 px minimum tap targets)
-- Installable web app with offline pages and push (§26.6); native Android/iOS app for students, teachers and parents (§26.14)
+- Installable web app with offline pages and push (§26.6); native Android/iOS app for students, teachers, parents and administrators (§26.14, §27.4), one standard app for every institute (§27.5)
 - Right-to-left layout for Urdu and Arabic (§26.13)
 - Lighthouse score ≥ 90 for Performance, Accessibility, Best Practices on core pages
 
@@ -5909,7 +5941,7 @@ Accessible from the top navigation as a dedicated "Settings" menu:
 
 - Frontend: ASP.NET Core MVC + Razor (Web project); Bootstrap 5 responsive layout
 - Backend: ASP.NET Core 8 Web API
-- Database: SQL Server with EF Core 8; Views and Stored Procedures for performance
+- Database: SQL Server with EF Core 8; Views and Stored Procedures for performance. Development default: SQL Server Express `localhost\SQLEXPRESS`, database `Tabsan-EduSphere`, Windows authentication (§27.7)
 - REST APIs with JWT Bearer authentication
 - AI integration (LLM via abstracted `IAiChatService`)
 - Email: `IEmailSender` abstraction over MailKit/SendGrid
@@ -5939,6 +5971,7 @@ This section states the product requirements added by Plans K, L and M (October 
 | K | Degree and transcript documents from Word templates | §26.1 | Complete |
 | L | Two-factor authentication (TOTP) | §26.2, §7 | Complete |
 | M1–M14 | Canvas-parity LMS, mobile, localisation, accessibility, scale, public API | §26.3–§26.16 | Complete; external checks open (§26.19) |
+| After M (Oct–Nov 2026) | School-only display, schools and School demo data scripts, Parent Links, mobile redesign with Homework/Attendance/admin views, one mobile app for every institute's server, on-premises network set-up, SQL Server Express default | §27 | Complete; open items in §27.9 |
 
 ### 26.1 Degree and transcript documents from Word templates (Plan K)
 - **Users:** Admin/SuperAdmin (templates, generation), Student (own documents).
@@ -6022,10 +6055,10 @@ This section states the product requirements added by Plans K, L and M (October 
 - **FR-M11.3** **Language & Translations** page: coverage, Excel export/import of overrides without a release. CI fails when a portal text lacks a translation.
 
 ### 26.14 Mobile app (M12)
-- **FR-M12.1** One EduSphere app (.NET MAUI) for students, teachers and parents on Android and iOS, signing in with username/password or the institution's SSO (PKCE hand-off through the portal), in English, Urdu or Arabic.
-- **FR-M12.2** Students: home summary, timetable, course materials, assignments with camera/file hand-in, quizzes (opened in the portal), announcements, discussions, results, attendance, report cards, notifications. Teachers: attendance, grading, announcements, discussions. Parents: their linked children's results, attendance, report cards, fee status and announcements.
+- **FR-M12.1** One EduSphere app (.NET MAUI) on Android and iOS for students, teachers, parents and, since §27.4, administrators. Users sign in with username/password or the institution's SSO (PKCE hand-off through the portal). The app is in English: it offered English, Urdu and Arabic until 31 October 2026 (§27.4). The standard build connects to whichever institute's server the user enters (§27.5).
+- **FR-M12.2** Students: home summary, timetable, course materials, assignments with camera/file hand-in, quizzes (opened in the portal), announcements, discussions, results, attendance, report cards, notifications. Teachers: attendance, grading, announcements, discussions. Parents: their linked children's results, attendance, report cards, fee status and announcements. Extended in §27.4 with Homework and Attendance tabs, one shared child/class/campus choice, parents' views of each child's timetable, courses and homework, and an administrator's campus overview.
 - **FR-M12.3** Native push (Firebase Cloud Messaging v1; APNs through FCM) honouring the web push preferences; a minimum app version gate (HTTP 426); self-hosted crash reports.
-- **FR-M12.4** White-label builds per institution (name, icons, colours, app id, URL scheme) with store texts.
+- **FR-M12.4** White-label builds per institution (name, icons, colours, app id, URL scheme) with store texts; a white-label build is locked to its institution's server unless built with `-AllowServerChange` (§27.5).
 
 ### 26.15 SCORM packages and xAPI (M13)
 - **FR-M13.1** Teachers upload SCORM 1.2/2004 packages (checked for unsafe paths, size, compression ratio and a valid manifest before storing), set attempts, visibility and marks, preview them and see a per-student report.
@@ -6055,10 +6088,11 @@ Each phase records its validation in `Docs/Phased-Architecture-Plan/M-Canvas-LMS
 
 - 2026-10-25: unit 638/638, integration 371/372 (1 long-standing skip), web-integration 98/98, contract 1/1, Plan M Playwright specs 41/41. Real-system checks: single sign-on against a Keycloak 26.8 identity provider over OIDC and SAML (ID and email linking, role refusal, signed requests, encrypted assertions — `User Guide/SSO-Setup-Guide.md` §9.1); Rustici *Golf Explained* SCORM 1.2/2004 packages (single SCO, 18 parts, 8 SCOs) played as a student with scores reaching the gradebook. User manual v1.5 (`User Guide/Tabsan-EduSphere-User-Manual.pdf`, 154 pages, 121 screenshots) documents every Plan M feature.
 - 2026-10-25 (SCORM sequencing): Tests: unit 658/658, integration 373/374 (1 long-standing skip), web-integration 100/100, contract 1/1, Plan M Playwright specs 41/41. Rustici sequencing samples (Forced Order, Simple Remediation, Random Test, Pre or Post Test) played as students in the running portal. User manual v1.6 (155 pages).
+- 2026-11-07 (after Plan M, §27.8): unit 717/717, integration 387/388 (1 long-standing skip), web-integration 111/111, contract 1/1 after a clean full build. The Playwright specs were not re-run. The mobile app was checked on a Galaxy Z Fold5 (31 October) and on an Android 14 emulator over the network (7 November). Mobile App Connection Guide v1.1 (53 pages).
 
 ### 26.19 Open items (need external systems or devices)
 - SSO: a sign-in against an institution's own Entra ID / Google Workspace tenant (OIDC and SAML verified with Keycloak).
-- PWA/mobile: a final check on physical Android/iOS phones (Android behaviour verified in Chrome's Android emulation; push through FCM and Windows push verified); iOS build on a Mac; native-app push with the institution's Firebase project.
+- PWA/mobile: the native app was checked on a physical Android phone (Galaxy Z Fold5, 31 October 2026) and the standard APK on an Android 14 emulator over the network (§27.8); PWA behaviour was verified in Chrome's Android emulation, and push through FCM and Windows push. Still open: a check on an iPhone, the iOS build on a Mac, native-app push with the institution's Firebase project, and physical phones on an institute's Wi-Fi (§27.9).
 - LTI: checks with vendor tools that need accounts (H5P, Zoom, Turnitin/Copyleaks); 1EdTech LTI Advantage certification (needs membership; readiness report done).
 - Live services: Gotenberg, Copyleaks, BigBlueButton/Zoom/Teams runs with real accounts.
 - Localisation: native-speaker review of Urdu and Arabic texts.
@@ -6067,7 +6101,232 @@ Each phase records its validation in `Docs/Phased-Architecture-Plan/M-Canvas-LMS
 
 ---
 
-## 27. Approval
+## 27. School Installations, Parent Links and One Mobile App for Every Institute (October–November 2026)
+
+This section covers the requirements delivered after Plan M, from 26 October to 7 November 2026. They make EduSphere ready for schools and let one mobile app serve every institute, whether its server is in the cloud or on its own network. Everything below is implemented and tested unless it is listed in §27.9.
+
+### 27.1 School-only installations (institution visibility)
+- **FR-S1.1** The portal shows only the institution types (School, College, University) that the institution policy enables **and** that have at least one active department. While none of the enabled types has data, the policy is shown as it is. This is display only: validation still uses the full policy, so College and University departments can still be added, and no code, controller, module or table is removed.
+- **FR-S1.2** The narrowed list drives:
+  - the sidebar, the portal capability matrix, labels, the module registry and dashboard composition (deployment tile, mode cards);
+  - the institute options of Grading Configuration, Result Calculation, Student Lifecycle, User Import and Admin Users (their default moves to a type that is shown);
+  - the shared Institute filter;
+  - the Report Center, where Degree Certificate, GPA and FYP are University-only.
+
+  Institution Policy says which enabled types stay hidden until their first department.
+- **FR-S1.3** Visibility is cached for one minute. Creating, activating or deactivating a department clears the cache, so the first College or University department brings that type back at once.
+- **FR-S1.4** The Payments Institute filter uses the shared institution options. It used its own numbering before, so a School-only installation asked for University receipts and showed none.
+
+### 27.2 Schools and School demo data (scripts)
+- **FR-S2.1** `Scripts/Schools-And-Campuses` sets up schools. All its scripts can be run again safely; `Run-School-Scripts.ps1` runs them in order (`-CheckOnly` runs only 03).
+  - `01` adds schools (tenants) and their campuses.
+  - `02` adds a School section with a Class 1–10 programme per campus and turns School on in the policy. Where a new database has no setting yet, it also writes "on" for College and University, so a first College or University department is accepted later. A choice already made on Institution Policy is kept.
+  - `03` is a read-only check of what the portal shows and why.
+- **FR-S2.2** `Scripts/School-Demo-Data` fills those schools with a term of data, so every page has something to show for every role. `Run-School-Demo-Data.ps1` runs both parts; both are safe to re-run.
+  - **Part 01, SQL through sqlcmd.** Per campus:
+    - an admin, a finance officer and five teachers;
+    - six students per class (Class 1–10) and four new admissions;
+    - five subjects per class, with enrolments and prerequisites;
+    - attendance, and published Quiz and Midterm results;
+    - tuition and admission fee receipts;
+    - a building with rooms and a weekly timetable per class;
+    - announcements, study links and notifications.
+  - **Part 02, Node.js through the API.**
+    - Class tests with attempts, and two homework assignments with hand-ins and marks.
+    - A term module with progress, a discussion, and an upcoming live class for every subject.
+    - Outcomes with mastery, and rubrics for English and Mathematics.
+    - A SCORM 1.2 Mathematics practice package.
+    - A Science stream for Class 9 and 10.
+    - An LTI practice-lab link, when a tool is registered.
+    - Helpdesk tickets, API tokens, School result components, live-class settings and an xAPI credential.
+    - A sample privacy notice when the portal has none (an existing one is never replaced).
+- **FR-S2.3** Demo texts are in English. `03-English-Text.sql` replaces the Urdu-script demo texts in databases filled before 31 October 2026, and can be run more than once.
+- **FR-S2.4** All scripts default to SQL Server Express (`localhost\SQLEXPRESS`, Windows authentication) and pass `sqlcmd -C` to trust SQL Express's own certificate. `-Server`, `-Database` and `-Api` choose another server, database or API.
+
+### 27.3 Parent Links screen
+- **FR-S3.1** Administrators link Parent-role accounts to School students on **Parent Links**, without calling the API. It is in the sidebar's Settings group (menu `parent_links`, module `sis`). The screen works in three steps:
+  1. **Find the parent** by username, name, email or phone. The first 25 matches are shown, each with its number of linked children; inactive accounts are marked.
+  2. **See that parent's children**, with each child's relationship and status.
+  3. **Link a School student**, found by registration number or name. The relationship is Father, Mother, Guardian, Grandparent, Sibling or Other, optional, at most 60 characters; a different word saved through the API is kept.
+- **FR-S3.2** One parent can have several children, and a child several parents.
+  - **Pause** hides the child from the parent until the link is resumed; the relationship is kept.
+  - **Remove** deletes the link. It is a soft delete that also marks the link inactive, so alerts, broadcasts and the app ignore it. Linking the same pair again restores the same row.
+- **FR-S3.3** Scope:
+  - A SuperAdmin sees everything.
+  - An Admin sees the students of their assigned departments. They also see the parent accounts of their own tenant (at any campus, because brothers and sisters can be at different campuses) and parent accounts without a tenant.
+  - Changing a link of a student outside the Admin's departments is refused (403), and the page shows the department message.
+  - The look-ups are for administrators only, and other roles cannot open the page.
+- **FR-S3.4** The menu is seeded for Admin, and refused for Faculty, Student, Finance and Parent. It appears only while the School institution type is on, because parents follow School children only. Parent accounts are created on User Import or Create Single User with the role Parent. The page is translated into Urdu and Arabic.
+- **API** (all under `api/v1/parent-portal`, policy Admin):
+
+  | Method and path | What it does |
+  |---|---|
+  | `GET parents?search=&take=` | Find parent accounts |
+  | `GET parents/{id}` | One parent account |
+  | `GET parents/{id}/links` | The parent's children, with name and class |
+  | `GET students?search=&take=` | Find School students |
+  | `PUT links` | Link, change the relationship, pause or resume |
+  | `DELETE links/{parentId}/{studentId}` | Pause the link; with `?remove=true`, remove it |
+
+  Searches return at most 50 results.
+
+### 27.4 Mobile app: redesign, new tabs and the admin view (extends §26.14)
+- **FR-S4.1 Look.** The app uses Tabsan branding:
+  - the TS emblem as app icon and splash, and the full logo on the sign-in screen;
+  - the navy/teal palette shared with the portal;
+  - a theme choice in Settings (as the phone, light or dark);
+  - tab icons, and colour-coded attendance, marks and statuses.
+- **FR-S4.2 Tabs by role:**
+
+  | Role | Tabs |
+  |---|---|
+  | Student | Home, Timetable, Courses, Homework, Attendance, Results, Notifications, Settings |
+  | Teacher | The student tabs without Results. Homework grades submissions; Attendance takes attendance per course. |
+  | Parent | The student tabs, for the chosen child |
+  | Admin, SuperAdmin | Home (the chosen campus: students, teachers, courses, today's attendance), Notifications, Settings |
+
+  On Android, tabs after the fourth go under More.
+- **FR-S4.3 One shared choice.** Timetable, Courses, Homework, Attendance and Results share one choice:
+  - the child (parents);
+  - the class (all classes, or one such as "Class 9");
+  - the institute and campus (teachers and admins who work in more than one).
+- **FR-S4.4 Content of the tabs:**
+  - **Homework** covers all the user's courses, still-to-do first, then soonest due. Students and parents see their own state and marks; teachers see what is left to grade.
+  - **Attendance** shows overall, per course and day by day, newest first.
+  - **Results** lists the newest class first, so the same subject in different years can be told apart.
+  - **Home's "today"** uses the phone's weekday, not the server's UTC day.
+  - **Marks:** School and College students and parents see average marks; CGPA is shown to University students only.
+- **FR-S4.5 Passwords.** An imported account's first sign-in in the app asks for a new password. Settings has **Change password** (the current password, then the new one twice). If the new password is one of the last five, the refusal says so.
+- **FR-S4.6 Language.** The app is in English. The shared core keeps its Urdu and Arabic texts, but the app no longer offers a language choice.
+- **FR-S4.7 API** (under `api/v1/mobile`). A parent passes `?studentProfileId=`, and any child who is not linked is refused with 403.
+
+  | Path | What it returns |
+  |---|---|
+  | `timetable`, `courses`, `courses/{offeringId}` | Also for a parent's child |
+  | `homework` | Homework of all the user's courses |
+  | `attendance/records` | Day by day; `?offeringId=` for one course, `?take=` up to 500 |
+  | `announcements` | A child's announcements, for parents |
+  | `scopes` | The institutes and campuses the user works in |
+  | `campus-summary` | Admin and SuperAdmin only; `?campusId=`, and `?date=` (today on the phone) |
+
+  Courses carry their campus and institute.
+- **FR-S4.8 Fixes found on School data and a real Android phone** (Galaxy Z Fold5):
+  - The Parent role is seeded and allowed in User Import and the single-user form.
+  - A parent's child announcements no longer return 403.
+  - Grading lists show student names, and teacher cards say "To grade" only when work is waiting.
+  - Timetable day names, dates outside the current year, live classes wrongly marked overdue, and course codes are correct.
+  - Notification dates show the date sent.
+  - Samsung keyboards no longer add a space after the dot in usernames.
+  - The app no longer stays on the start spinner when a saved session loads at once.
+  - Android network errors show the usual "No connection" message.
+
+### 27.5 One mobile app for every institute (choosing the server)
+- **FR-S5.1** The standard build has no server built in.
+  - On first start it asks for the **institute's server address**.
+  - It checks the address with `GET api/v1/mobile/config`, which must answer like an EduSphere API (JSON with `institutionName` or `minimumVersion`).
+  - It keeps the address in the phone's secure storage, and the sign-in page then shows the institution's name.
+
+  One APK therefore serves every school, college and university, each with its own server and database.
+- **FR-S5.2** Addresses are accepted the way people type them:
+  - a host name (`edu.myschool.com`) or a full https address;
+  - an IP address and port (`192.168.1.10:5181`), or a server name (`schoolserver:5181`);
+  - an address under a folder (`https://school.edu/edusphere`).
+
+  Anything after `/api/` or `/swagger` copied from a browser is dropped. When no scheme is given, https is tried first, then http, for local addresses only. Each address tried gets at most 10 seconds.
+- **FR-S5.3 Transport security:**
+  - Servers on the internet must use https with a trusted certificate. Plain `http://` to an internet address is refused, because passwords and student records would cross the internet unencrypted.
+  - http is accepted only on the institute's own network:
+    - private and loopback IPs (10.x, 172.16–31.x, 192.168.x, 127.x, 169.254.x);
+    - 100.64.0.0/10, used by VPNs such as Tailscale;
+    - IPv6 unique-local and link-local addresses;
+    - names without a dot, and `.local`, `.lan`, `.internal`, `.home.arpa` and `localhost` names.
+  - Settings shows such a connection as "not encrypted".
+  - Android allows clear-text traffic so the app can apply this rule itself; iOS allows local networking only.
+- **FR-S5.4 Clear errors.** When the check fails, the app says which case it is:
+  - not an EduSphere server;
+  - server unreachable (with the address tried);
+  - untrusted certificate;
+  - app update required (HTTP 426);
+  - invalid address;
+  - https required.
+
+  "Not an EduSphere server" is reported first, because it is the most useful.
+- **FR-S5.5 Changing the server.** People change the server with **Change server**, on the sign-in page or in Settings. In Settings it asks for confirmation and signs out first, because accounts belong to one server. Switching servers forgets the old server's session.
+- **FR-S5.6 Builds:**
+
+  | Build | Server | How |
+  |---|---|---|
+  | Standard | Asked on first start | No `ApiBaseUrl`; `-p:AndroidPackageFormat=apk` |
+  | Preset | Starts on the given server; can still be changed | `-p:ApiBaseUrl=…` |
+  | Institution's own (white-label) | Locked: no server page, no Change server | `build-whitelabel.ps1` sets `-p:LockServer=true`; `-AllowServerChange` keeps it open |
+
+  The build fails when `LockServer` is not `true` or `false`, or is `true` without `ApiBaseUrl`. `whitelabel.json` carries `lockServer`. The standard APK is signed with the debug key; Google Play needs the upload keystore and an `.aab` file.
+
+### 27.6 Serving phones on the institute's own network (on-premises)
+- **FR-S6.1 Listening on the network.** The API and portal can listen on all network interfaces: `--urls http://0.0.0.0:5181` and `--urls http://0.0.0.0:5063`, or `ASPNETCORE_URLS`.
+  - A firewall rule must allow the ports (on Windows, `New-NetFirewallRule` on the Private profile).
+  - The server's network must be set to Private.
+  - The server needs a fixed address, so the address people type keeps working.
+- **FR-S6.2 Portal address.** `Mobile:PortalBaseUrl` must be a portal address that phones can open, for example `http://192.168.1.10:5063`. Quizzes, some materials and single sign-on open in the portal. `api/v1/mobile/config` returns it to the app.
+- **FR-S6.3 Internet installations** use an https address with a trusted certificate (for example Let's Encrypt). Everyone at the institute types the same address.
+
+### 27.7 Database set-up and portal fixes
+- **FR-S7.1** Development uses SQL Server Express by default: `localhost\SQLEXPRESS`, database `Tabsan-EduSphere`, Windows authentication. This applies to the API, the portal, the background jobs, `environments.json`, and the Scripts READMEs and helper scripts. The test suites keep their own Testing settings.
+- **FR-S7.2** At start-up, a reachable SQL Server that does not have the configured database yet counts as healthy, and the EF migrations that run next create the database (a fresh install, or a dropped test database).
+  - SQL error 4060 counts as "missing" only when `master` confirms the database does not exist.
+  - Any other cause, such as a login that may not open an existing database, stays a failure.
+- **FR-S7.3** The idempotent schema script runs on a new server. `Scripts/01-Schema-Current.sql` is produced by `dotnet ef migrations script --idempotent`. Its views and stored procedures are created through `EXEC`, because `CREATE VIEW` and `CREATE PROCEDURE` must start their batch.
+- **FR-S7.4** The Results page shows:
+  - course code and title, class or semester, and the student's name and registration number (the result endpoints now add these labels);
+  - marks out of the real maximum;
+  - the grade point for University results (School and College results have none);
+  - for the FYP row, its final result label.
+- **FR-S7.5** When the Courses module is switched off, the Prerequisites page shows the module's error on the page instead of failing with HTTP 500.
+- **FR-S7.6** A refused password change says "Current password is incorrect, or the new password is one of your last five passwords." The portal and the app both show it.
+
+### 27.8 Documentation and acceptance evidence
+- **Mobile App Connection Guide** (`User Guide/Tabsan-EduSphere-Mobile-App-Connection-Guide.docx` and `.pdf`):
+  - **v1.0** (31 October 2026, 41 pages). Screenshots from a Galaxy Z Fold5 using the School demo data.
+  - **v1.1** (7 November 2026, 53 pages). Every phone screenshot comes from the standard APK on an Android 14 emulator connected over the network. It covers:
+    - how the app connects, and preparing the server for the internet or the local network (fixed address, listening on the network, firewall);
+    - distributing the standard or a branded app, and giving users the server address (with a message template);
+    - installing the APK, connecting, the connection errors, signing in, and changing the server;
+    - each role (students, teachers, parents, administrators), and how the app and the portal stay in step;
+    - troubleshooting;
+    - appendices: settings reference, endpoints, a Quick Start Card and a glossary.
+
+  The guide is built by `tools/user-manual/mobile-guide`. Without Word, `tools/user-manual/finalize-libreoffice.py` refreshes the contents page and exports the PDF with LibreOffice.
+- **Schools sales deck:** `PPT/Tabsan_EduSphere_For_Schools.pptx`, 19 slides made from screenshots of the running app.
+- **Tests,** 2026-11-07, after a clean full build with 0 warnings:
+  - unit 717/717;
+  - integration 387/388 (1 long-standing skip);
+  - web-integration 111/111;
+  - contract 1/1.
+
+  New tests in this period:
+
+  | Area | Tests |
+  |---|---|
+  | Institution visibility | Unit, integration on the real API (School-only, then College added), web-integration |
+  | Parent links | Unit, service, integration (look-ups, link, pause, remove, link again, department and tenant scope, admin-only, menu seeding), web-integration (page, 403 message, Urdu, other roles) |
+  | Result labels | Integration and web-integration |
+  | Mobile core | Server address parsing, server check, switching, lock, server page, child/class/campus choice, homework, attendance, password change |
+  | Mobile API | Integration: classes, campuses, homework, day-by-day attendance, the admin's campus, results order |
+- **Checked in the running app:**
+  - School-only display, on a School-only copy of the database.
+  - Both School scripts, on SQL Server Express.
+  - The standard APK against `192.168.1.109:5181`: a student, a teacher, a parent (with the first-time password change) and an administrator, plus the connection errors and Change server.
+  - The teacher's announcement and attendance appearing in the student's portal and the parent's app.
+
+### 27.9 Open items
+- **Real phones on a school Wi-Fi.** The institute's IT must add the firewall rule and set the server's network to Private. A run on physical phones over the institute's Wi-Fi is still to do.
+- **iOS.** The build, the local-network permission prompt and plain-HTTP access on the local network need a Mac and an iPhone.
+- **Google Play.** Signing with the institution's upload keystore and publishing an `.aab`. The standard APK is debug-signed, for direct installation only.
+- **Push.** Native push needs the institution's own Firebase project (as in §26.19).
+
+---
+
+## 28. Approval
 
 | Name | Role | Signature | Date |
 |-----|------|----------|------|

@@ -46,20 +46,25 @@ public sealed record Pkce(string Verifier, string Challenge)
 public sealed class EduSphereClient
 {
     private const string SessionKey = "edusphere.session";
+    private const string ServerKey = "edusphere.server";
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+
+    /// <summary>How long a server check waits for each address (an unreachable local address otherwise hangs for the full time-out).</summary>
+    public static TimeSpan ServerCheckTimeout { get; set; } = TimeSpan.FromSeconds(10);
 
     private readonly HttpClient _http;
     private readonly ISecureStore _store;
     private readonly AppSettings _settings;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private Session? _session;
+    private string? _server;
 
     public EduSphereClient(HttpClient http, ISecureStore store, AppSettings settings)
     {
         _http = http;
         _store = store;
         _settings = settings;
-        if (_http.BaseAddress is null) _http.BaseAddress = new Uri(settings.ApiBase + "/");
+        _server = settings.ApiBase.Length > 0 ? settings.ApiBase : null;
     }
 
     /// <summary>The app's language ("en", "ur", "ar"); sent with every call so answers come translated.</summary>
@@ -69,17 +74,106 @@ public sealed class EduSphereClient
 
     public bool IsSignedIn => _session is not null;
 
+    /// <summary>The institute's server the app talks to (no trailing slash); null until one is chosen in the standard build.</summary>
+    public string? Server => _server;
+
+    public bool HasServer => _server is not null;
+
+    /// <summary>People may switch to another institute's server (not on a build locked to its institution).</summary>
+    public bool CanChangeServer => _settings.CanChangeServer;
+
     /// <summary>Raised when the session ends (expired refresh token, sign-out) so the app shows the sign-in page.</summary>
     public event EventHandler? SignedOut;
 
-    /// <summary>Restores the session saved on the device (start-up).</summary>
+    /// <summary>Restores the server chosen on this device and the saved session (start-up).</summary>
     public async Task<bool> RestoreAsync()
     {
+        if (CanChangeServer && await _store.GetAsync(ServerKey) is { Length: > 0 } saved) _server = saved;
+        if (_server is null) return false;
         var raw = await _store.GetAsync(SessionKey);
         if (string.IsNullOrEmpty(raw)) return false;
         try { _session = JsonSerializer.Deserialize<Session>(raw, Json); }
         catch (JsonException) { _session = null; }
         return _session is not null;
+    }
+
+    // ── the institute's server ─────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Checks a typed server address (see <see cref="ServerAddress.Parse"/>): the first address whose app configuration
+    /// answers like EduSphere's wins. Nothing is saved; <see cref="UseServerAsync"/> does that.
+    /// </summary>
+    public async Task<ServerCheck> CheckServerAsync(string? address, CancellationToken ct = default)
+    {
+        var (candidates, invalid) = ServerAddress.Parse(address);
+        if (invalid is not null) return new ServerCheck(null, null, AppText.Get(invalid));
+        string? error = null;
+        var notEduSphere = false;
+        foreach (var candidate in candidates)
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(ServerCheckTimeout);
+            var shown = ServerAddress.Display(candidate);
+            try
+            {
+                using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(candidate + "/api/v1/mobile/config"));
+                Headers(request);
+                using var response = await TransportAsync(request, timeout.Token);
+                var body = await response.Content.ReadAsStringAsync(timeout.Token);
+                if (response.StatusCode == (HttpStatusCode)426) return new ServerCheck(null, null, AppText.Get("UpdateRequired"));
+                if (response.IsSuccessStatusCode && ReadConfig(body) is { } config) return new ServerCheck(candidate, config, null);
+                notEduSphere = true;
+            }
+            catch (TaskCanceledException) when (!ct.IsCancellationRequested) { error = string.Format(AppText.Get("ServerUnreachable"), shown); }
+            catch (HttpRequestException ex)
+            {
+                error = string.Format(AppText.Get(IsCertificateProblem(ex) ? "ServerCertificate" : "ServerUnreachable"), shown);
+            }
+        }
+        // A server that answered but is not EduSphere says more than an address tried in vain over the other scheme.
+        return new ServerCheck(null, null, notEduSphere ? AppText.Get("NotEduSphere") : error ?? AppText.Get("NotEduSphere"));
+    }
+
+    /// <summary>Switches to a checked server and keeps it on the device; the session of another server (its tokens) is forgotten.</summary>
+    public async Task UseServerAsync(string server)
+    {
+        if (!CanChangeServer) throw new InvalidOperationException("This build is locked to its institution's server.");
+        var chosen = server.Trim().TrimEnd('/');
+        if (!string.Equals(chosen, _server, StringComparison.OrdinalIgnoreCase))
+        {
+            _session = null;
+            _store.Remove(SessionKey);
+        }
+        _server = chosen;
+        await _store.SetAsync(ServerKey, chosen);
+    }
+
+    /// <summary>The app configuration, when the answer is one (an EduSphere API always sends these fields).</summary>
+    private static MobileConfig? ReadConfig(string body)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.ValueKind != JsonValueKind.Object) return null;
+            var known = doc.RootElement.EnumerateObject().Any(p => p.Name.Equals("institutionName", StringComparison.OrdinalIgnoreCase)
+                                                                    || p.Name.Equals("minimumVersion", StringComparison.OrdinalIgnoreCase));
+            return known ? doc.RootElement.Deserialize<MobileConfig>(Json) : null;
+        }
+        catch (JsonException) { return null; }
+    }
+
+    /// <summary>An https server whose certificate the phone does not trust (self-signed, expired, wrong name).</summary>
+    private static bool IsCertificateProblem(Exception ex)
+    {
+        for (var e = (Exception?)ex; e is not null; e = e.InnerException)
+        {
+            if (e is System.Security.Authentication.AuthenticationException
+                || e is WebException { Status: WebExceptionStatus.TrustFailure or WebExceptionStatus.SecureChannelFailure })
+                return true;
+            if (e.Message.Contains("certificate", StringComparison.OrdinalIgnoreCase) || e.Message.Contains("trust anchor", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
     }
 
     // ── sign-in ────────────────────────────────────────────────────────────────────────────────
@@ -91,7 +185,7 @@ public sealed class EduSphereClient
     public async Task<SignInResult> SignInAsync(string username, string password, string? mfaCode = null, CancellationToken ct = default)
     {
         using var request = Request(HttpMethod.Post, "api/v1/auth/login", new { username, password, mfaCode = string.IsNullOrWhiteSpace(mfaCode) ? null : mfaCode.Trim() }, anonymous: true);
-        using var response = await _http.SendAsync(request, ct);
+        using var response = await TransportAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         if (response.IsSuccessStatusCode)
         {
@@ -128,7 +222,7 @@ public sealed class EduSphereClient
         var code = Query(callback, "code");
         if (string.IsNullOrEmpty(code)) return new SignInResult(SignInStatus.Failed, Query(callback, "error") ?? "Single sign-on was cancelled.");
         using var request = Request(HttpMethod.Post, "api/v1/mobile/handoff/redeem", new { code, codeVerifier = pkce.Verifier, deviceInfo }, anonymous: true);
-        using var response = await _http.SendAsync(request, ct);
+        using var response = await TransportAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         return response.IsSuccessStatusCode
             ? new SignInResult(SignInStatus.Success, Session: await SaveSessionAsync(body))
@@ -180,7 +274,7 @@ public sealed class EduSphereClient
             if (_session is null) return false;
             if (_session.AccessToken != staleAccessToken) return true; // another call already refreshed
             using var request = Request(HttpMethod.Post, "api/v1/auth/refresh", new { refreshToken = _session.RefreshToken }, anonymous: true);
-            using var response = await _http.SendAsync(request, ct);
+            using var response = await TransportAsync(request, ct);
             if (!response.IsSuccessStatusCode)
             {
                 await ForgetSessionAsync();
@@ -206,9 +300,40 @@ public sealed class EduSphereClient
     /// <summary>The home screen; "today's classes" are for the phone's day (timetables hold the school's local times).</summary>
     public Task<HomeData?> GetHomeAsync(DayOfWeek? today = null, CancellationToken ct = default)
         => GetAsync<HomeData>($"api/v1/mobile/home?day={(int)(today ?? DateTime.Now.DayOfWeek)}", ct);
-    public async Task<List<ClassSlot>> GetTimetableAsync(CancellationToken ct = default) => await GetAsync<List<ClassSlot>>("api/v1/mobile/timetable", ct) ?? [];
-    public async Task<List<CourseSummary>> GetCoursesAsync(CancellationToken ct = default) => await GetAsync<List<CourseSummary>>("api/v1/mobile/courses", ct) ?? [];
-    public Task<CourseDetail?> GetCourseAsync(Guid offeringId, CancellationToken ct = default) => GetAsync<CourseDetail>($"api/v1/mobile/courses/{offeringId}", ct);
+    /// <summary>The week's classes (own, or a linked child's for parents).</summary>
+    public async Task<List<ClassSlot>> GetTimetableAsync(Guid? childProfileId = null, CancellationToken ct = default)
+        => await GetAsync<List<ClassSlot>>("api/v1/mobile/timetable" + Child(childProfileId), ct) ?? [];
+
+    /// <summary>Courses studied or taught, with class and campus (own, or a linked child's for parents).</summary>
+    public async Task<List<CourseSummary>> GetCoursesAsync(Guid? childProfileId = null, CancellationToken ct = default)
+        => await GetAsync<List<CourseSummary>>("api/v1/mobile/courses" + Child(childProfileId), ct) ?? [];
+
+    public Task<CourseDetail?> GetCourseAsync(Guid offeringId, Guid? childProfileId = null, CancellationToken ct = default)
+        => GetAsync<CourseDetail>($"api/v1/mobile/courses/{offeringId}" + Child(childProfileId), ct);
+
+    /// <summary>Homework of all courses, soonest due first (own, a child's for parents; teachers: with what is left to grade).</summary>
+    public async Task<List<HomeworkItem>> GetHomeworkAsync(Guid? childProfileId = null, CancellationToken ct = default)
+        => await GetAsync<List<HomeworkItem>>("api/v1/mobile/homework" + Child(childProfileId), ct) ?? [];
+
+    /// <summary>Day-by-day attendance, newest first (own, or a linked child's for parents), optionally of one course.</summary>
+    public async Task<List<AttendanceDay>> GetAttendanceDaysAsync(Guid? childProfileId = null, Guid? offeringId = null, CancellationToken ct = default)
+    {
+        var query = new List<string>();
+        if (childProfileId is { } child) query.Add($"studentProfileId={child}");
+        if (offeringId is { } offering) query.Add($"offeringId={offering}");
+        return await GetAsync<List<AttendanceDay>>("api/v1/mobile/attendance/records" + (query.Count == 0 ? "" : "?" + string.Join("&", query)), ct) ?? [];
+    }
+
+    /// <summary>Institutes and campuses the user works in (teachers, admins, SuperAdmins).</summary>
+    public async Task<List<ScopeItem>> GetScopesAsync(CancellationToken ct = default) => await GetAsync<List<ScopeItem>>("api/v1/mobile/scopes", ct) ?? [];
+
+    /// <summary>Admins: a campus at a glance (all their campuses without one); <paramref name="today"/> is the phone's date.</summary>
+    public Task<CampusSummary?> GetCampusSummaryAsync(Guid? campusId, DateTime today, CancellationToken ct = default)
+        => GetAsync<CampusSummary>($"api/v1/mobile/campus-summary?date={today:yyyy-MM-dd}" + (campusId is { } c ? $"&campusId={c}" : ""), ct);
+
+    /// <summary>Changes the signed-in user's password (current one first; the API checks its password rules).</summary>
+    public Task ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct = default)
+        => SendAsync<object>(HttpMethod.Put, "api/v1/auth/change-password", new { currentPassword, newPassword }, false, ct);
     public async Task<List<ChildSummary>> GetChildrenAsync(CancellationToken ct = default) => await GetAsync<List<ChildSummary>>("api/v1/mobile/children", ct) ?? [];
     /// <summary>Published results (own, or a linked child's for parents).</summary>
     public async Task<List<ResultItem>> GetResultsAsync(Guid? childProfileId = null, CancellationToken ct = default)
@@ -314,13 +439,34 @@ public sealed class EduSphereClient
         var token = _session?.AccessToken;
         using (var first = await build())
         {
-            var response = await _http.SendAsync(first, ct);
+            var response = await TransportAsync(first, ct);
             if (response.StatusCode != HttpStatusCode.Unauthorized || anonymous || token is null) return await Check(response, ct);
             response.Dispose();
         }
         if (!await RefreshAsync(token, ct)) throw new ApiException(HttpStatusCode.Unauthorized, "Your session has ended. Please sign in again.");
         using var retry = await build();
-        return await Check(await _http.SendAsync(retry, ct), ct);
+        return await Check(await TransportAsync(retry, ct), ct);
+    }
+
+    /// <summary>
+    /// Every call goes through here. Android's HTTP handler reports a cancelled or broken request as
+    /// <see cref="WebException"/> ("Canceled") or <see cref="IOException"/> instead of the usual .NET types, and the screens,
+    /// the shell and sign-out only catch <see cref="HttpRequestException"/> / <see cref="TaskCanceledException"/>, so an
+    /// unmapped one crashed the app (leaving a screen while it loads, a time-out, a dropped connection). The body is read
+    /// inside SendAsync (ResponseContentRead), so a failure while reading it lands here too.
+    /// </summary>
+    private async Task<HttpResponseMessage> TransportAsync(HttpRequestMessage request, CancellationToken ct)
+    {
+        try
+        {
+            return await _http.SendAsync(request, ct);
+        }
+        catch (Exception ex) when (ex is WebException or IOException)
+        {
+            if (ct.IsCancellationRequested || ex is WebException { Status: WebExceptionStatus.RequestCanceled })
+                throw new TaskCanceledException(ex.Message, ex, ct);
+            throw new HttpRequestException(ex.Message, ex);
+        }
     }
 
     private static async Task<HttpResponseMessage> Check(HttpResponseMessage response, CancellationToken ct)
@@ -335,12 +481,19 @@ public sealed class EduSphereClient
 
     private HttpRequestMessage Request(HttpMethod method, string path, object? body, bool anonymous)
     {
-        var request = new HttpRequestMessage(method, path.TrimStart('/'));
+        // Absolute addresses (not HttpClient.BaseAddress, which cannot change after the first call): the server can be switched.
+        if (_server is null) throw new ApiException(HttpStatusCode.ServiceUnavailable, AppText.Get("EnterServer"));
+        var request = new HttpRequestMessage(method, new Uri(_server + "/" + path.TrimStart('/')));
         if (!anonymous && _session is not null) request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _session.AccessToken);
-        request.Headers.AcceptLanguage.ParseAdd(string.IsNullOrWhiteSpace(Language) ? "en" : Language);
-        request.Headers.TryAddWithoutValidation("X-App-Version", _settings.AppVersion);
+        Headers(request);
         if (body is not null) request.Content = JsonContent.Create(body, options: Json);
         return request;
+    }
+
+    private void Headers(HttpRequestMessage request)
+    {
+        request.Headers.AcceptLanguage.ParseAdd(string.IsNullOrWhiteSpace(Language) ? "en" : Language);
+        request.Headers.TryAddWithoutValidation("X-App-Version", _settings.AppVersion);
     }
 
     private static (string? Error, string? Message) ReadError(string body)

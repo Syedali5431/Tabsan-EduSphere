@@ -178,7 +178,7 @@ async function buildChapters() {
       sec++;
       children.push(new d.Paragraph({ heading: d.HeadingLevel.HEADING_2, keepNext: true, children: [new d.TextRun(`${ch}.${sec}   ${s.title}`)] }));
       if (s.who) children.push(new d.Paragraph({
-        spacing: { after: 160 }, shading: { type: d.ShadingType.CLEAR, color: 'auto', fill: SOFT },
+        keepNext: true, spacing: { after: 160 }, shading: { type: d.ShadingType.CLEAR, color: 'auto', fill: SOFT },
         border: { left: { style: d.BorderStyle.SINGLE, size: 18, color: TEAL, space: 6 } },
         children: [new d.TextRun({ text: 'Who does this: ', bold: true, color: TEAL_DARK, size: 18 }), new d.TextRun({ text: s.who, color: INK, size: 18 })] }));
       const h3 = (t) => children.push(new d.Paragraph({ heading: d.HeadingLevel.HEADING_3, keepNext: true, children: [new d.TextRun(t)] }));
@@ -234,7 +234,7 @@ async function buildChapters() {
     new d.Paragraph({ spacing: { before: 440, after: 60 }, children: [new d.TextRun({ text: 'TABSAN EDUSPHERE', font: FONT_HEAD, size: 26, color: TEAL, characterSpacing: 60 })] }),
     new d.Paragraph({ spacing: { after: 120 }, children: [new d.TextRun({ text: 'Mobile App Connection Guide', font: FONT_HEAD, size: 64, color: NAVY })] }),
     new d.Paragraph({ spacing: { after: 300 }, border: { bottom: { style: d.BorderStyle.SINGLE, size: 18, color: TEAL, space: 12 } },
-      children: [new d.TextRun({ text: 'Connecting the EduSphere app to your web portal — set-up, accounts, sign-in and daily use', size: 28, color: MUTED })] }),
+      children: [new d.TextRun({ text: 'Connecting the EduSphere app to your institute\'s server — set-up, accounts, sign-in and daily use', size: 28, color: MUTED })] }),
     new d.Table({ width: { size: BODY_W, type: d.WidthType.DXA }, columnWidths: [Math.floor(BODY_W / 3), Math.floor(BODY_W / 3), BODY_W - 2 * Math.floor(BODY_W / 3)], alignment: d.AlignmentType.CENTER,
       rows: [new d.TableRow({ children: [coverPhone(cover1),
         new d.TableCell({ width: { size: Math.floor(BODY_W / 3), type: d.WidthType.DXA }, borders: noBorders, verticalAlign: d.VerticalAlign.CENTER, children: [
@@ -279,7 +279,7 @@ async function buildChapters() {
       new d.TextRun({ children: ['\tPage ', d.PageNumber.CURRENT, ' of ', d.PageNumber.TOTAL_PAGES], color: MUTED, size: 16 })] })] });
 
   const doc = new d.Document({
-    creator: 'Tabsan Nexora', title: 'Tabsan EduSphere Mobile App Connection Guide', description: 'How to connect the EduSphere mobile app to the EduSphere web portal',
+    creator: 'Tabsan Nexora', title: 'Tabsan EduSphere Mobile App Connection Guide', description: 'How to connect the EduSphere mobile app to your institute\'s EduSphere server',
     numbering: { config: numberingConfigs },
     styles: {
       default: { document: { run: { font: FONT, size: 20, color: INK } } },
@@ -297,7 +297,9 @@ async function buildChapters() {
     },
     sections: [
       { properties: { page: { size: { width: PAGE_W, height: 16838 }, margin: { top: 1100, bottom: 1000, left: MARGIN, right: MARGIN } } }, children: cover },
-      { properties: { page: { size: { width: PAGE_W, height: 16838 }, margin: { top: 1300, bottom: 1200, left: MARGIN, right: MARGIN, header: 600, footer: 600 }, pageNumbers: { start: 1 } } },
+      // Numbering carries on from the (unnumbered) cover, so "Page n of N" counts the same pages as N. Restarting at 1
+      // made the total one too many (and LibreOffice adds a blank page to keep page 1 on a right-hand side).
+      { properties: { page: { size: { width: PAGE_W, height: 16838 }, margin: { top: 1300, bottom: 1200, left: MARGIN, right: MARGIN, header: 600, footer: 600 } } },
         headers: { default: header }, footers: { default: footer }, children: [...docInfo, ...body, ...appendix] },
     ],
   });

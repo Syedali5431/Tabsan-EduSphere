@@ -18,10 +18,10 @@ Completion Status: Phase 38 complete + ISO 27001 & ISO 9001 Compliance (Phases 1
 - v1.6: SCORM packages that set their own order (SCORM 2004 sequencing: locked parts, Next decided by the package, end of package), SCORM 1.2 prerequisites, older packages read again automatically; new screenshot of a sequenced package and the updated SCORM card on Manage Course Content; two new troubleshooting rows.
 - To regenerate after UI changes, see `tools/user-manual/README.md`.
 
-## Mobile App Connection Guide (v1.0, 2026-10-30)
+## Mobile App Connection Guide (v1.1, 2026-11-07)
 
-- **[Tabsan-EduSphere-Mobile-App-Connection-Guide.pdf](Tabsan-EduSphere-Mobile-App-Connection-Guide.pdf)** and the editable **[.docx](Tabsan-EduSphere-Mobile-App-Connection-Guide.docx)** — 41 pages: how the app and the portal share one server; preparing the server (`Mobile` settings, checking `api/v1/mobile/config`); building and distributing the app for an institution; preparing the portal (branding, parent accounts, linking parents to children, single sign-on, push); signing in (including the first-time password change); using the app as a student, teacher and parent; how the app and portal stay in step; troubleshooting; settings and endpoint references.
-- App screenshots were taken from the APK on an Android phone (Galaxy Z Fold5) against a copy of the School demo data, with matching portal screenshots from the same server.
+- **[Tabsan-EduSphere-Mobile-App-Connection-Guide.pdf](Tabsan-EduSphere-Mobile-App-Connection-Guide.pdf)** and the editable **[.docx](Tabsan-EduSphere-Mobile-App-Connection-Guide.docx)** — 53 pages: one app for every institute (the server address is entered in the app); preparing the server on the internet (HTTPS) or on the institute's own network (listening on the network, firewall, which addresses count as local); the `Mobile` settings and checking `api/v1/mobile/config`; the standard APK, giving users the server address, branded builds; preparing the portal (branding, parent accounts, linking parents to children, single sign-on, push); installing the APK, connecting, connection errors, signing in (including the first-time password change), changing the server; using the app as a student, teacher, parent and administrator; how the app and portal stay in step; troubleshooting; settings and endpoint references, a Quick Start Card and a glossary.
+- App screenshots were taken from the standard APK on an Android 14 emulator connected over the institute's Wi-Fi address to a server with the School demo data, with matching portal screenshots from the same server.
 - To regenerate, see `tools/user-manual/mobile-guide/README.md`.
 
 ## 2026-06-15 Certificate Enhancements

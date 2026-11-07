@@ -9,6 +9,9 @@
 
   The API of that institution must use the same scheme: Mobile:AppRedirectUri = "<Scheme>://sso" (appsettings.json).
 
+  The app is locked to -ApiBaseUrl (people cannot switch servers); -AllowServerChange keeps "Change server" available.
+  The standard build (no institution) needs no script: it asks each person for their institute's server (mobile/README.md).
+
 .EXAMPLE
   ./build-whitelabel.ps1 -AppName "City University" -AppId edu.cityuni.app -ApiBaseUrl https://api.cityuni.edu `
       -Color "#7A1F2B" -Scheme cityuni -Version 1.2.0 -Build 12 -GoogleServicesJson ./cityuni/google-services.json `
@@ -29,7 +32,8 @@ param(
     [string] $GoogleServiceInfoPlist,
     [string] $KeyStore,
     [string] $KeyAlias,
-    [switch] $Apk
+    [switch] $Apk,
+    [switch] $AllowServerChange
 )
 $ErrorActionPreference = 'Stop'
 $project = Join-Path $PSScriptRoot 'Tabsan.EduSphere.Mobile/Tabsan.EduSphere.Mobile.csproj'
@@ -38,7 +42,8 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 
 $props = @(
     "-p:AppName=$AppName", "-p:AppId=$AppId", "-p:ApiBaseUrl=$ApiBaseUrl", "-p:AppColor=$Color",
-    "-p:AppScheme=$Scheme", "-p:AppVersion=$Version", "-p:AppBuild=$Build"
+    "-p:AppScheme=$Scheme", "-p:AppVersion=$Version", "-p:AppBuild=$Build",
+    "-p:LockServer=$(if ($AllowServerChange) { 'false' } else { 'true' })"
 )
 
 if ($Platform -eq 'android') {

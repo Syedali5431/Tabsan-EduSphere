@@ -74,12 +74,13 @@ public sealed class MobileQueries : IMobileQueries
 
     private static MobileHomeResponse Empty(string role, string? name, int unread) => new(role, name, unread, [], [], [], null, null, null);
 
-    public async Task<IReadOnlyList<MobileClass>> TimetableAsync(Guid userId, string role, CancellationToken ct = default)
+    public async Task<IReadOnlyList<MobileClass>?> TimetableAsync(Guid userId, string role, Guid? studentProfileId = null, CancellationToken ct = default)
     {
-        if (string.Equals(role, "Faculty", StringComparison.OrdinalIgnoreCase)) return await TeacherTimetableAsync(userId, ct);
-        if (!string.Equals(role, "Student", StringComparison.OrdinalIgnoreCase)) return [];
-        var profileId = await _db.StudentProfiles.Where(p => p.UserId == userId).Select(p => (Guid?)p.Id).FirstOrDefaultAsync(ct);
-        return profileId is null ? [] : await StudentTimetableAsync(await ActiveOfferingsAsync(profileId.Value, ct), ct);
+        if (Is(role, "Faculty")) return await TeacherTimetableAsync(userId, ct);
+        if (!Is(role, "Student") && !(Is(role, "Parent") && studentProfileId is not null)) return [];
+        if (await AllowedStudentAsync(userId, role, studentProfileId, ct) is not { } profileId)
+            return Is(role, "Student") && studentProfileId is null ? [] : null;
+        return await StudentTimetableAsync(await ActiveOfferingsAsync(profileId, ct), ct);
     }
 
     public async Task<IReadOnlyList<MobileChildSummary>> ChildrenAsync(Guid parentUserId, CancellationToken ct = default)
@@ -100,41 +101,51 @@ public sealed class MobileQueries : IMobileQueries
         return result.OrderBy(c => c.Name).ToList();
     }
 
-    public async Task<IReadOnlyList<MobileCourse>> CoursesAsync(Guid userId, string role, CancellationToken ct = default)
+    public async Task<IReadOnlyList<MobileCourse>?> CoursesAsync(Guid userId, string role, Guid? studentProfileId = null, CancellationToken ct = default)
     {
         IQueryable<CourseOffering> offerings;
-        if (string.Equals(role, "Student", StringComparison.OrdinalIgnoreCase))
+        if (Is(role, "Student") || (Is(role, "Parent") && studentProfileId is not null))
         {
-            var profileId = await _db.StudentProfiles.Where(p => p.UserId == userId).Select(p => (Guid?)p.Id).FirstOrDefaultAsync(ct);
-            if (profileId is null) return [];
+            if (await AllowedStudentAsync(userId, role, studentProfileId, ct) is not { } profileId)
+                return Is(role, "Student") && studentProfileId is null ? [] : null;
             var ids = _db.Enrollments.Where(e => e.StudentProfileId == profileId && e.Status == EnrollmentStatus.Active).Select(e => e.CourseOfferingId);
             offerings = _db.CourseOfferings.Where(o => ids.Contains(o.Id));
         }
-        else if (string.Equals(role, "Faculty", StringComparison.OrdinalIgnoreCase))
+        else if (Is(role, "Faculty"))
             offerings = _db.CourseOfferings.Where(o => o.FacultyUserId == userId);
         else return [];
         var rows = await offerings.AsNoTracking()
-            .Select(o => new { o.Id, o.Course.Code, o.Course.Title, Semester = o.Semester.Name, o.FacultyUserId })
+            .Select(o => new
+            {
+                o.Id, o.Course.Code, o.Course.Title, Semester = o.Semester.Name, o.FacultyUserId,
+                CampusId = o.CampusId ?? o.Course.Department.CampusId, TenantId = o.TenantId ?? o.Course.Department.TenantId
+            })
             .ToListAsync(ct);
         var teacherIds = rows.Where(r => r.FacultyUserId != null).Select(r => r.FacultyUserId!.Value).Distinct().ToList();
         var teachers = await _db.Users.AsNoTracking().Where(u => teacherIds.Contains(u.Id))
             .Select(u => new { u.Id, Name = u.FullName ?? u.Username }).ToDictionaryAsync(u => u.Id, u => u.Name, ct);
-        return rows.Select(r => new MobileCourse(r.Id, r.Code, r.Title, r.Semester, r.FacultyUserId is { } f ? teachers.GetValueOrDefault(f) : null))
+        var campusIds = rows.Where(r => r.CampusId != null).Select(r => r.CampusId!.Value).Distinct().ToList();
+        var campuses = await _db.Campuses.AsNoTracking().Where(c => campusIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.Name, ct);
+        var tenantIds = rows.Where(r => r.TenantId != null).Select(r => r.TenantId!.Value).Distinct().ToList();
+        var tenants = await _db.Tenants.AsNoTracking().Where(t => tenantIds.Contains(t.Id)).ToDictionaryAsync(t => t.Id, t => t.Name, ct);
+        return rows.Select(r => new MobileCourse(r.Id, r.Code, r.Title, r.Semester, r.FacultyUserId is { } f ? teachers.GetValueOrDefault(f) : null,
+                r.CampusId, r.CampusId is { } c ? campuses.GetValueOrDefault(c) : null, r.TenantId, r.TenantId is { } t ? tenants.GetValueOrDefault(t) : null))
             .OrderBy(c => c.CourseCode, StringComparer.Ordinal).ToList();
     }
 
-    public async Task<MobileCourseResponse?> CourseAsync(Guid userId, string role, Guid offeringId, CancellationToken ct = default)
+    public async Task<MobileCourseResponse?> CourseAsync(Guid userId, string role, Guid offeringId, Guid? studentProfileId = null, CancellationToken ct = default)
     {
-        var course = (await CoursesAsync(userId, role, ct)).FirstOrDefault(c => c.OfferingId == offeringId);
+        var course = (await CoursesAsync(userId, role, studentProfileId, ct))?.FirstOrDefault(c => c.OfferingId == offeringId);
         if (course is null) return null;
-        var isTeacher = string.Equals(role, "Faculty", StringComparison.OrdinalIgnoreCase);
+        var isTeacher = Is(role, "Faculty");
         var offering = await _db.CourseOfferings.AsNoTracking().Where(o => o.Id == offeringId).Select(o => new { o.CourseId, o.SemesterId }).FirstAsync(ct);
         var materials = await _db.CourseMaterials.AsNoTracking()
             .Where(m => m.CourseId == offering.CourseId && m.SemesterId == offering.SemesterId && m.IsActive)
             .OrderBy(m => m.Name)
             .Select(m => new MobileMaterial(m.Id, m.Name, m.Description, m.MaterialType.ToString(), m.LinkUrl, m.FilePath != null))
             .ToListAsync(ct);
-        var profileId = isTeacher ? null : await _db.StudentProfiles.Where(p => p.UserId == userId).Select(p => (Guid?)p.Id).FirstOrDefaultAsync(ct);
+        // Students see their own work; parents their child's (already checked by CoursesAsync).
+        var profileId = isTeacher ? null : await AllowedStudentAsync(userId, role, studentProfileId, ct);
         var assignments = await _db.Assignments.AsNoTracking()
             .Where(a => a.CourseOfferingId == offeringId && (a.IsPublished || isTeacher))
             .OrderBy(a => a.DueDate)
@@ -222,6 +233,104 @@ public sealed class MobileQueries : IMobileQueries
         var offerings = await ActiveOfferingsAsync(profileId, ct);
         return await AnnouncementsAsync(offerings.Select(o => o.OfferingId).ToList(), ct, take: 20);
     }
+
+    public async Task<IReadOnlyList<MobileHomework>?> HomeworkAsync(Guid userId, string role, Guid? studentProfileId = null, CancellationToken ct = default)
+    {
+        var courses = await CoursesAsync(userId, role, studentProfileId, ct);
+        if (courses is null) return null;
+        if (courses.Count == 0) return [];
+        var isTeacher = Is(role, "Faculty");
+        var profileId = isTeacher ? null : await AllowedStudentAsync(userId, role, studentProfileId, ct);
+        var byOffering = courses.ToDictionary(c => c.OfferingId);
+        var ids = byOffering.Keys.ToList();
+        var rows = await _db.Assignments.AsNoTracking()
+            .Where(a => ids.Contains(a.CourseOfferingId) && (a.IsPublished || isTeacher))
+            .Select(a => new
+            {
+                a.Id, a.CourseOfferingId, a.Title, a.Description, a.DueDate, a.MaxMarks,
+                Mine = _db.AssignmentSubmissions.Where(s => s.AssignmentId == a.Id && s.StudentProfileId == profileId && !s.IsMissing)
+                    .Select(s => new { s.MarksAwarded, s.Status, s.PostedAt }).FirstOrDefault(),
+                ToGrade = isTeacher ? _db.AssignmentSubmissions.Count(s => s.AssignmentId == a.Id && s.Status == SubmissionStatus.Submitted && s.MarksAwarded == null) : 0
+            })
+            .ToListAsync(ct);
+        return rows.Select(a =>
+            {
+                var c = byOffering[a.CourseOfferingId];
+                return new MobileHomework(a.Id, a.CourseOfferingId, c.CourseCode, c.CourseTitle, c.SemesterName, a.Title, a.Description, a.DueDate,
+                    a.MaxMarks, a.Mine is not null, a.Mine?.PostedAt != null ? a.Mine.MarksAwarded : null, a.Mine?.Status.ToString(), a.ToGrade);
+            })
+            .OrderBy(h => h.DueDate).ToList();
+    }
+
+    public async Task<IReadOnlyList<MobileAttendanceRecord>?> AttendanceRecordsAsync(Guid userId, string role, Guid? studentProfileId, Guid? offeringId,
+        int take = 100, CancellationToken ct = default)
+    {
+        if (await AllowedStudentAsync(userId, role, studentProfileId, ct) is not { } profileId) return null;
+        var query = _db.AttendanceRecords.AsNoTracking().Where(a => a.StudentProfileId == profileId);
+        if (offeringId is { } only) query = query.Where(a => a.CourseOfferingId == only);
+        var rows = await query.OrderByDescending(a => a.Date).Take(Math.Clamp(take, 1, 500))
+            .Select(a => new { a.Date, a.CourseOfferingId, a.Status }).ToListAsync(ct);
+        var ids = rows.Select(r => r.CourseOfferingId).Distinct().ToList();
+        var courses = await _db.CourseOfferings.AsNoTracking().Where(o => ids.Contains(o.Id))
+            .Select(o => new { o.Id, o.Course.Code, o.Course.Title, Semester = o.Semester.Name }).ToDictionaryAsync(o => o.Id, ct);
+        return rows.Select(r =>
+            {
+                var c = courses.GetValueOrDefault(r.CourseOfferingId);
+                return new MobileAttendanceRecord(r.Date, r.CourseOfferingId, c?.Code ?? "", c?.Title ?? "", c?.Semester, r.Status.ToString());
+            })
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<MobileScope>> ScopesAsync(Guid userId, string role, CancellationToken ct = default)
+    {
+        var campusIds = new List<Guid?>();
+        if (Is(role, "SuperAdmin"))
+            campusIds.AddRange(await _db.Campuses.Where(c => c.IsActive).Select(c => (Guid?)c.Id).ToListAsync(ct));
+        else if (Is(role, "Admin"))
+            campusIds.AddRange(await _db.AdminDepartmentAssignments.Where(a => a.AdminUserId == userId && a.RemovedAt == null)
+                .Select(a => a.Department.CampusId).ToListAsync(ct));
+        else if (Is(role, "Faculty"))
+        {
+            campusIds.AddRange(await _db.CourseOfferings.Where(o => o.FacultyUserId == userId)
+                .Select(o => o.CampusId ?? o.Course.Department.CampusId).ToListAsync(ct));
+            campusIds.AddRange(await _db.FacultyDepartmentAssignments.Where(a => a.FacultyUserId == userId && a.RemovedAt == null)
+                .Join(_db.Departments, a => a.DepartmentId, d => d.Id, (a, d) => d.CampusId).ToListAsync(ct));
+        }
+        else return [];
+        if (!Is(role, "SuperAdmin"))
+            campusIds.Add(await _db.Users.Where(u => u.Id == userId).Select(u => u.CampusId).FirstOrDefaultAsync(ct));
+        var ids = campusIds.Where(id => id != null).Select(id => id!.Value).Distinct().ToList();
+        var scopes = await _db.Campuses.AsNoTracking().Where(c => ids.Contains(c.Id) && c.IsActive)
+            .Join(_db.Tenants, c => c.TenantId, t => t.Id, (c, t) => new { TenantId = t.Id, TenantName = t.Name, CampusId = c.Id, CampusName = c.Name })
+            .ToListAsync(ct);
+        return scopes.Select(s => new MobileScope(s.TenantId, s.TenantName, s.CampusId, s.CampusName))
+            .OrderBy(s => s.TenantName, StringComparer.OrdinalIgnoreCase).ThenBy(s => s.CampusName, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    public async Task<MobileCampusSummary?> CampusSummaryAsync(Guid userId, string role, Guid? campusId, DateTime today, CancellationToken ct = default)
+    {
+        if (!Is(role, "Admin") && !Is(role, "SuperAdmin")) return null;
+        var scopes = await ScopesAsync(userId, role, ct);
+        var chosen = campusId is { } id ? scopes.FirstOrDefault(s => s.CampusId == id) : null;
+        if (campusId is not null && chosen is null) return null;
+        List<Guid> campuses = chosen is not null ? [chosen.CampusId] : scopes.Select(s => s.CampusId).ToList();
+        var departments = await _db.Departments.Where(d => d.CampusId != null && campuses.Contains(d.CampusId.Value)).Select(d => d.Id).ToListAsync(ct);
+        var offerings = _db.CourseOfferings.Where(o => o.CampusId != null ? campuses.Contains(o.CampusId.Value) : departments.Contains(o.Course.DepartmentId));
+        var students = await _db.StudentProfiles.CountAsync(p => departments.Contains(p.DepartmentId), ct);
+        var courses = await offerings.CountAsync(ct);
+        var teachers = await offerings.Where(o => o.FacultyUserId != null).Select(o => o.FacultyUserId).Distinct().CountAsync(ct);
+        var day = today.Date;
+        var next = day.AddDays(1);
+        var offeringIds = offerings.Select(o => o.Id);
+        var marks = await _db.AttendanceRecords.AsNoTracking()
+            .Where(a => offeringIds.Contains(a.CourseOfferingId) && a.Date >= day && a.Date < next)
+            .Select(a => a.Status).ToListAsync(ct);
+        var attended = marks.Count(s => s is AttendanceStatus.Present or AttendanceStatus.Late);
+        return new MobileCampusSummary(chosen?.CampusId, chosen?.CampusName, chosen?.TenantName, students, teachers, courses, marks.Count,
+            marks.Count == 0 ? null : Math.Round(100m * attended / marks.Count, 1));
+    }
+
+    private static bool Is(string role, string name) => string.Equals(role, name, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>The student's own profile, or a parent's actively linked child; null otherwise.</summary>
     private async Task<Guid?> AllowedStudentAsync(Guid userId, string role, Guid? studentProfileId, CancellationToken ct)

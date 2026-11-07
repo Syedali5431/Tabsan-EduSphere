@@ -64,18 +64,44 @@ public sealed class MobileController : ControllerBase
         return Ok(await _queries.HomeAsync(UserId(), Role(), day, ct));
     }
 
-    /// <summary>The week's classes: a student's enrolled courses, or the classes a teacher teaches.</summary>
+    /// <summary>The week's classes: a student's enrolled courses, the classes a teacher teaches, or a parent's linked child's (?studentProfileId=).</summary>
     [HttpGet("timetable")]
-    public async Task<IActionResult> Timetable(CancellationToken ct) => Ok(await _queries.TimetableAsync(UserId(), Role(), ct));
+    public async Task<IActionResult> Timetable([FromQuery] Guid? studentProfileId, CancellationToken ct)
+        => await _queries.TimetableAsync(UserId(), Role(), studentProfileId, ct) is { } rows ? Ok(rows) : Forbidden("You cannot see this student's timetable.");
 
-    /// <summary>The courses the user studies (student) or teaches (teacher).</summary>
+    /// <summary>The courses the user studies (student) or teaches (teacher), or a parent's linked child's (?studentProfileId=).</summary>
     [HttpGet("courses")]
-    public async Task<IActionResult> Courses(CancellationToken ct) => Ok(await _queries.CoursesAsync(UserId(), Role(), ct));
+    public async Task<IActionResult> Courses([FromQuery] Guid? studentProfileId, CancellationToken ct)
+        => await _queries.CoursesAsync(UserId(), Role(), studentProfileId, ct) is { } rows ? Ok(rows) : Forbidden("You cannot see this student's courses.");
 
-    /// <summary>One course: materials, assignments (with the student's own state), quizzes and announcements.</summary>
+    /// <summary>One course: materials, assignments (with the student's own state), quizzes and announcements (parents: ?studentProfileId=).</summary>
     [HttpGet("courses/{offeringId:guid}")]
-    public async Task<IActionResult> Course(Guid offeringId, CancellationToken ct)
-        => await _queries.CourseAsync(UserId(), Role(), offeringId, ct) is { } course ? Ok(course) : NotFound(new { message = "Course offering not found." });
+    public async Task<IActionResult> Course(Guid offeringId, [FromQuery] Guid? studentProfileId, CancellationToken ct)
+        => await _queries.CourseAsync(UserId(), Role(), offeringId, studentProfileId, ct) is { } course ? Ok(course) : NotFound(new { message = "Course offering not found." });
+
+    /// <summary>Homework of all the user's courses (teachers: with what is left to grade; parents: ?studentProfileId=), soonest due first.</summary>
+    [HttpGet("homework")]
+    public async Task<IActionResult> Homework([FromQuery] Guid? studentProfileId, CancellationToken ct)
+        => await _queries.HomeworkAsync(UserId(), Role(), studentProfileId, ct) is { } rows ? Ok(rows) : Forbidden("You cannot see this student's homework.");
+
+    /// <summary>Day-by-day attendance, newest first (students: own; parents: ?studentProfileId=), optionally of one course (?offeringId=).</summary>
+    [HttpGet("attendance/records")]
+    public async Task<IActionResult> AttendanceRecords([FromQuery] Guid? studentProfileId, [FromQuery] Guid? offeringId, [FromQuery] int take, CancellationToken ct)
+        => await _queries.AttendanceRecordsAsync(UserId(), Role(), studentProfileId, offeringId, take <= 0 ? 100 : take, ct) is { } rows
+            ? Ok(rows) : Forbidden("You cannot see this student's attendance.");
+
+    /// <summary>The institutes and campuses the user works in (teachers, admins, SuperAdmins), for the app's campus picker.</summary>
+    [HttpGet("scopes")]
+    public async Task<IActionResult> Scopes(CancellationToken ct) => Ok(await _queries.ScopesAsync(UserId(), Role(), ct));
+
+    /// <summary>Admins and SuperAdmins: a campus at a glance (?campusId=; all their campuses without it). ?date= is today on the phone.</summary>
+    [HttpGet("campus-summary")]
+    [Authorize(Roles = "Admin,SuperAdmin")]
+    public async Task<IActionResult> CampusSummary([FromQuery] Guid? campusId, [FromQuery] DateTime? date, CancellationToken ct)
+        => await _queries.CampusSummaryAsync(UserId(), Role(), campusId, date ?? DateTime.UtcNow.Date, ct) is { } summary
+            ? Ok(summary) : Forbidden("You do not manage this campus.");
+
+    private ObjectResult Forbidden(string message) => StatusCode(StatusCodes.Status403Forbidden, new { message });
 
     /// <summary>Published results with course names (students: own; parents: ?studentProfileId= of a linked child).</summary>
     [HttpGet("results")]

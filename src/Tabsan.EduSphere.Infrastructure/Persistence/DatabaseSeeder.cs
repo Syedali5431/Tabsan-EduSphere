@@ -407,6 +407,7 @@ public static class DatabaseSeeder
         var notifications    = await Upsert("notifications",     "Notifications",      "View system and academic notifications",           8);
         var students         = await Upsert("students",          "Students",           "Manage student profiles",                         9);
         var userImport       = await Upsert("user_import",       "User Import",        "Bulk-import user accounts from CSV",             10);
+        var parentLinks      = await Upsert("parent_links",      "Parent Links",       "Link parent accounts to School students",       10);
         var userSettings     = await Upsert("user_settings",     "User Settings",      "Update personal details and account password",   11);
         var departments      = await Upsert("departments",       "Departments",        "Manage academic departments",                    10);
         var programs         = await Upsert("programs",          "Programs",           "Manage degree programs",                         11);
@@ -569,6 +570,11 @@ public static class DatabaseSeeder
         EnsureRoleAccess(userImport.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(userImport.Id, "Faculty", isAllowed: false);
         EnsureRoleAccess(userImport.Id, "Student", isAllowed: false);
+
+        // Parent links (School parents ↔ students): Admin only, like User Import.
+        EnsureRoleAccess(parentLinks.Id, "Admin",   isAllowed: true);
+        foreach (var role in new[] { "Faculty", "Student", "Finance", "Parent" })
+            EnsureRoleAccess(parentLinks.Id, role, isAllowed: false);
 
         // User settings: available to every signed-in role for self-service profile updates.
         foreach (var role in new[] { "Admin", "Faculty", "Student", "Finance" })

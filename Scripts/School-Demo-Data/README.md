@@ -13,7 +13,7 @@ Run them after the `Schools-And-Campuses` scripts. Script 2 signs in as the teac
 
 ```powershell
 cd Scripts\School-Demo-Data
-.\Run-School-Demo-Data.ps1                                  # LocalDB, database Tabsan-EduSphere, API on http://localhost:5181
+.\Run-School-Demo-Data.ps1                                  # localhost\SQLEXPRESS, database Tabsan-EduSphere, API on http://localhost:5181
 .\Run-School-Demo-Data.ps1 -Server "myserver" -Database "Tabsan-EduSphere" -Api "https://myserver/api/v1"
 .\Run-School-Demo-Data.ps1 -RecordsOnly                     # only 01 (no API needed)
 .\Run-School-Demo-Data.ps1 -ActivityOnly                    # only 02
@@ -22,7 +22,7 @@ cd Scripts\School-Demo-Data
 or one at a time:
 
 ```powershell
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -b -f 65001 -i "Scripts\School-Demo-Data\01-School-Records.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -d "Tabsan-EduSphere" -C -b -f 65001 -i "Scripts\School-Demo-Data\01-School-Records.sql"
 node Scripts\School-Demo-Data\02-Learning-Activity.mjs http://localhost:5181/api/v1
 node Scripts\School-Demo-Data\02-Learning-Activity.mjs http://localhost:5181/api/v1 TMS-GUL    # one campus only
 ```

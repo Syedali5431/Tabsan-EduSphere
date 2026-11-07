@@ -16,7 +16,7 @@ Run them against `Tabsan-EduSphere` after `02-Seed-Core.sql` (see `../README-SCR
 
 ```powershell
 cd Scripts\Schools-And-Campuses
-.\Run-School-Scripts.ps1                                # LocalDB, database Tabsan-EduSphere
+.\Run-School-Scripts.ps1                                # localhost\SQLEXPRESS, database Tabsan-EduSphere
 .\Run-School-Scripts.ps1 -Server "myserver" -Database "Tabsan-EduSphere"
 .\Run-School-Scripts.ps1 -CheckOnly                     # only 03
 ```
@@ -24,9 +24,9 @@ cd Scripts\Schools-And-Campuses
 or one at a time:
 
 ```powershell
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -b -f 65001 -i "Scripts\Schools-And-Campuses\01-Add-Schools-And-Campuses.sql"
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -b -f 65001 -i "Scripts\Schools-And-Campuses\02-Add-School-Sections.sql"
-sqlcmd -S "(localdb)\MSSQLLocalDB" -d "Tabsan-EduSphere" -b -f 65001 -i "Scripts\Schools-And-Campuses\03-Check-Institution-Types.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -d "Tabsan-EduSphere" -C -b -f 65001 -i "Scripts\Schools-And-Campuses\01-Add-Schools-And-Campuses.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -d "Tabsan-EduSphere" -C -b -f 65001 -i "Scripts\Schools-And-Campuses\02-Add-School-Sections.sql"
+sqlcmd -S "localhost\SQLEXPRESS" -d "Tabsan-EduSphere" -C -b -f 65001 -i "Scripts\Schools-And-Campuses\03-Check-Institution-Types.sql"
 ```
 
 ### Your own schools
