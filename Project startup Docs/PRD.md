@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-11-08 — Product Requirements Synchronization (accessibility regressions fixed)
+- The axe-core scan with the School demo data found serious or critical findings on 13 portal pages (§27.9). All are fixed, and the accessibility spec passes again for SuperAdmin and student pages (5/5, 0 findings of any impact):
+  - **Labels:** every control in the scan now has a name. That covers the menu on/off switches (Sidebar Settings), the rename boxes (Tenants, Campuses, Programs), the Active tick (Grading Configuration), the profile-picture field (User Settings), the empty offering box (Announcements), Select Admin (Admin Users), the department filter (Prerequisites) and the certificate type (Generate Certificates). New texts have Urdu and Arabic translations.
+  - **Contrast:**
+    - Text on the info and warning badges and progress bars is dark in every theme. White on those fills is below 2:1.
+    - The second lines of the selected user in User Settings are no longer faded.
+    - Inline code is darker on light panels.
+
+    The colours are the theme variables `--text-on-bright-fill` and `--code-text` in `site.css`.
+- The 13 pages were also scanned in three light themes and the four dark themes, with the controls above on the page. No serious or critical findings.
+- Tests: unit 717/717, web-integration 111/111.
+
 ### 2026-11-08 — Product Requirements Synchronization (a second institute on one server; Installation and Connection Guide)
 - A second installation with its own database was set up next to the first, and a phone was moved between them. This found three faults, all fixed (§27.7):
   - A new database got its SuperAdmin only on the second start.
@@ -6348,6 +6360,9 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **iOS.** The build, the local-network permission prompt and plain-HTTP access on the local network need a Mac and an iPhone.
 - **Google Play.** Signing with the institution's upload keystore and publishing an `.aab`. The standard APK is debug-signed, for direct installation only.
 - **Push.** Native push needs the institution's own Firebase project (as in §26.19).
+- **Accessibility regressions.** The axe-core scan of 8 November 2026 (School demo data) found serious or critical findings on 13 pages, against 0 on 24 October (§26.16). They were missing labels, drop-downs without a name, and low colour contrast. All were fixed the same day (see the 2026-11-08 synchronization entry), and the spec passes again. Still open:
+  - The spec signs in only as SuperAdmin and student, so Admin, Teacher, Finance and Parent pages are not scanned.
+  - It scans the signed-in user's own theme. The other themes were checked by hand on the 13 pages only.
 - **Security: the API's `/setup` page.** It needs no sign-in, also after set-up:
   - Anyone who can reach the API can open it.
   - Save & Continue or Import & Apply Profile changes the database the API uses, at once.
