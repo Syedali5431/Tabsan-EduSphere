@@ -3,6 +3,7 @@
 //   e.g. node capture-portal.mjs http://localhost:5163 http://localhost:5281 http://192.168.1.109:5281 <password>
 // Saves one thing on the example installation: its branding (institution name and subtitle). Everything else only
 // reads; the database setup page is tested ("Test Connection"), never saved. Images go to shots/portal/.
+// The setup page (n04) needs SETUP_API: an API without a working database, because /setup is closed (404) otherwise.
 import { chromium } from 'playwright-core';
 import fs from 'fs';
 import { execFileSync } from 'child_process';
@@ -70,11 +71,14 @@ async function consoleFigure(name, heading, lines) {
 await consoleFigure('n02-api-startup', 'Northfield API — console when it starts', fs.readFileSync('shots/console/api-startup.txt', 'utf8').trim().split(/\r?\n/));
 await consoleFigure('n03-portal-startup', 'Northfield portal — console when it starts', fs.readFileSync('shots/console/portal-startup.txt', 'utf8').trim().split(/\r?\n/));
 
-// 4. The API's database setup page with a connection test (not saved).
-{
+// 4. The API's database setup page with a connection test (not saved). The page is open only while an API has no
+// working database (a working one answers 404), so SETUP_API names a second copy of the API started without one
+// (README); without it this picture is kept as it is.
+if (process.env.SETUP_API) {
   const ctx = await context(1200, 1000);
   const page = await ctx.newPage();
-  await page.goto(`${API}/setup`);
+  const response = await page.goto(`${process.env.SETUP_API}/setup`);
+  if (response.status() !== 200) throw new Error(`${process.env.SETUP_API}/setup answered ${response.status()}: start that API without a working database`);
   await page.selectOption('#dbType', 'Local').catch(() => {});
   await page.selectOption('#localProvider', 'SqlServerExpress').catch(() => {});
   await page.fill('#serverHost', SQL);
@@ -87,6 +91,8 @@ await consoleFigure('n03-portal-startup', 'Northfield portal — console when it
   await shot(page, 'n04-setup-page', { fullPage: true });
   console.log('   test result:', (await page.textContent('#testResult')).trim());
   await ctx.close();
+} else {
+  console.log('kept n04-setup-page (set SETUP_API to take it again)');
 }
 
 // 5. The new institute's portal before anything is set.

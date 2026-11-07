@@ -7,6 +7,11 @@ using Tabsan.EduSphere.API.Services.Setup;
 
 namespace Tabsan.EduSphere.API.Controllers;
 
+/// <summary>
+/// The Database Setup page. Anonymous, because a new server has no database and so no users, but
+/// <see cref="Middleware.DatabaseSetupGateMiddleware"/> lets requests reach it only while the API has no working
+/// database; once the database works every <c>/setup</c> address answers 404 (the reasons are in that middleware).
+/// </summary>
 [AllowAnonymous]
 public sealed class SetupController : Controller
 {
@@ -93,8 +98,9 @@ public sealed class SetupController : Controller
                 return View("~/Views/Setup/Index.cshtml", failedModel);
             }
 
+            // The database works now, so /setup is closed (404); continue like Save & Continue.
             TempData["SetupMessage"] = "Setup profile imported and applied successfully.";
-            return Redirect("/setup");
+            return Redirect("/");
         }
         catch (Exception ex)
         {

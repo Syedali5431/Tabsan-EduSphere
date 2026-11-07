@@ -1,5 +1,12 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-11-08 — Product Requirements Synchronization (the API's Database Setup page closes on a working server; Installation and Connection Guide v1.1)
+- The API's `/setup` page is open only while the API has no working database. Once the database works, every address that starts with `/setup` answers 404, for everyone (FR-S7.10). Before, anyone who could reach the API, for example phones on the school Wi-Fi, could change the database the API uses or make it connect to any SQL Server.
+- Fixed: on a server without a working database the page itself failed with HTTP 500, because the licence-domain check and the institution context read the database first (FR-S7.11).
+- Installation and Connection Guide v1.1 (34 pages): the setup page's new behaviour, how to change the database of a working installation, and a new Figure 2.1 (§27.8). Blocking `/setup` at IIS or nginx stays as a second line of defence.
+- The open item in §27.9 is closed; what remains is the time while the database is unreachable (§27.9).
+- Tests after the change: unit 717/717, integration 400/401 (13 new; 1 long-standing skip), web-integration 111/111, contract 1/1.
+
 ### 2026-11-08 — Product Requirements Synchronization (a second institute on one server; Installation and Connection Guide)
 - A second installation with its own database was set up next to the first, and a phone was moved between them. This found three faults, all fixed (§27.7):
   - A new database got its SuperAdmin only on the second start.
@@ -6294,6 +6301,12 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **FR-S7.7** The first start on a new database creates the first SuperAdmin (from `TABSAN_SUPER_USERNAME`, `TABSAN_SUPER_PASSWORD` and `TABSAN_SUPER_EMAIL`). The roles are now saved before the SuperAdmin is linked to one; before, only the second start created the account.
 - **FR-S7.8** Publishing the API again into a folder that already holds it keeps the API's own `appsettings*.json`. The filter that leaves out the BackgroundJobs settings never matched (MSBuild has no escapes, so its doubled backslash was literal) and ran before those files joined the publish list. A folder already broken by an earlier publish needs those files deleted and a new publish.
 - **FR-S7.9** The portal uses the API address it resolves at start-up everywhere: from `EDUSPHERE_APP_BASE_URL`, an `environments.json` profile, or `EduApi:BaseUrl`. It writes that address in its first lines. Before, the variable and the profile only passed a start-up check, and the pages called the API named in `EduApi:BaseUrl`.
+- **FR-S7.10** The API's Database Setup page (`/setup`, with its Test Connection, Save & Continue, Import, Export and Docker .env actions) needs no sign-in, because a new server has no database and so no users. It is open only while the API has no working database (`DatabaseSetupRuntimeState.RequiresSetup`: the connection string is missing or a placeholder, or the database cannot be reached). Once the database works, every address that starts with `/setup` answers 404, also to SuperAdmins and to the server itself. `DatabaseSetupGateMiddleware` enforces it and explains why in a comment:
+  - SuperAdmin only does not work: a browser opening this page on the API carries no sign-in token (the portal keeps it).
+  - The server itself (loopback) is not safe: behind nginx or out-of-process hosting on the same computer every request comes from 127.0.0.1, and forwarded headers can be forged when no known proxy is configured.
+
+  Only addresses that start with `/setup` are affected; the two-factor addresses that end in `setup` (`api/v1/auth/mfa/setup`, `api/v1/2fa/setup`) are not. A successful import continues to `/`, like Save & Continue, since `/setup` is closed by then. To change the database of a working installation: change `EDUSPHERE_DB_CONNECTION` or `appsettings.Local.json`, delete `App_Data/database-setup.json` if the page saved one, and restart.
+- **FR-S7.11** The Database Setup page works on a server without a working database. The licence-domain check and the institution context no longer read the database for `/setup` addresses; before, the page failed with HTTP 500 exactly when it was needed (found by starting a published API with a SQL Server that does not exist).
 
 ### 27.8 Documentation and acceptance evidence
 - **Mobile App Connection Guide** (`User Guide/Tabsan-EduSphere-Mobile-App-Connection-Guide.docx` and `.pdf`):
@@ -6318,6 +6331,8 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   - troubleshooting and a settings reference.
 
   The example is "Northfield Model School": database `EduSphere-Northfield`, API on port 5281, portal on 5163, running next to the main installation on SQL Server Express. A phone was moved between the two with Change server. The guide is built by `tools/user-manual/connection-guide`.
+
+  **v1.1** (8 November 2026, 34 pages) follows FR-S7.10: the setup page is open only while the API has no working database (sections 2.4 and 7.5), how to change the database of a working installation, a troubleshooting row for `/setup` answering 404, and the IIS and nginx block kept as a second line of defence. Figure 2.1 was taken again on a second copy of the published API started with a SQL Server that does not exist.
 - **Schools sales deck:** `PPT/Tabsan_EduSphere_For_Schools.pptx`, 19 slides made from screenshots of the running app.
 - **Tests,** 2026-11-07, and again on 2026-11-08 after the fixes in FR-S7.7 to FR-S7.9, after a full build with 0 errors:
   - unit 717/717;
@@ -6326,6 +6341,8 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   - contract 1/1.
 
   A full rebuild also reports five older compiler warnings in the portal (`ScormPlayController.Json` hides an inherited member; unreachable code in four views). They are untouched by this work.
+
+  Again on 2026-11-08 after FR-S7.10 and FR-S7.11: unit 717/717, integration 400/401 (13 new tests for the setup page; the same long-standing skip), web-integration 111/111, contract 1/1.
 - **The first SuperAdmin:** a new database needs `TABSAN_SUPER_PASSWORD` in every real environment, and start-up stops with a clear message without it (an empty value counts as missing). Only the Testing environment skips the bootstrap account, because the test suites create their own accounts.
 
   New tests in this period:
@@ -6337,6 +6354,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   | Result labels | Integration and web-integration |
   | Mobile core | Server address parsing, server check, switching, lock, server page, child/class/campus choice, homework, attendance, password change |
   | Mobile API | Integration: classes, campuses, homework, day-by-day attendance, the admin's campus, results order |
+  | Database Setup page | Integration: with a working database every `/setup` address answers 404, also to a SuperAdmin; save, import and test-connection are refused even with a valid anti-forgery token, and nothing is connected or changed; on a test host with no database at all the page, test-connection, save, import and export work and the rest of the API answers 503; a database that stops and starts working opens and closes the page; the two-factor `setup` addresses are unaffected |
 - **Checked in the running app:**
   - School-only display, on a School-only copy of the database.
   - Both School scripts, on SQL Server Express.
@@ -6348,12 +6366,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **iOS.** The build, the local-network permission prompt and plain-HTTP access on the local network need a Mac and an iPhone.
 - **Google Play.** Signing with the institution's upload keystore and publishing an `.aab`. The standard APK is debug-signed, for direct installation only.
 - **Push.** Native push needs the institution's own Firebase project (as in §26.19).
-- **Security: the API's `/setup` page.** It needs no sign-in, also after set-up:
-  - Anyone who can reach the API can open it.
-  - Save & Continue or Import & Apply Profile changes the database the API uses, at once.
-  - Test Connection makes the API connect to any SQL Server someone types.
-
-  Until the product limits the page (for example to the time before a database is configured, to the server itself, or to SuperAdmins), the Installation and Connection Guide tells installers to block `/setup` at IIS or nginx (§7.5 of that guide).
+- **Security: the API's `/setup` page while the database is unreachable.** Closed on 8 November 2026 for working servers: the page answers 404 once the database works (FR-S7.10). It still opens, without sign-in, whenever the API cannot reach its database, for example while SQL Server is stopped or restarting. During that time anyone who can reach the API could point it at another database. The Installation and Connection Guide therefore keeps telling installers to block `/setup` at IIS or nginx as a second line of defence (§7.5 of that guide). The page's Docker .env template also shows the configured connection string with its password at those times.
 
 ---
 
