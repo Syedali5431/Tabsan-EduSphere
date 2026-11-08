@@ -18,6 +18,14 @@ public sealed class InstitutionContextMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // The Database Setup page needs no institution context, and it is reached only while there is no working
+        // database (DatabaseSetupGateMiddleware), so reading the policy would fail the page.
+        if (DatabaseSetupGateMiddleware.IsSetupPath(context.Request.Path.Value ?? string.Empty))
+        {
+            await _next(context);
+            return;
+        }
+
         var policyService = context.RequestServices
             .GetService<IInstitutionPolicyService>();
 

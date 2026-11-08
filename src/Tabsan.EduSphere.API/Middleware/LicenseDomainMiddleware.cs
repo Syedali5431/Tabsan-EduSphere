@@ -33,8 +33,10 @@ public class LicenseDomainMiddleware
     {
         var path = context.Request.Path.Value ?? string.Empty;
 
-        // Always allow the auth / license endpoints so the admin is never fully locked out.
-        if (_allowedPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+        // Always allow the auth / license endpoints so the admin is never fully locked out. The Database Setup page too:
+        // DatabaseSetupGateMiddleware lets it through only while there is no working database, so the licence cannot be read.
+        if (_allowedPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase))
+            || DatabaseSetupGateMiddleware.IsSetupPath(path))
         {
             await _next(context);
             return;

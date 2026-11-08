@@ -17,7 +17,7 @@
             <div class="card">
                 <div>
                     <h1 class="h4 mb-1">Database Setup</h1>
-                    <p class="muted">Configure your deployment database once, then run normally. You can revisit this page any time at /setup.</p>
+                    <p class="muted">Configure your deployment database once, then run normally. This page is open only while the API has no working database; once the database works, /setup is closed. To change the database later, use the server's settings (Installation and Connection Guide, section 2.4).</p>
 
                     @if (TempData["SetupMessage"] is string setupMessage && !string.IsNullOrWhiteSpace(setupMessage))
                     {

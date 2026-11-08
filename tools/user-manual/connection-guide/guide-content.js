@@ -3,7 +3,8 @@
 // diagram:<name> = shots/diagram (diagram.js). **bold** and `code` work in all text.
 // Every figure comes from the worked example of chapter 6: a second installation, "Northfield Model School", on the same PC.
 
-const VERSION = '1.0';
+// 1.1: the API closes /setup once its database works (sections 2.4 and 7.5).
+const VERSION = '1.1';
 const DATE = '8 November 2026';
 
 module.exports = {
@@ -138,9 +139,10 @@ module.exports = {
             { h3: 'Recommended: an environment variable' },
             'Set `EDUSPHERE_DB_CONNECTION` in the window or IIS site that starts the API (section 3.3). It wins over every settings file, and it keeps the password out of files in the program folder.',
             { h3: 'Or: the Database Setup page' },
-            'The API has its own setup page at `http://<API address>/setup`. It opens by itself when the API cannot reach its database. You choose SQL Server Express or another server, type the server and database, and use **Test Connection** (Figure 2.1). **Save & Continue** stores the settings encrypted in `App_Data\\database-setup.json` in the API\'s folder. They take effect at once and override every other setting.',
-            { fig: 'portal:n04-setup-page', caption: 'The API\'s Database Setup page: the example\'s database tested (not saved)' },
-            { note: ['warning', 'The Database Setup page asks for **no sign-in**, also after set-up. Anyone who can reach the API can open it and change the database the API uses. Use environment variables instead where you can, and block the page once the installation works (section 7.5).'] },
+            'The API has its own setup page at `http://<API address>/setup`. It is open **only while the API has no working database**: on a new server whose connection string is missing, or when the API cannot reach its database. Then every page of the API leads there. You choose SQL Server Express or another server, type the server and database, and use **Test Connection** (Figure 2.1). **Save & Continue** stores the settings encrypted in `App_Data\\database-setup.json` in the API\'s folder. They take effect at once and override every other setting.',
+            { fig: 'portal:n04-setup-page', caption: 'The API\'s Database Setup page on an API without a working database: the example\'s database tested (not saved)' },
+            'Once the database works, every address that starts with `/setup` answers **404** (page not found), for everyone. To change the database of a working installation, change `EDUSPHERE_DB_CONNECTION` or `appsettings.Local.json`, delete `App_Data\\database-setup.json` if the setup page saved one (it wins over both), and restart the API.',
+            { note: ['warning', 'The Database Setup page asks for **no sign-in**, because a new server has no users yet. Whenever the API cannot reach its database (for example while SQL Server is stopped), the page is open again to anyone who can reach the API. Use environment variables where you can, and also block the page at IIS or nginx (section 7.5).'] },
             { h3: 'Or: a settings file' },
             'Put the connection string in `appsettings.Local.json` in the API\'s folder. An update does not overwrite this file, because it is never part of the published program.',
             { code: ['{', '  "ConnectionStrings": {', '    "DefaultConnection": "Server=localhost\\\\SQLEXPRESS;Database=EduSphere-Northfield;…"', '  }', '}'] },
@@ -432,7 +434,7 @@ module.exports = {
               '**Published** the API and the portal into a new folder (section 3.2).',
               '**Started the API** with `EDUSPHERE_DB_CONNECTION` naming the new database, `TABSAN_SUPER_PASSWORD` for the first SuperAdmin, `--urls http://0.0.0.0:5281` and `--Mobile:PortalBaseUrl=http://192.168.1.109:5163` (section 3.3). The database did not exist; the API created it in 16 seconds and answered `/health` with **Healthy**.',
               '**Started the portal** with `EDUSPHERE_APP_BASE_URL=http://localhost:5281` and `--urls http://0.0.0.0:5163` (section 4.2). Its log showed every call going to port 5281.',
-              '**Tested the database** on the API\'s Database Setup page: "Connection test succeeded." (not saved, Figure 2.1).',
+              '**Tested the database** on the Database Setup page: "Connection test succeeded." (not saved, Figure 2.1). The page is closed on an API whose database works, so this was a second copy of the API, started for a moment on port 5282 with a SQL Server that does not exist (`-SqlServer localhost\\NOSUCH -ApiPort 5282`).',
               '**Signed in** to the new portal as superadmin, named the institute **Northfield Model School** with the subtitle **School Portal**, and looked at License Update (sections 4.3–4.5).',
               '**Checked** `http://192.168.1.109:5281/api/v1/mobile/config`: it showed the new name and the portal address for phones (Figure 5.1).',
               '**Moved the phone**: on the Android 14 emulator, which was signed in to the main institute, Settings → Change server. Typing `192.168.1.109:5163` (the portal) was refused; `192.168.1.109:5281` connected, showed Northfield\'s name, and the SuperAdmin signed in (chapter 5).',
@@ -516,12 +518,13 @@ module.exports = {
         {
           title: 'Protect the Database Setup page',
           body: [
-            'The API\'s `/setup` page needs no sign-in. Its **Save & Continue** and **Import & Apply Profile** buttons change the database the API uses, and **Test Connection** makes the API connect to any SQL Server someone types. Once the installation works, block every address that **starts with** `/setup` for everyone but the server itself. Do not block `setup` elsewhere in addresses: two-factor sign-in uses addresses that end in `/setup`.',
+            'The API\'s `/setup` page needs no sign-in, so that a new server can use it. Its **Save & Continue** and **Import & Apply Profile** buttons change the database the API uses, and **Test Connection** makes the API connect to any SQL Server someone types. The API therefore closes the page itself: while its database works, every address that **starts with** `/setup` answers **404** (page not found), also to SuperAdmins and to the server itself (section 2.4).',
+            'The page opens again whenever the API cannot reach its database, for example while SQL Server is stopped or restarting, or when the database server cannot be reached. Then anyone who can reach the API could point it at another database. As a second line of defence, block every address that starts with `/setup` at IIS or nginx for everyone but the server itself, once the installation works. Do not block `setup` elsewhere in addresses: two-factor sign-in uses addresses that end in `/setup`.',
             { h3: 'IIS (URL Rewrite module), in the API site\'s web.config' },
             { code: ['<rewrite><rules>', '  <rule name="Block database setup page" stopProcessing="true">', '    <match url="^setup(/|$)" />', '    <action type="CustomResponse" statusCode="404" />', '  </rule>', '</rules></rewrite>'] },
             { h3: 'nginx' },
             { code: ['location ^~ /setup { deny all; }'] },
-            { note: ['warning', 'When phones reach the API directly on the institute\'s network (no IIS or nginx in front), every device on that Wi-Fi can open `/setup`. Put the API behind IIS or nginx with the block above, or keep that network to staff devices.'] },
+            { note: ['warning', 'When phones reach the API directly on the institute\'s network (no IIS or nginx in front), every device on that Wi-Fi can open `/setup` whenever the API cannot reach its database. Put the API behind IIS or nginx with the block above, or keep that network to staff devices.'] },
           ],
         },
         {
@@ -550,6 +553,7 @@ module.exports = {
               ['The API stops at once: "TABSAN_SUPER_PASSWORD environment variable is required for initial seeding."', 'First start of a new database without the variable', 'Set `TABSAN_SUPER_PASSWORD` (section 2.5)'],
               ['Cannot sign in as superadmin after the very first start', 'A build from before 8 November 2026', 'Restart the API once'],
               ['Pages redirect to `/setup`, or the API answers 503 "database_setup_required"', 'The API cannot reach its database', 'Check that SQL Server runs, the server and database names, and the account\'s rights; use Test Connection'],
+              ['`/setup` answers 404 (page not found)', 'The API\'s database works, so the setup page is closed (section 7.5)', 'Change the database with `EDUSPHERE_DB_CONNECTION` or `appsettings.Local.json`; delete `App_Data\\database-setup.json` if the page saved one; restart the API (section 2.4)'],
               ['"Cannot open database … requested by the login"', 'The database exists but the API\'s account has no rights on it', 'Give that account db_owner (section 2.2)'],
               ['Every request gives error 500 after an update; `appsettings.json` is about 1 KB', 'An update by a build from before 8 November 2026 copied the background-jobs settings over the API\'s', 'Delete `appsettings*.json` in the folder and publish again (section 3.2)'],
               ['In Production the API stops with "… must be provided by environment variables …"', 'A required setting is missing or a placeholder', 'Set it (section 7.1)'],
@@ -592,7 +596,7 @@ module.exports = {
         { table: { head: ['Setting / variable', 'Purpose', 'Example'], widths: [4400, 2800, 2200], rows: [
           ['`EDUSPHERE_DB_CONNECTION`', 'The database (wins over every file)', 'chapter 2'],
           ['`ConnectionStrings:DefaultConnection`', 'The database (settings file)', 'chapter 2'],
-          ['`App_Data\\database-setup.json`', 'Saved by the Database Setup page; wins over everything', '—'],
+          ['`App_Data\\database-setup.json`', 'Saved by the Database Setup page; wins over everything (delete it to use another setting)', 'section 2.4'],
           ['`TABSAN_SUPER_USERNAME` / `_PASSWORD` / `_EMAIL`', 'The first SuperAdmin of a new database', '`superadmin`'],
           ['`--urls` (or `ASPNETCORE_URLS`)', 'Listening address (Production: section 7.3)', '`http://0.0.0.0:5281`'],
           ['`ASPNETCORE_ENVIRONMENT`', '`Development` (trial) or `Production` (live; the default)', '`Production`'],
@@ -622,7 +626,7 @@ module.exports = {
         { table: { head: ['Address', 'What it shows'], widths: [4400, 5000], rows: [
           ['`http://<server>:5281/health`', '**Healthy** when the API and its database work'],
           ['`http://<server>:5281/api/v1/mobile/config`', 'The institute\'s name and portal address: what the app reads first'],
-          ['`http://<server>:5281/setup`', 'The Database Setup page (block it on live servers, section 7.5)'],
+          ['`http://<server>:5281/setup`', 'The Database Setup page: only while the API has no working database, else 404 (section 7.5)'],
           ['`http://<server>:5163/`', 'The portal\'s sign-in page'],
         ] } },
         { h3: 'Ports used in the example' },
