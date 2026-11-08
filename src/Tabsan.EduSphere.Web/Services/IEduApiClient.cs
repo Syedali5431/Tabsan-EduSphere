@@ -462,6 +462,8 @@ public partial interface IEduApiClient
 
     // Phase 15: Enrollment Rules — Prerequisites
     Task<List<PrerequisiteWebItem>> GetPrerequisitesAsync(Guid courseId, CancellationToken ct);
+    /// <summary>The prerequisites of every course in a department, in one call.</summary>
+    Task<List<PrerequisiteWebItem>> GetDepartmentPrerequisitesAsync(Guid departmentId, CancellationToken ct);
     Task AddPrerequisiteAsync(Guid courseId, Guid prerequisiteCourseId, CancellationToken ct);
     Task RemovePrerequisiteAsync(Guid courseId, Guid prerequisiteCourseId, CancellationToken ct);
 
@@ -3524,6 +3526,7 @@ public partial class EduApiClient : IEduApiClient
         public Guid    Id             { get; set; }
         public string? Title          { get; set; }
         public string? Code           { get; set; }
+        public Guid    DepartmentId   { get; set; }
         public Guid?   TenantId       { get; set; }
         public Guid?   CampusId       { get; set; }
         public int     InstitutionType { get; set; }
@@ -3543,6 +3546,7 @@ public partial class EduApiClient : IEduApiClient
         Id             = c.Id,
         Title          = c.Title          ?? "",
         Code           = c.Code           ?? "",
+        DepartmentId   = c.DepartmentId,
         TenantId       = c.TenantId,
         CampusId       = c.CampusId,
         InstitutionType = c.InstitutionType,
@@ -6193,10 +6197,14 @@ public partial class EduApiClient : IEduApiClient
     // ── Phase 15: Enrollment Rules — Prerequisites ────────────────────────────
 
     public async Task<List<PrerequisiteWebItem>> GetPrerequisitesAsync(Guid courseId, CancellationToken ct)
+        => MapPrerequisites(await GetAsync<List<PrerequisiteApiDto>>($"api/v1/prerequisite/{courseId}", ct));
+
+    public async Task<List<PrerequisiteWebItem>> GetDepartmentPrerequisitesAsync(Guid departmentId, CancellationToken ct)
+        => MapPrerequisites(await GetAsync<List<PrerequisiteApiDto>>($"api/v1/prerequisite?departmentId={departmentId}", ct));
+
+    private static List<PrerequisiteWebItem> MapPrerequisites(List<PrerequisiteApiDto>? items)
     {
-        var items = await GetAsync<List<PrerequisiteApiDto>>($"api/v1/prerequisite/{courseId}", ct)
-                    ?? new List<PrerequisiteApiDto>();
-        return items.Select(p => new PrerequisiteWebItem
+        return (items ?? new List<PrerequisiteApiDto>()).Select(p => new PrerequisiteWebItem
         {
             CourseId                = p.CourseId,
             CourseCode              = p.CourseCode ?? "",

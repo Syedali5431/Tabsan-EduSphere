@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-11-08 — Product Requirements Synchronization (full check of the portal and the app; three fixes)
+- Every portal page in the menu was opened as SuperAdmin (67 pages), Admin (37), Finance (8), Teacher (29) and Student (17), and every app screen as student, teacher, parent and campus admin. Three faults were found and fixed:
+  - A parent's portal sign-in looped between Dashboard and Helpdesk until the browser gave up. Parents now land on a page that sends them to the app (§27.7).
+  - The Prerequisites page asked the API course by course, so the School demo data's 610 courses used up the per-user request limit in one page load. It now makes one call per department (§27.7).
+  - The parent's child card in the app showed the programme ("Class 1 to 10 …") instead of the child's class (§27.4).
+- Browser suite (Playwright, installed Chrome, School demo data):
+  - Languages: 3/3 pass. The default-language test now clears its account's own language first and always restores what it changed; a failure part-way used to leave the portal in Arabic.
+  - PWA: 2/2 pass.
+  - Accessibility: 4/5 pass. "No serious or critical violations" fails on 13 pages (§27.9).
+  - The specs that create courses, modules, outcomes, live classes and groups were not run against the demo database.
+
 ### 2026-11-08 — Product Requirements Synchronization (a second institute on one server; Installation and Connection Guide)
 - A second installation with its own database was set up next to the first, and a phone was moved between them. This found three faults, all fixed (§27.7):
   - A new database got its SuperAdmin only on the second start.
@@ -6227,6 +6238,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   - Samsung keyboards no longer add a space after the dot in usernames.
   - The app no longer stays on the start spinner when a saved session loads at once.
   - Android network errors show the usual "No connection" message.
+- **FR-S4.9 The parent's child card** shows a School or College child's own class and campus, for example "Class 9 · Gulberg Campus". It used to show the programme, "Class 1 to 10 (Gulberg Campus)", which is the whole school section. University children keep their programme. The API (`api/v1/mobile/children`) sends this line, so the installed app shows it without an update.
 
 ### 27.5 One mobile app for every institute (choosing the server)
 - **FR-S5.1** The standard build has no server built in.
@@ -6293,6 +6305,10 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **FR-S7.6** A refused password change says "Current password is incorrect, or the new password is one of your last five passwords." The portal and the app both show it.
 - **FR-S7.7** The first start on a new database creates the first SuperAdmin (from `TABSAN_SUPER_USERNAME`, `TABSAN_SUPER_PASSWORD` and `TABSAN_SUPER_EMAIL`). The roles are now saved before the SuperAdmin is linked to one; before, only the second start created the account.
 - **FR-S7.8** Publishing the API again into a folder that already holds it keeps the API's own `appsettings*.json`. The filter that leaves out the BackgroundJobs settings never matched (MSBuild has no escapes, so its doubled backslash was literal) and ran before those files joined the publish list. A folder already broken by an earlier publish needs those files deleted and a new publish.
+- **FR-S7.10** Signed-in users who may open no menu page have a page of their own, **Portal/Start** (no menu permission needed):
+  - Parents, who have no portal pages, land there after sign-in. It tells them their children's information is in the mobile app and how to connect it.
+  - When the access check refuses Helpdesk itself, it sends the user to Start with the reason, not back to the Dashboard. This applies to a role whose menu lacks Helpdesk, and to anyone while the API cannot be asked. Before, Dashboard and Helpdesk redirected to each other without end.
+- **FR-S7.11** `GET api/v1/prerequisite?departmentId=` returns the prerequisites of every course in a department in one call, and the Prerequisites page uses it, one call per department. The per-course call `GET api/v1/prerequisite/{courseId}` remains.
 - **FR-S7.9** The portal uses the API address it resolves at start-up everywhere: from `EDUSPHERE_APP_BASE_URL`, an `environments.json` profile, or `EduApi:BaseUrl`. It writes that address in its first lines. Before, the variable and the profile only passed a start-up check, and the pages called the API named in `EduApi:BaseUrl`.
 
 ### 27.8 Documentation and acceptance evidence
@@ -6325,7 +6341,11 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   - web-integration 111/111;
   - contract 1/1.
 
-  A full rebuild also reports five older compiler warnings in the portal (`ScormPlayController.Json` hides an inherited member; unreachable code in four views). They are untouched by this work.
+  A full rebuild also reports 11 older compiler warnings in code this work did not change:
+  - five in the portal (`ScormPlayController.Json` hides an inherited member; unreachable code in four views);
+  - six nullable-reference and XML-comment warnings in `BackupController`, `ResultService`, `ReportService` and `SsoRepository`.
+
+  After the fixes in FR-S4.9, FR-S7.10 and FR-S7.11: unit 717/717, integration 388/389 (1 long-standing skip), web-integration 114/114, contract 1/1.
 - **The first SuperAdmin:** a new database needs `TABSAN_SUPER_PASSWORD` in every real environment, and start-up stops with a clear message without it (an empty value counts as missing). Only the Testing environment skips the bootstrap account, because the test suites create their own accounts.
 
   New tests in this period:
@@ -6348,6 +6368,10 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **iOS.** The build, the local-network permission prompt and plain-HTTP access on the local network need a Mac and an iPhone.
 - **Google Play.** Signing with the institution's upload keystore and publishing an `.aab`. The standard APK is debug-signed, for direct installation only.
 - **Push.** Native push needs the institution's own Firebase project (as in §26.19).
+- **Accessibility regressions** (axe-core scan of 8 November 2026, School demo data). §26.16 records 0 findings on 24 October; this scan found serious or critical findings on 13 pages:
+  - form controls without labels: Sidebar Settings, Tenant Management, Campus Management, Programs, Grading Configuration, User Settings (SuperAdmin and student) and Announcements;
+  - drop-downs without an accessible name: Admin Users, Prerequisites and Generate Certificates;
+  - low colour contrast: Departments, Enrollment report, User Settings and LTI Tools.
 - **Security: the API's `/setup` page.** It needs no sign-in, also after set-up:
   - Anyone who can reach the API can open it.
   - Save & Continue or Import & Apply Profile changes the database the API uses, at once.

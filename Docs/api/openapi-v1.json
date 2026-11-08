@@ -13282,6 +13282,38 @@
         }
       }
     },
+    "/api/v1/lti/tools/dynamic-registration": {
+      "post": {
+        "tags": [
+          "LtiAdmin"
+        ],
+        "summary": "LTI Dynamic Registration: issues a registration token and the URL that opens the tool's registration page.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartLtiRegistrationRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartLtiRegistrationRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartLtiRegistrationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/lti/tools/{toolId}/{state}": {
       "post": {
         "tags": [
@@ -13588,6 +13620,32 @@
         }
       }
     },
+    "/api/v1/lti/openid-configuration": {
+      "get": {
+        "tags": [
+          "LtiProtocol"
+        ],
+        "summary": "LTI Dynamic Registration: the platform's OpenID configuration (read by the tool during registration).",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/lti/register": {
+      "post": {
+        "tags": [
+          "LtiProtocol"
+        ],
+        "summary": "LTI Dynamic Registration: the tool's client registration, authorised by the single-use registration token.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/lti/jwks": {
       "get": {
         "tags": [
@@ -13750,6 +13808,14 @@
           },
           {
             "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -13947,6 +14013,14 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         ],
         "responses": {
@@ -13980,6 +14054,14 @@
           },
           {
             "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
             "in": "query",
             "schema": {
               "type": "integer",
@@ -14085,13 +14167,21 @@
         "tags": [
           "Mobile"
         ],
-        "summary": "The home screen for the signed-in role (today's classes, what is due, announcements, summaries).",
+        "summary": "The home screen for the signed-in role (today's classes, what is due, announcements, summaries).\r\nday: today on the phone, 0 Sunday … 6 Saturday (without it, today in UTC).",
         "parameters": [
           {
             "name": "X-App-Version",
             "in": "header",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "day",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -14107,7 +14197,17 @@
         "tags": [
           "Mobile"
         ],
-        "summary": "The week's classes: a student's enrolled courses, or the classes a teacher teaches.",
+        "summary": "The week's classes: a student's enrolled courses, the classes a teacher teaches, or a parent's linked child's (?studentProfileId=).",
+        "parameters": [
+          {
+            "name": "studentProfileId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -14120,7 +14220,17 @@
         "tags": [
           "Mobile"
         ],
-        "summary": "The courses the user studies (student) or teaches (teacher).",
+        "summary": "The courses the user studies (student) or teaches (teacher), or a parent's linked child's (?studentProfileId=).",
+        "parameters": [
+          {
+            "name": "studentProfileId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -14133,7 +14243,7 @@
         "tags": [
           "Mobile"
         ],
-        "summary": "One course: materials, assignments (with the student's own state), quizzes and announcements.",
+        "summary": "One course: materials, assignments (with the student's own state), quizzes and announcements (parents: ?studentProfileId=).",
         "parameters": [
           {
             "name": "offeringId",
@@ -14142,6 +14252,120 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "studentProfileId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/homework": {
+      "get": {
+        "tags": [
+          "Mobile"
+        ],
+        "summary": "Homework of all the user's courses (teachers: with what is left to grade; parents: ?studentProfileId=), soonest due first.",
+        "parameters": [
+          {
+            "name": "studentProfileId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/attendance/records": {
+      "get": {
+        "tags": [
+          "Mobile"
+        ],
+        "summary": "Day-by-day attendance, newest first (students: own; parents: ?studentProfileId=), optionally of one course (?offeringId=).",
+        "parameters": [
+          {
+            "name": "studentProfileId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "offeringId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/scopes": {
+      "get": {
+        "tags": [
+          "Mobile"
+        ],
+        "summary": "The institutes and campuses the user works in (teachers, admins, SuperAdmins), for the app's campus picker.",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/mobile/campus-summary": {
+      "get": {
+        "tags": [
+          "Mobile"
+        ],
+        "summary": "Admins and SuperAdmins: a campus at a glance (?campusId=; all their campuses without it). ?date= is today on the phone.",
+        "parameters": [
+          {
+            "name": "campusId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
             }
           }
         ],
@@ -14221,12 +14445,35 @@
         }
       }
     },
+    "/api/v1/mobile/announcements": {
+      "get": {
+        "tags": [
+          "Mobile"
+        ],
+        "summary": "Announcements of the student's courses, newest first (students: own; parents: ?studentProfileId= of a linked child).",
+        "parameters": [
+          {
+            "name": "studentProfileId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/mobile/children": {
       "get": {
         "tags": [
           "Mobile"
         ],
-        "summary": "A parent's linked children with attendance, CGPA, fees and results at a glance.",
+        "summary": "A parent's linked children with attendance, CGPA (University) or average marks, fees and results at a glance.",
         "responses": {
           "200": {
             "description": "OK"
@@ -15869,6 +16116,115 @@
         }
       }
     },
+    "/api/v1/parent-portal/parents": {
+      "get": {
+        "tags": [
+          "ParentPortal"
+        ],
+        "summary": "Parent-role accounts whose username, name, email or phone contains search.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/parent-portal/parents/{parentUserId}": {
+      "get": {
+        "tags": [
+          "ParentPortal"
+        ],
+        "parameters": [
+          {
+            "name": "parentUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/parent-portal/parents/{parentUserId}/links": {
+      "get": {
+        "tags": [
+          "ParentPortal"
+        ],
+        "summary": "The parent's links with each child's name and class (only children the caller may manage).",
+        "parameters": [
+          {
+            "name": "parentUserId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/parent-portal/students": {
+      "get": {
+        "tags": [
+          "ParentPortal"
+        ],
+        "summary": "School students whose registration number, name or username contains search.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/v1/parent-portal/links/{parentUserId}": {
       "get": {
         "tags": [
@@ -15928,6 +16284,7 @@
         "tags": [
           "ParentPortal"
         ],
+        "summary": "Pauses the link (inactive); with `remove=true` removes it (linking again restores it).",
         "parameters": [
           {
             "name": "parentUserId",
@@ -15945,6 +16302,14 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          },
+          {
+            "name": "remove",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
             }
           }
         ],
@@ -16980,6 +17345,27 @@
       }
     },
     "/api/v1/prerequisite": {
+      "get": {
+        "tags": [
+          "Prerequisite"
+        ],
+        "summary": "Returns the prerequisites of every course in a department in one call. The portal's Prerequisites page used one call\r\nper course: with 600 courses a single page load used up the whole per-user request limit (600 a minute).",
+        "parameters": [
+          {
+            "name": "departmentId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
       "post": {
         "tags": [
           "Prerequisite"
@@ -23321,8 +23707,80 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "part",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scorm/play/{token}/parts": {
+      "get": {
+        "tags": [
+          "Scorm"
+        ],
+        "summary": "Multi-part packages: each part's status for the player's contents list.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scorm/play/{token}/navigate": {
+      "post": {
+        "tags": [
+          "Scorm"
+        ],
+        "summary": "Sequenced packages: a navigation request (Next, Previous, a part chosen in the contents, or a SCO's adl.nav.request).",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScormNavigateRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScormNavigateRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScormNavigateRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -23335,7 +23793,7 @@
         "tags": [
           "Scorm"
         ],
-        "summary": "The runtime's commit: the CMI object as JSON (sendBeacon sends it as text/plain). Answers as scorm-again expects.",
+        "summary": "The runtime's commit: the CMI object as JSON (sendBeacon sends it as text/plain). Answers as scorm-again expects.\r\nParts of sequenced packages also name their attempt (\"commit/{part}/{n}\").",
         "parameters": [
           {
             "name": "token",
@@ -23343,6 +23801,91 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "final",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scorm/play/{token}/commit/{part}": {
+      "post": {
+        "tags": [
+          "Scorm"
+        ],
+        "summary": "The runtime's commit: the CMI object as JSON (sendBeacon sends it as text/plain). Answers as scorm-again expects.\r\nParts of sequenced packages also name their attempt (\"commit/{part}/{n}\").",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "part",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "final",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/scorm/play/{token}/commit/{part}/{n}": {
+      "post": {
+        "tags": [
+          "Scorm"
+        ],
+        "summary": "The runtime's commit: the CMI object as JSON (sendBeacon sends it as text/plain). Answers as scorm-again expects.\r\nParts of sequenced packages also name their attempt (\"commit/{part}/{n}\").",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "part",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "n",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -31792,6 +32335,36 @@
           },
           "enabled": {
             "type": "boolean"
+          },
+          "idClaim": {
+            "maxLength": 256,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "linkById": {
+            "type": "boolean"
+          },
+          "roleClaim": {
+            "maxLength": 256,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "roleMappings": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string",
+            "nullable": true
+          },
+          "requireRoleMatch": {
+            "type": "boolean"
+          },
+          "signAuthnRequests": {
+            "type": "boolean"
+          },
+          "requireEncryptedAssertions": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -31979,6 +32552,20 @@
         "properties": {
           "newAttempt": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScormNavigateRequest": {
+        "type": "object",
+        "properties": {
+          "request": {
+            "type": "string",
+            "nullable": true
+          },
+          "target": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -32279,6 +32866,16 @@
         "type": "object",
         "properties": {
           "accessCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "StartLtiRegistrationRequest": {
+        "type": "object",
+        "properties": {
+          "registrationUrl": {
             "type": "string",
             "nullable": true
           }

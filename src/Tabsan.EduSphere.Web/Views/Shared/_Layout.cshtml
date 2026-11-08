@@ -29,6 +29,8 @@
     var showFinanceLinks    = isFinance    || noRoles;
     var showStudentLinks    = isStudent    || noRoles;
     var showSuperAdminLinks = isSuperAdmin;
+    // A parent account and nothing else: no portal pages (Portal/Start points them to the mobile app).
+    var isParentOnly = (sessionId?.IsParent ?? false) && !isAdmin && !isFaculty && !isFinance && !isStudent;
 
     var studentSemesterNumber = 0;
     if (isConnected && isStudent)
@@ -804,6 +806,12 @@
                             </a>
                         }
                     }
+                }
+                else if (isParentOnly)
+                {
+                    @* Parents have no portal pages (they use the mobile app): the generic menu below only led to "access denied". *@
+                    <div class="menu-label">@T["Overview"]</div>
+                    <a class="menu-link @(IsActiveLink("Portal", "Start") ? "is-active" : "")" asp-controller="Portal" asp-action="Start" aria-current="@(IsActiveLink("Portal", "Start") ? "page" : null)"><span class="menu-link-icon">@Html.Raw(ResolveMenuIcon("Dashboard"))</span><span class="menu-link-text">@T["Welcome"]</span></a>
                 }
                 else
                 {

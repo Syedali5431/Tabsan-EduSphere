@@ -30,17 +30,30 @@ public class PrerequisiteController : ControllerBase
     /// <summary>Returns all prerequisites for the given course.</summary>
     [HttpGet("{courseId:guid}")]
     public async Task<IActionResult> GetByCourse(Guid courseId, CancellationToken ct)
+        => Ok(ToDtos(await _repo.GetByCourseIdAsync(courseId, ct)));
+
+    // ── GET /api/v1/prerequisite?departmentId= ────────────────────────────────
+
+    /// <summary>
+    /// Returns the prerequisites of every course in a department in one call. The portal's Prerequisites page used one call
+    /// per course: with 600 courses a single page load used up the whole per-user request limit (600 a minute).
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetByDepartment([FromQuery] Guid? departmentId, CancellationToken ct)
     {
-        var prereqs = await _repo.GetByCourseIdAsync(courseId, ct);
-        var result = prereqs.Select(p => new PrerequisiteDto(
+        if (departmentId is not { } id || id == Guid.Empty)
+            return BadRequest(new { message = "departmentId is required." });
+        return Ok(ToDtos(await _repo.GetByDepartmentIdAsync(id, ct)));
+    }
+
+    private static IEnumerable<PrerequisiteDto> ToDtos(IEnumerable<CoursePrerequisite> prereqs)
+        => prereqs.Select(p => new PrerequisiteDto(
             CourseId:               p.CourseId,
             CourseCode:             p.Course?.Code ?? "",
             CourseTitle:            p.Course?.Title ?? "",
             PrerequisiteCourseId:   p.PrerequisiteCourseId,
             PrerequisiteCourseCode: p.PrerequisiteCourse?.Code ?? "",
             PrerequisiteCourseTitle: p.PrerequisiteCourse?.Title ?? ""));
-        return Ok(result);
-    }
 
     // ── POST /api/v1/prerequisite ─────────────────────────────────────────────
 

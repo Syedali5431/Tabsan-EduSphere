@@ -1,0 +1,26 @@
+@model Tabsan.EduSphere.Web.Models.Portal.StartPageModel
+@{
+    ViewData["Title"] = T.Text("Welcome");
+}
+
+<h1 class="h4 mb-3">@T["Welcome"]</h1>
+
+@if (Model.IsParent)
+{
+    @* Parents have no portal pages: everything about their children is in the mobile app. *@
+    <div class="card" data-testid="parent-app-card">
+        <div class="card-body">
+            <h2 class="h5">@T["Parents use the EduSphere mobile app"]</h2>
+            <p class="mb-2">@T["Your children's results, attendance, homework, timetable, fees and announcements are in the EduSphere app. Install it on your phone, type the server address your school gave you, and sign in with this username and password."]</p>
+            <p class="text-muted small mb-0">@T["To change your password, open Settings in the app."]</p>
+        </div>
+    </div>
+}
+else
+{
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="alert alert-info" role="status">@T.Text(Model.Message)</div>
+    }
+    <p>@T["Choose a page from the menu."]</p>
+}

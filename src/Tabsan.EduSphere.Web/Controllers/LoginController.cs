@@ -595,6 +595,8 @@ public class LoginController : Controller
         {
             "superadmin" => nameof(PortalController.Dashboard),
             "student" => nameof(PortalController.Announcements),
+            // Parents have no portal pages (they use the mobile app); Helpdesk refused them and the redirects looped.
+            "parent" => nameof(PortalController.Start),
             _ => nameof(PortalController.Helpdesk)
         };
 

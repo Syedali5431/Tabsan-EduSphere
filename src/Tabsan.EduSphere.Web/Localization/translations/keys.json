@@ -1730,6 +1730,9 @@
  "Choose a level first.": [
   "wwwroot/js/grading-workspace.js"
  ],
+ "Choose a page from the menu.": [
+  "Views/Portal/Start.cshtml"
+ ],
  "Choose a parent from the list to see their children and link more.": [
   "Views/Portal/ParentLinks.cshtml"
  ],
@@ -6085,6 +6088,9 @@
  "Parent links are managed by Admins and Super Admins.": [
   "Controllers/PortalController.ParentLinks.cs"
  ],
+ "Parents use the EduSphere mobile app": [
+  "Views/Portal/Start.cshtml"
+ ],
  "Part of (optional)": [
   "Views/Portal/Outcomes.cshtml"
  ],
@@ -9461,6 +9467,9 @@
  "To (UTC)": [
   "Views/Portal/AuditLogs.cshtml"
  ],
+ "To change your password, open Settings in the app.": [
+  "Views/Portal/Start.cshtml"
+ ],
  "To complete it, students must": [
   "Views/Portal/_ModuleItemsEditor.cshtml"
  ],
@@ -10200,6 +10209,9 @@
  ],
  "Your authenticator registration is preserved so you can re-enable later.": [
   "Views/Portal/TwoFactorSettings.cshtml"
+ ],
+ "Your children's results, attendance, homework, timetable, fees and announcements are in the EduSphere app. Install it on your phone, type the server address your school gave you, and sign in with this username and password.": [
+  "Views/Portal/Start.cshtml"
  ],
  "Your comment was not saved.": [
   "wwwroot/js/submission-page.js"

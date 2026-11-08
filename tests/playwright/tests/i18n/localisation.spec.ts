@@ -85,7 +85,24 @@ test.describe('Localisation @i18n', () => {
     expect(errors).toEqual([]);
   });
 
-  test('SuperAdmin sets the default language and exports translations', async ({ page }) => {
+  test('SuperAdmin sets the default language and exports translations', async ({ page, request }) => {
+    // Run against a real database, this test must leave it as it found it: the test above saves this account's own
+    // language (so the new default would not apply to it), and a failure half-way used to leave the portal in Arabic.
+    const api = process.env.API_BASE_URL ?? 'http://localhost:5181';
+    const token = (await (await request.post(`${api}/api/v1/auth/login`, { data: { username: USER, password: PASS } })).json()).accessToken;
+    const auth = { Authorization: `Bearer ${token}` };
+    const before = await (await request.get(`${api}/api/v1/localization/me`, { headers: auth })).json();
+    await request.put(`${api}/api/v1/localization/me`, { headers: auth, data: { language: null } });
+    try {
+      await defaultLanguageSteps(page);
+    } finally {
+      await request.put(`${api}/api/v1/localization/default`, { headers: auth, data: { language: before.defaultLanguage ?? 'en' } });
+      await request.put(`${api}/api/v1/localization/me`, { headers: auth, data: { language: before.language ?? null } });
+    }
+  });
+});
+
+async function defaultLanguageSteps(page: Page) {
     await login(page);
     await page.goto('/Portal/LanguageSettings');
     await expect(page.locator('[data-translation-coverage] tr[data-language="ur"]')).toContainText('Urdu');
@@ -111,5 +128,4 @@ test.describe('Localisation @i18n', () => {
     await page.locator('[data-default-language] button').click();
     await expect(page.locator('html')).toHaveAttribute('lang', 'en');
     await expect(page.locator('.alert[role="status"]').first()).toContainText('Default language saved.');
-  });
-});
+}

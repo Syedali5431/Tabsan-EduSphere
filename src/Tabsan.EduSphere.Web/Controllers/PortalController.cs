@@ -371,14 +371,14 @@ public partial class PortalController : Controller
             {
                 _logger.LogWarning(ex, "Unable to load visible menu keys for action {ActionName} due to API connectivity issue.", action);
                 TempData["PortalMessage"] = "API service is temporarily unavailable. Access checks could not be completed.";
-                context.Result = RedirectToAction(nameof(Dashboard));
+                context.Result = RedirectToAction(DeniedFallback(action));
                 return;
             }
 
             if (!visibleMenuKeys.Contains(requiredMenuKey))
             {
                 TempData["PortalMessage"] = "Access denied for this section based on your current role and menu permissions.";
-                context.Result = RedirectToAction(nameof(Dashboard));
+                context.Result = RedirectToAction(DeniedFallback(action));
                 return;
             }
         }
@@ -420,6 +420,14 @@ public partial class PortalController : Controller
         var identity = _api.GetSessionIdentity();
         return identity is not null && (identity.IsAdmin || identity.IsSuperAdmin || identity.IsFinance);
     }
+
+    /// <summary>
+    /// Where a refused page sends the user. Usually the Dashboard, which sends everyone but SuperAdmins on to Helpdesk; when
+    /// Helpdesk itself is refused (parents have no portal pages, or a SuperAdmin hid Helpdesk for a role, or the API could
+    /// not be asked), that made an endless Dashboard ↔ Helpdesk loop, so Start, which needs no menu permission, ends it.
+    /// </summary>
+    private static string DeniedFallback(string? action)
+        => string.Equals(action, nameof(Helpdesk), StringComparison.OrdinalIgnoreCase) ? nameof(Start) : nameof(Dashboard);
 
     private bool ShouldEnforceSidebarGuard(string? actionName)
         => _api.IsConnected()
@@ -1107,6 +1115,23 @@ public partial class PortalController : Controller
         ViewData["Title"] = "Dashboard";
         var vm = _api.GetConnection();
         return View(vm);
+    }
+
+    /// <summary>
+    /// A page every signed-in user may open (it is in no menu): parents learn that their children are in the mobile app, and
+    /// others whose menu has no Helpdesk see why they landed here and choose a page from the menu.
+    /// </summary>
+    [HttpGet]
+    public IActionResult Start()
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+        ViewData["Title"] = "Welcome";
+        return View(new StartPageModel
+        {
+            IsParent = _api.GetSessionIdentity()?.IsParent == true,
+            Message = TempData["PortalMessage"]?.ToString()
+        });
     }
 
     [HttpPost]
@@ -10628,19 +10653,20 @@ public partial class PortalController : Controller
             var courses = await _api.GetCourseDetailsAsync(departmentId, null, null, null, ct);
             model.Courses = courses;
 
-            var groups = new List<CoursePrerequisiteGroup>();
-            foreach (var course in courses)
+            // One call per department, not per course: with the School demo data (610 courses) the old loop alone used up
+            // the API's per-user request limit and the page showed "Too many requests".
+            var byCourse = new Dictionary<Guid, List<PrerequisiteWebItem>>();
+            foreach (var department in courses.Select(c => c.DepartmentId).Where(id => id != Guid.Empty).Distinct())
+                foreach (var link in await _api.GetDepartmentPrerequisitesAsync(department, ct))
+                    (byCourse.TryGetValue(link.CourseId, out var list) ? list : byCourse[link.CourseId] = new()).Add(link);
+
+            model.CourseGroups = courses.Select(course => new CoursePrerequisiteGroup
             {
-                var prereqs = await _api.GetPrerequisitesAsync(course.Id, ct);
-                groups.Add(new CoursePrerequisiteGroup
-                {
-                    CourseId      = course.Id,
-                    CourseCode    = course.Code,
-                    CourseTitle   = course.Title,
-                    Prerequisites = prereqs
-                });
-            }
-            model.CourseGroups = groups;
+                CourseId      = course.Id,
+                CourseCode    = course.Code,
+                CourseTitle   = course.Title,
+                Prerequisites = byCourse.GetValueOrDefault(course.Id) ?? new List<PrerequisiteWebItem>()
+            }).ToList();
         }
         catch (Exception ex) when (ex is InvalidOperationException or HttpRequestException)
         {

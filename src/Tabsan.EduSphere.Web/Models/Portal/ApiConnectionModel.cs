@@ -265,6 +265,16 @@ public class SessionIdentity
     public bool IsFinance => Roles.Contains("Finance");
     public bool IsFaculty => Roles.Contains("Faculty");
     public bool IsStudent => Roles.Contains("Student");
+    /// <summary>Parents have no portal pages: they follow their children in the mobile app (Portal/Start tells them so).</summary>
+    public bool IsParent => Roles.Contains("Parent");
+}
+
+/// <summary>Portal/Start: where users land when no menu page is open to them.</summary>
+public class StartPageModel
+{
+    public bool IsParent { get; set; }
+    /// <summary>Why the user was sent here (an access-denied or API-unavailable message), if any.</summary>
+    public string? Message { get; set; }
 }
 
 public class ForceChangePasswordPageModel
@@ -827,6 +837,7 @@ public class CourseItem
     public Guid   Id             { get; set; }
     public string Title          { get; set; } = "";
     public string Code           { get; set; } = "";
+    public Guid   DepartmentId   { get; set; }
     public Guid?  TenantId       { get; set; }
     public Guid?  CampusId       { get; set; }
     public int    InstitutionType { get; set; }
