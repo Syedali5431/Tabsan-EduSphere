@@ -159,7 +159,7 @@ else
                                     <input type="hidden" name="menuId" value="@item.Id" />
                                     <input type="hidden" name="menuName" value="@item.Name" />
                                     <input class="form-check-input status-check" type="checkbox"
-                                           name="isActive" value="true"
+                                           name="isActive" value="true" aria-label="@T.Format("Menu {0} is active", item.Name)"
                                            @(item.IsActive ? "checked" : "")
                                            @(item.IsSystemMenu ? "disabled title=\"System menus cannot be deactivated\"" : "")
                                            onchange="this.form.submit()" />
@@ -216,7 +216,7 @@ else
                                             <input type="hidden" name="menuId" value="@sub.Id" />
                                             <input type="hidden" name="menuName" value="@sub.Name" />
                                             <input class="form-check-input status-check" type="checkbox"
-                                                   name="isActive" value="true"
+                                                   name="isActive" value="true" aria-label="@T.Format("Menu {0} is active", sub.Name)"
                                                    @(sub.IsActive ? "checked" : "")
                                                    @(sub.IsSystemMenu ? "disabled title=\"System menus cannot be deactivated\"" : "")
                                                    onchange="this.form.submit()" />

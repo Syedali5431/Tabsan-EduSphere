@@ -68,7 +68,7 @@ else
                                     <form asp-action="UpdateTenant" method="post" class="d-flex gap-2 align-items-center">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@tenant.Id" />
-                                        <input type="text" name="newName" class="form-control form-control-sm" value="@tenant.Name" maxlength="200" required />
+                                        <input type="text" name="newName" class="form-control form-control-sm" value="@tenant.Name" maxlength="200" required aria-label="@T.Format("Name of {0}", tenant.Code)" />
                                         <button type="submit" class="btn btn-sm btn-outline-secondary">@T["Save"]</button>
                                     </form>
                                 </td>

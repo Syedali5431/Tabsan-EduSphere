@@ -2924,6 +2924,9 @@
  "Document pages": [
   "wwwroot/js/submission-viewer.js"
  ],
+ "Document type for {0}": [
+  "Views/Portal/GenerateCertificates.cshtml"
+ ],
  "Done": [
   "Views (inline expressions)"
  ],
@@ -3560,6 +3563,7 @@
  "Filter by Department": [
   "Views/Portal/Courses.cshtml",
   "Views/Portal/Fyp.cshtml",
+  "Views/Portal/Prerequisites.cshtml",
   "Views/Portal/Programs.cshtml"
  ],
  "Filter by Semester": [
@@ -4819,6 +4823,9 @@
  "Menu": [
   "Views/Portal/SidebarSettings.cshtml"
  ],
+ "Menu {0} is active": [
+  "Views/Portal/SidebarSettings.cshtml"
+ ],
  "Message": [
   "Views/Portal/Announcements.cshtml",
   "Views/Shared/ChatPanel.cshtml"
@@ -5035,6 +5042,11 @@
   "Views/Portal/ReportSettings.cshtml",
   "Views/Portal/SidebarSettings.cshtml",
   "Views/Portal/StudentLifecycle.cshtml",
+  "Views/Portal/TenantManagement.cshtml"
+ ],
+ "Name of {0}": [
+  "Views/Portal/CampusManagement.cshtml",
+  "Views/Portal/Programs.cshtml",
   "Views/Portal/TenantManagement.cshtml"
  ],
  "Name or email": [
@@ -5327,6 +5339,9 @@
  ],
  "No notifications yet.": [
   "Views/Portal/Notifications.cshtml"
+ ],
+ "No offerings available for the selected scope": [
+  "Views/Portal/Announcements.cshtml"
  ],
  "No offerings found": [
   "Views/Portal/Courses.cshtml"

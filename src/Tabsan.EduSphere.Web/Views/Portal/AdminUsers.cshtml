@@ -46,7 +46,7 @@ else
                         <input id="adminSearch" type="text" class="form-control" placeholder="@T["Search by username or email"]" />
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">@T["Select Admin"]</label>
+                        <label class="form-label" for="adminSelect">@T["Select Admin"]</label>
                         <form asp-action="AdminUsers" method="get">
                             <select id="adminSelect" name="selectedAdminUserId" class="form-select" onchange="this.form.submit()">
                                 @foreach (var admin in Model.AdminUsers)

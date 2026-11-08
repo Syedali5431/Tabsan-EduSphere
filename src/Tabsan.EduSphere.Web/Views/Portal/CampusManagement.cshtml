@@ -100,7 +100,7 @@ else
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@campus.Id" />
                                         <input type="hidden" name="tenantId" value="@campus.TenantId" />
-                                        <input type="text" name="newName" class="form-control form-control-sm" value="@campus.Name" maxlength="200" required />
+                                        <input type="text" name="newName" class="form-control form-control-sm" value="@campus.Name" maxlength="200" required aria-label="@T.Format("Name of {0}", campus.Code)" />
                                         <button type="submit" class="btn btn-sm btn-outline-secondary">@T["Save"]</button>
                                     </form>
                                 </td>
