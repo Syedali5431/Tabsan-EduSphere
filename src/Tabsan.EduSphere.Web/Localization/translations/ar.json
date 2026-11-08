@@ -3037,7 +3037,6 @@
   "clears this setup so you can start fresh.": "يمسح هذا الإعداد لتبدأ من جديد.",
   "compares the top 27% of attempts with the bottom 27%: above 0.3 is good, near 0 means the question doesn't separate strong and weak students, and a negative value usually means the question or its key needs checking.": "يقارن أعلى 27% من المحاولات بأدنى 27%: فوق 0.3 جيد، وقرب 0 يعني أن السؤال لا يميّز بين الطلاب الأقوياء والضعفاء، والقيمة السالبة تعني غالبًا أن السؤال أو مفتاحه يحتاج إلى مراجعة.",
   "day late": "يوم تأخير",
-  "default:": "الافتراضي:",
   "e.g. +61412345678": "مثل +61412345678",
   "e.g. .pdf, .docx — web pages, scripts and programs are never accepted.": "مثل ‎.pdf و‎.docx — لا تُقبل صفحات الويب والبرامج النصية والبرامج أبدًا.",
   "e.g. 10.0.0.0/8, 192.168.1.20": "مثل 10.0.0.0/8، 192.168.1.20",

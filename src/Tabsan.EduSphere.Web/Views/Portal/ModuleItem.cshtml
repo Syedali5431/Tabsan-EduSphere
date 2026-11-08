@@ -61,7 +61,7 @@ else
                     if (SafeLink(item.Url)) { <a class="btn btn-primary me-2" href="@item.Url" target="_blank" rel="noopener noreferrer">@T["Open ↗"]</a> }
                     if (item.MaterialHasFile) { <a class="btn btn-outline-primary" href="/Portal/DownloadCourseMaterialFile?id=@item.TargetId">@T["Download"]</a> }
                     break;
-                @T["default:"]
+                default:
                     <p class="text-muted">@T["This item opens on its own page."]</p>
                     break;
             }

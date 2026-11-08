@@ -135,7 +135,7 @@ else
                             }
                             else { <p class="mb-2">@T["(no file)"]</p> }
                             break;
-                        @T["default:"]
+                        default:
                             <div class="p-2 bg-light rounded mb-2" style="white-space: pre-wrap;">@(string.IsNullOrWhiteSpace(saved?.TextResponse) ? T.Text("(no answer)") : saved!.TextResponse)</div>
                             break;
                     }

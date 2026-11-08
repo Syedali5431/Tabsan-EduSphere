@@ -140,6 +140,7 @@ public class OutcomesWebIntegrationTests : IClassFixture<WebApplicationFactory<W
         Assert.Contains("data-attainment-table", html);
         Assert.Contains("PLO1", html);
         Assert.Contains("Met", html);
+        Assert.Contains("<span class=\"badge bg-secondary\">No evidence</span>", html); // PLO2: the switch's default branch
         Assert.Contains("target=80", api.Calls.Last(c => c.Path.StartsWith("/api/v1/outcomes/attainment")).Query);
         var pdf = await client.GetAsync($"/Portal/OutcomeAttainmentExport?programId={ProgramId}&format=pdf&target=80");
         Assert.Equal("application/pdf", pdf.Content.Headers.ContentType!.MediaType);
@@ -264,7 +265,9 @@ public class OutcomesWebIntegrationTests : IClassFixture<WebApplicationFactory<W
                     {"programId":"{{ProgramId}}","programCode":"BSCS","programName":"Computer Science","departmentName":"Computing","generatedAt":"2026-10-19T00:00:00Z","targetPercent":80,"studentsInProgram":40,
                      "outcomes":[{"outcomeId":"{{PloId}}","code":"PLO1","title":"Solve computing problems","masteryPoints":3,"maxPoints":4,"calculationMethod":"Highest","studentsAssessed":30,"studentsMastered":27,
                                   "attainmentPercent":90,"averageScore":3.4,"targetMet":true,"mappedCourseOutcomes":["CLO1 Write correct programs"],
-                                  "contributions":[{"courseCode":"CS101","courseTitle":"Programming","semesterName":"Fall 2026","students":30,"averagePercent":84.5}]}]}
+                                  "contributions":[{"courseCode":"CS101","courseTitle":"Programming","semesterName":"Fall 2026","students":30,"averagePercent":84.5}]},
+                                 {"outcomeId":"77777777-0000-0000-0000-000000000003","code":"PLO2","title":"Communicate effectively","masteryPoints":3,"maxPoints":4,"calculationMethod":"Highest","studentsAssessed":0,"studentsMastered":0,
+                                  "attainmentPercent":null,"averageScore":null,"targetMet":null,"mappedCourseOutcomes":[],"contributions":[]}]}
                     """);
             if (path == $"/api/v1/outcomes/attainment/programs/{ProgramId}/export") return File("application/pdf", "plo-attainment-BSCS.pdf", "%PDF-1.4");
             if (path == "/api/v1/outcomes/mastery/me")

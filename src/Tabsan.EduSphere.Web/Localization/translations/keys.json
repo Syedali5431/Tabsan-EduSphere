@@ -10371,12 +10371,6 @@
  "day late": [
   "Views/Portal/AssignmentPolicies.cshtml"
  ],
- "default:": [
-  "Views/Portal/Departments.cshtml",
-  "Views/Portal/ModuleItem.cshtml",
-  "Views/Portal/OutcomeAttainment.cshtml",
-  "Views/Portal/QuizReview.cshtml"
- ],
  "e.g. +61412345678": [
   "Views/Portal/UserImport.cshtml"
  ],

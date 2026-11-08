@@ -151,6 +151,9 @@ public class QuizEngineWebIntegrationTests : IClassFixture<WebApplicationFactory
         Assert.Contains("14.5", html);
         Assert.Contains("Correct answer:", html);
         Assert.Contains("Awaiting marking", html);
+        // Short-answer and essay responses come from the switch's default branch.
+        Assert.Contains("Seven is prime", html);
+        Assert.Contains("Because.", html);
     }
 
     // ── harness ──────────────────────────────────────────────────────────────
@@ -249,7 +252,9 @@ public class QuizEngineWebIntegrationTests : IClassFixture<WebApplicationFactory
                 "options":[{"id":"55555555-0000-0000-0000-000000000102","text":"Canberra"}],"saved":{"selectedOptionIds":["55555555-0000-0000-0000-000000000102"]}},
                "marks":1,"marksAwarded":1,"correctAnswer":"Canberra","pendingManualGrading":false},
               {"order":2,"question":{"order":2,"questionId":"55555555-0000-0000-0000-000000000008","type":"Essay","text":"Explain.","marks":3,"saved":{"selectedOptionIds":[],"textResponse":"Because."}},
-               "marks":3,"pendingManualGrading":true}]}
+               "marks":3,"pendingManualGrading":true},
+              {"order":3,"question":{"order":3,"questionId":"55555555-0000-0000-0000-000000000007","type":"ShortAnswer","text":"Name a prime.","marks":1,"saved":{"selectedOptionIds":[],"textResponse":"Seven is prime"}},
+               "marks":1,"marksAwarded":1,"pendingManualGrading":false}]}
             """;
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
