@@ -89,6 +89,27 @@ public class InstitutionVisibilityWebIntegrationTests : IClassFixture<WebApplica
         Assert.Equal(["1", "2", "0"], Options(await client.GetStringAsync("/Portal/GradingConfig"), "institutionType").Select(o => o.Value));
     }
 
+    [Fact]
+    public async Task Departments_ShowTheInstitutionBadge_ForEachType()
+    {
+        var api = new FakeApi
+        {
+            School = true, College = true, University = true,
+            DepartmentsJson = """
+                [{"id":"99999999-0000-0000-0000-000000000001","name":"Primary","code":"PRI","isActive":true,"institutionType":1},
+                 {"id":"99999999-0000-0000-0000-000000000002","name":"Pre-Medical","code":"PMED","isActive":true,"institutionType":2},
+                 {"id":"99999999-0000-0000-0000-000000000003","name":"Computer Science","code":"CS","isActive":true,"institutionType":0}]
+                """
+        };
+        using var client = await SignedInClientAsync(api);
+
+        var html = await client.GetStringAsync("/Portal/Departments");
+        Assert.Contains("<code>CS</code>", html);
+        Assert.Contains("<span class=\"badge bg-info\">School</span>", html);
+        Assert.Contains("<span class=\"badge bg-warning text-dark\">College</span>", html);
+        Assert.Contains("<span class=\"badge bg-primary\">University</span>", html); // the switch's default branch
+    }
+
     private static List<(string Value, bool Selected)> Options(string html, string selectName)
     {
         var select = Regex.Match(html, $@"<select[^>]*name=""{selectName}""[^>]*>(.*?)</select>", RegexOptions.Singleline);
@@ -129,6 +150,7 @@ public class InstitutionVisibilityWebIntegrationTests : IClassFixture<WebApplica
         public bool School { get; init; }
         public bool College { get; init; }
         public bool University { get; init; }
+        public string DepartmentsJson { get; init; } = "[]";
         private readonly List<(string Path, string Query)> _gets = new();
 
         public IEnumerable<string> Queries(string path) => _gets.Where(g => g.Path == path).Select(g => g.Query);
@@ -164,6 +186,8 @@ public class InstitutionVisibilityWebIntegrationTests : IClassFixture<WebApplica
                 var type = request.RequestUri.Query.Contains("institutionType=1") ? 1 : request.RequestUri.Query.Contains("institutionType=2") ? 2 : 0;
                 return Task.FromResult(Json($$"""{"institutionType":{{type}},"gpaScaleRules":[],"componentRules":[]}"""));
             }
+            if (path == "/api/v1/department") return Task.FromResult(Json(DepartmentsJson));
+            if (path == "/api/v1/admin-user") return Task.FromResult(Json("[]"));
             if (path == "/api/v1/sidebar-menu/my-visible")
                 return Task.FromResult(Json("""[{"id":"00000000-0000-0000-0000-0000000000c3","key":"dashboard","name":"Dashboard","purpose":"","parentId":null,"displayOrder":1,"isActive":true,"isSystemMenu":true,"roleAccesses":[],"subMenus":[]}]"""));
 

@@ -24,6 +24,7 @@ public class ModuleProgressWebIntegrationTests : IClassFixture<WebApplicationFac
     private const string QuizItem = "b1000000-0000-0000-0000-000000000002";
     private const string LinkItem = "b1000000-0000-0000-0000-000000000003";
     private const string AssignmentItem = "b1000000-0000-0000-0000-000000000004";
+    private const string DiscussionItem = "b1000000-0000-0000-0000-000000000005"; // no thread linked, so no redirect
     private const string AssignmentId = "c1000000-0000-0000-0000-000000000001";
     private const string QuizId = "c1000000-0000-0000-0000-000000000002";
     private const string StudentId = "d1000000-0000-0000-0000-000000000001";
@@ -126,6 +127,10 @@ public class ModuleProgressWebIntegrationTests : IClassFixture<WebApplicationFac
         var link = await client.GetStringAsync($"/Portal/ModuleItem/{LinkItem}");
         Assert.Contains("href=\"https://example.org/reading\"", link);
         Assert.Contains("Mark as done", link);
+
+        var other = await client.GetStringAsync($"/Portal/ModuleItem/{DiscussionItem}"); // the switch's default branch
+        Assert.Contains("data-item-type=\"Discussion\"", other);
+        Assert.Contains("This item opens on its own page.", other);
     }
 
     [Fact]
@@ -277,6 +282,7 @@ public class ModuleProgressWebIntegrationTests : IClassFixture<WebApplicationFac
                 if (path.Contains(QuizItem)) return Json(Open(QuizItem, "Quiz", QuizId, "Quiz 1", true, "Complete “Week 1” first", null, null, "MustSubmit", "locked", false));
                 if (path.Contains(AssignmentItem)) return Json(Open(AssignmentItem, "Assignment", AssignmentId, "Essay", false, null, null, null, "MustScoreAtLeast", "todo", false));
                 if (path.Contains(LinkItem)) return Json(Open(LinkItem, "ExternalUrl", null, "Reading", false, null, null, "https://example.org/reading", "MustMarkDone", "todo", true));
+                if (path.Contains(DiscussionItem)) return Json(Open(DiscussionItem, "Discussion", null, "Forum", false, null, null, null, "None", "none", false));
             }
             if (path.EndsWith("/nav"))
                 return Json($$"""{"itemId":"{{LinkItem}}","moduleTitle":"Week 1","previous":{"id":"{{PageItem}}","title":"Syllabus","locked":false},"next":{"id":"{{AssignmentItem}}","title":"Essay","locked":false},"status":"todo","canMarkDone":true,"courseOfferingId":"{{OfferingId}}"}""");
