@@ -3,9 +3,10 @@
 ### 2026-11-08 — Product Requirements Synchronization (the API's Database Setup page closes on a working server; Installation and Connection Guide v1.1)
 - The API's `/setup` page is open only while the API has no working database. Once the database works, every address that starts with `/setup` answers 404, for everyone (FR-S7.10). Before, anyone who could reach the API, for example phones on the school Wi-Fi, could change the database the API uses or make it connect to any SQL Server.
 - Fixed: on a server without a working database the page itself failed with HTTP 500, because the licence-domain check and the institution context read the database first (FR-S7.11).
+- The page's Docker .env template no longer shows the configured password (FR-S7.12).
 - Installation and Connection Guide v1.1 (34 pages): the setup page's new behaviour, how to change the database of a working installation, and a new Figure 2.1 (§27.8). Blocking `/setup` at IIS or nginx stays as a second line of defence.
 - The open item in §27.9 is closed; what remains is the time while the database is unreachable (§27.9).
-- Tests after the change: unit 717/717, integration 400/401 (13 new; 1 long-standing skip), web-integration 111/111, contract 1/1.
+- Tests after the change: unit 725/725 (8 new), integration 400/401 (13 new; 1 long-standing skip), web-integration 111/111, contract 1/1.
 
 ### 2026-11-08 — Product Requirements Synchronization (a second institute on one server; Installation and Connection Guide)
 - A second installation with its own database was set up next to the first, and a phone was moved between them. This found three faults, all fixed (§27.7):
@@ -6307,6 +6308,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 
   Only addresses that start with `/setup` are affected; the two-factor addresses that end in `setup` (`api/v1/auth/mfa/setup`, `api/v1/2fa/setup`) are not. A successful import continues to `/`, like Save & Continue, since `/setup` is closed by then. To change the database of a working installation: change `EDUSPHERE_DB_CONNECTION` or `appsettings.Local.json`, delete `App_Data/database-setup.json` if the page saved one, and restart.
 - **FR-S7.11** The Database Setup page works on a server without a working database. The licence-domain check and the institution context no longer read the database for `/setup` addresses; before, the page failed with HTTP 500 exactly when it was needed (found by starting a published API with a SQL Server that does not exist).
+- **FR-S7.12** The setup page's Docker .env template (`/setup/docker-env`) never shows the configured password. `Password` or `Pwd`, quoted or not, becomes `REPLACE_WITH_PASSWORD`, with a comment line saying so; the API treats that value as not configured. A connection string without a password is shown as it is, and one that cannot be read is not shown at all. Before, anyone who could open the page while the database was unreachable could download the password.
 
 ### 27.8 Documentation and acceptance evidence
 - **Mobile App Connection Guide** (`User Guide/Tabsan-EduSphere-Mobile-App-Connection-Guide.docx` and `.pdf`):
@@ -6342,7 +6344,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 
   A full rebuild also reports five older compiler warnings in the portal (`ScormPlayController.Json` hides an inherited member; unreachable code in four views). They are untouched by this work.
 
-  Again on 2026-11-08 after FR-S7.10 and FR-S7.11: unit 717/717, integration 400/401 (13 new tests for the setup page; the same long-standing skip), web-integration 111/111, contract 1/1.
+  Again on 2026-11-08 after FR-S7.10 to FR-S7.12: unit 725/725 (8 new tests for the Docker .env template), integration 400/401 (13 new tests for the setup page; the same long-standing skip), web-integration 111/111, contract 1/1.
 - **The first SuperAdmin:** a new database needs `TABSAN_SUPER_PASSWORD` in every real environment, and start-up stops with a clear message without it (an empty value counts as missing). Only the Testing environment skips the bootstrap account, because the test suites create their own accounts.
 
   New tests in this period:
@@ -6354,7 +6356,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   | Result labels | Integration and web-integration |
   | Mobile core | Server address parsing, server check, switching, lock, server page, child/class/campus choice, homework, attendance, password change |
   | Mobile API | Integration: classes, campuses, homework, day-by-day attendance, the admin's campus, results order |
-  | Database Setup page | Integration: with a working database every `/setup` address answers 404, also to a SuperAdmin; save, import and test-connection are refused even with a valid anti-forgery token, and nothing is connected or changed; on a test host with no database at all the page, test-connection, save, import and export work and the rest of the API answers 503; a database that stops and starts working opens and closes the page; the two-factor `setup` addresses are unaffected |
+  | Database Setup page | Integration: with a working database every `/setup` address answers 404, also to a SuperAdmin; save, import and test-connection are refused even with a valid anti-forgery token, and nothing is connected or changed; on a test host with no database at all the page, test-connection, save, import and export work and the rest of the API answers 503; a database that stops and starts working opens and closes the page; the two-factor `setup` addresses are unaffected. Unit: the Docker .env template hides the password (SQL login, `pwd`, quoted with `;`, SQLite), keeps a Windows-authentication string as it is and leaves out one it cannot read |
 - **Checked in the running app:**
   - School-only display, on a School-only copy of the database.
   - Both School scripts, on SQL Server Express.
@@ -6366,7 +6368,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **iOS.** The build, the local-network permission prompt and plain-HTTP access on the local network need a Mac and an iPhone.
 - **Google Play.** Signing with the institution's upload keystore and publishing an `.aab`. The standard APK is debug-signed, for direct installation only.
 - **Push.** Native push needs the institution's own Firebase project (as in §26.19).
-- **Security: the API's `/setup` page while the database is unreachable.** Closed on 8 November 2026 for working servers: the page answers 404 once the database works (FR-S7.10). It still opens, without sign-in, whenever the API cannot reach its database, for example while SQL Server is stopped or restarting. During that time anyone who can reach the API could point it at another database. The Installation and Connection Guide therefore keeps telling installers to block `/setup` at IIS or nginx as a second line of defence (§7.5 of that guide). The page's Docker .env template also shows the configured connection string with its password at those times.
+- **Security: the API's `/setup` page while the database is unreachable.** Closed on 8 November 2026 for working servers: the page answers 404 once the database works (FR-S7.10). It still opens, without sign-in, whenever the API cannot reach its database, for example while SQL Server is stopped or restarting. During that time anyone who can reach the API could point it at another database. The Installation and Connection Guide therefore keeps telling installers to block `/setup` at IIS or nginx as a second line of defence (§7.5 of that guide). The page shows the server, database and user name at those times, but never the password (FR-S7.12).
 
 ---
 

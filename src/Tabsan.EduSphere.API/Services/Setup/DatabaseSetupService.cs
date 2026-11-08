@@ -227,9 +227,17 @@ public sealed class DatabaseSetupService : IDatabaseSetupService
             "ASPNETCORE_ENVIRONMENT=Production"
         };
 
+        // The setup page asks for no sign-in, so this download never shows the password.
+        var passwordHidden = false;
+        string? shown = null;
         if (!string.IsNullOrWhiteSpace(snapshot.ConnectionString))
+            shown = HidePassword(snapshot.ConnectionString, snapshot.Provider, out passwordHidden);
+
+        if (shown is not null)
         {
-            var escaped = snapshot.ConnectionString.Replace("\"", "\\\"");
+            if (passwordHidden)
+                lines.Add($"# The password is not shown: replace {PasswordPlaceholder} with it.");
+            var escaped = shown.Replace("\"", "\\\"");
             lines.Add($"ConnectionStrings__DefaultConnection=\"{escaped}\"");
         }
         else
@@ -242,6 +250,45 @@ public sealed class DatabaseSetupService : IDatabaseSetupService
         lines.Add("# -v /host/path/edusphere-app-data:/app/App_Data");
 
         return string.Join(Environment.NewLine, lines);
+    }
+
+    /// <summary>
+    /// Stands in for the password in connection strings shown on the setup page. It contains "REPLACE_WITH", so a
+    /// template copied without the real password counts as unconfigured instead of failing to sign in.
+    /// </summary>
+    public const string PasswordPlaceholder = "REPLACE_WITH_PASSWORD";
+
+    /// <summary>
+    /// The connection string with its password (<c>Password</c> or <c>Pwd</c>, quoted or not) replaced by
+    /// <see cref="PasswordPlaceholder"/>. Without a password it is returned unchanged; when it cannot be read it is
+    /// not shown at all (<c>null</c>).
+    /// </summary>
+    public static string? HidePassword(string connectionString, RuntimeDatabaseProvider provider, out bool passwordHidden)
+    {
+        passwordHidden = false;
+        try
+        {
+            if (provider == RuntimeDatabaseProvider.Sqlite)
+            {
+                var sqlite = new SqliteConnectionStringBuilder(connectionString);
+                if (string.IsNullOrEmpty(sqlite.Password))
+                    return connectionString;
+                sqlite.Password = PasswordPlaceholder;
+                passwordHidden = true;
+                return sqlite.ConnectionString;
+            }
+
+            var sql = new SqlConnectionStringBuilder(connectionString);
+            if (string.IsNullOrEmpty(sql.Password))
+                return connectionString;
+            sql.Password = PasswordPlaceholder;
+            passwordHidden = true;
+            return sql.ConnectionString;
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException or KeyNotFoundException or InvalidOperationException)
+        {
+            return null;
+        }
     }
 
     private BuildConnectionResult BuildConnection(DatabaseSetupViewModel input)
