@@ -1,5 +1,16 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-11-08 — Product Requirements Synchronization (browser suite on a copy of the database; three more fixes)
+- The accessibility fixes and the `/setup` lock-down were merged into main, and the whole browser suite was run: the read-only specs against the School demo data, and the specs that create data against `Tabsan-EduSphere-E2E`, a copy of it served by a second API and portal (ports 5381 and 5263).
+- Three faults found, all fixed:
+  - **The student's home page** (Announcements, where students land after sign-in) showed every course of the campus, a red "Select a department or course offering to view announcements" and no announcements until a course was chosen, and a post form the API would refuse. It now lists the announcements of the student's own courses (FR-S7.14).
+  - **The quiz builder** answered "API request failed with status 403" to the SuperAdmin for every course outside the SuperAdmin's home campus, and then left out accommodations and date overrides (FR-S7.15).
+  - **Two installations on one server shared the sign-in.** Browsers send cookies by host, not port, so after signing in to one portal the other one used its API and token and showed the first institute's data (FR-S7.16). Everyone signs in again once after this update.
+- Accessibility: the spec now also signs in as Admin, Teacher, Finance and Parent (`ADMIN_`, `FACULTY_`, `FINANCE_`, `PARENT_USERNAME`). All six roles: 0 findings of any impact.
+- Specs that create data, on the copy: modules 3/3, assignment policies and groups 4/4, LTI 4/4, outcomes 4/4, grading workspace 2/2, similarity 1/1, live classes 1/1. Two similarity and two live-class tests need the preview data's completed checks and past classes and were skipped. The live-class test that connects BigBlueButton needs a service that answers its connection test, so it runs only against the fake API. The specs got settings for real data: `OUTCOMES_COURSE_ID`, `LIVE_MEETING_URL`, and the student page's heading is looked up inside the page (the AI assistant panel has an `h2` too). The demo homework has typed answers only, so a PDF was handed in on the copy through the portal for the grading workspace; that worked too.
+- The older specs from before Plan M (role menus, login, MFA, certificates, attendance, FYP, edge cases, full student lifecycle) mostly fail against the School data for reasons in the specs. Examples: the University demo accounts, pages that were renamed, an MFA account, a folder on another developer's PC. See §27.9.
+- Tests: unit 717/717, integration 401/402 (1 long-standing skip), web-integration 117/117 (3 new), contract 1/1.
+
 ### 2026-11-08 — Product Requirements Synchronization (accessibility regressions fixed)
 - The axe-core scan with the School demo data found serious or critical findings on 13 portal pages (§27.9). All are fixed, and the accessibility spec passes again for SuperAdmin and student pages (5/5, 0 findings of any impact):
   - **Labels:** every control in the scan now has a name. That covers the menu on/off switches (Sidebar Settings), the rename boxes (Tenants, Campuses, Programs), the Active tick (Grading Configuration), the profile-picture field (User Settings), the empty offering box (Announcements), Select Admin (Admin Users), the department filter (Prerequisites) and the certificate type (Generate Certificates). New texts have Urdu and Arabic translations.
@@ -6335,6 +6346,9 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 
   Only addresses that start with `/setup` are affected; the two-factor addresses that end in `setup` (`api/v1/auth/mfa/setup`, `api/v1/2fa/setup`) are not. A successful import continues to `/`, like Save & Continue, since `/setup` is closed by then. To change the database of a working installation: change `EDUSPHERE_DB_CONNECTION` or `appsettings.Local.json`, delete `App_Data/database-setup.json` if the page saved one, and restart.
 - **FR-S7.13** The Database Setup page works on a server without a working database. The licence-domain check and the institution context no longer read the database for `/setup` addresses; before, the page failed with HTTP 500 exactly when it was needed (found by starting a published API with a SQL Server that does not exist).
+- **FR-S7.14** A student's Announcements page (their page after sign-in) lists their own courses only and shows the announcements of all of them until they choose one (only active ones). It has no department filter, no "Show inactive" and no post form. Staff keep the department and course filters and the post form.
+- **FR-S7.15** The quiz builder asks for the class list without a tenant or campus when a SuperAdmin opens it, as the other staff pages do: a SuperAdmin's home tenant and campus are not a scope.
+- **FR-S7.16** The portal's sign-in cookies (API address, tokens, identity) belong to one installation. Their names end with a key made from the API address the portal was started with (EduApi:BaseUrl), and they are encrypted for that address. Two portals on one server, on different ports, no longer read each other's sign-in: each asks for its own.
 
 ### 27.8 Documentation and acceptance evidence
 - **Mobile App Connection Guide** (`User Guide/Tabsan-EduSphere-Mobile-App-Connection-Guide.docx` and `.pdf`):
@@ -6377,6 +6391,8 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   After FR-S7.12 and FR-S7.13, on their own branch: unit 717/717, integration 400/401 (13 new tests for the setup page; the same long-standing skip), web-integration 111/111, contract 1/1.
 
   With all of FR-S4.9 and FR-S7.10 to FR-S7.13 and the accessibility fixes merged (8 November 2026, 0 errors): unit 717/717, integration 401/402 (1 long-standing skip), web-integration 114/114, contract 1/1.
+
+  After FR-S7.14 to FR-S7.16: unit 717/717, integration 401/402 (1 long-standing skip), web-integration 117/117, contract 1/1. Each of the three new web tests fails with its fix taken out.
 - **The first SuperAdmin:** a new database needs `TABSAN_SUPER_PASSWORD` in every real environment, and start-up stops with a clear message without it (an empty value counts as missing). Only the Testing environment skips the bootstrap account, because the test suites create their own accounts.
 
   New tests in this period:
@@ -6405,9 +6421,8 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   - drop-downs without an accessible name: Admin Users, Prerequisites and Generate Certificates;
   - low colour contrast: Departments, Enrollment report, User Settings and LTI Tools.
 
-  All were fixed the same day (see the 2026-11-08 entry "accessibility regressions fixed"), and the spec passes again. Still open:
-  - The spec signs in only as SuperAdmin and student, so Admin, Teacher, Finance and Parent pages are not scanned.
-  - It scans the signed-in user's own theme. The other themes were checked by hand on the 13 pages only.
+  All were fixed the same day (see the 2026-11-08 entry "accessibility regressions fixed"), and the spec passes again, now for all six roles (SuperAdmin, Admin, Teacher, Finance, Student, Parent), with 0 findings. Still open: it scans the signed-in user's own theme. The other themes were checked by hand on the 13 pages only.
+- **The older browser specs** (from before Plan M: role menus, login, MFA, certificates, attendance, FYP, edge cases, full student lifecycle) do not match the current portal and the School demo data. Examples: they expect a student to land on a page with no messages, menu items the portal has renamed, University demo accounts, an MFA account, and a certificates folder on another developer's PC. They need updating before they can be used as a regression check. The Plan M specs and the accessibility, language and PWA specs are current.
 - **Security: the API's `/setup` page while the database is unreachable.** Closed on 8 November 2026 for working servers: the page answers 404 once the database works (FR-S7.12). It still opens, without sign-in, whenever the API cannot reach its database, for example while SQL Server is stopped or restarting. During that time anyone who can reach the API could point it at another database. The Installation and Connection Guide therefore keeps telling installers to block `/setup` at IIS or nginx as a second line of defence (§7.5 of that guide). The page's Docker .env template also shows the configured connection string with its password at those times.
 
 ---

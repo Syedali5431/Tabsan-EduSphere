@@ -54,7 +54,12 @@ public partial class PortalController
             model.Banks = await _api.GetQuestionBanksAsync(model.Quiz.CourseOfferingId, ct);
             if (copyBankId.HasValue) model.CopyBank = await _api.GetQuestionBankAsync(copyBankId.Value, ct);
             var identity = _api.GetSessionIdentity();
-            model.Roster = await _api.GetEnrollmentRosterAsync(model.Quiz.CourseOfferingId, identity?.TenantId, identity?.CampusId, ct);
+            // A SuperAdmin's own tenant and campus are not a scope (they work across every institution, as on the other
+            // pages): sending them made the API refuse the class list (403) for every course outside the SuperAdmin's
+            // home campus, and the accommodations and date overrides below were never loaded.
+            var superAdmin = identity?.IsSuperAdmin == true;
+            model.Roster = await _api.GetEnrollmentRosterAsync(model.Quiz.CourseOfferingId,
+                superAdmin ? null : identity?.TenantId, superAdmin ? null : identity?.CampusId, ct);
             model.Accommodations = await _api.GetQuizAccommodationsAsync(model.Quiz.CourseOfferingId, ct);
             model.Overrides = await _api.GetQuizOverridesAsync(quizId, ct);
         }

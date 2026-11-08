@@ -102,7 +102,8 @@ test.describe('Grading workspace @grading', () => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`/Portal/AssignmentSubmission?assignmentId=${ASSIGNMENT}`);
-    await expect(page.locator('h2')).toBeVisible();
+    // The page's own heading: the AI assistant panel on every page has an h2 of its own.
+    await expect(page.locator('#submission-page h2').first()).toBeVisible();
     const preview = page.locator('[data-preview]').first();
     if (await preview.isVisible().catch(() => false)) {
       await preview.click();

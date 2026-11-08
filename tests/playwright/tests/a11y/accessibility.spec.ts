@@ -6,7 +6,8 @@
  * all findings are written to a JSON report (A11Y_REPORT, default test-results/a11y-report.json).
  *
  * Needs: SUPER_ADMIN_USERNAME / SUPER_ADMIN_PASSWORD and STUDENT_USERNAME / STUDENT_PASSWORD.
- * Optional: A11Y_MAX_PAGES (default 120), A11Y_EXTRA_PAGES (comma-separated paths).
+ * Optional: ADMIN_, FACULTY_, FINANCE_ and PARENT_USERNAME / _PASSWORD scan those roles' sidebar pages too (a role
+ * without a username is skipped); A11Y_MAX_PAGES (default 120), A11Y_EXTRA_PAGES (comma-separated paths).
  */
 import { test, expect, Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
@@ -17,6 +18,11 @@ import pagesFile from './portal-pages.json';
 const ROLES = [
   { name: 'superadmin', user: process.env.SUPER_ADMIN_USERNAME, pass: process.env.SUPER_ADMIN_PASSWORD, pages: pagesFile.staff },
   { name: 'student', user: process.env.STUDENT_USERNAME, pass: process.env.STUDENT_PASSWORD, pages: pagesFile.student },
+  // The other roles: the pages their own sidebar links to (each role sees a different menu and different controls).
+  { name: 'admin', user: process.env.ADMIN_USERNAME, pass: process.env.ADMIN_PASSWORD, pages: [] as string[] },
+  { name: 'faculty', user: process.env.FACULTY_USERNAME, pass: process.env.FACULTY_PASSWORD, pages: [] as string[] },
+  { name: 'finance', user: process.env.FINANCE_USERNAME, pass: process.env.FINANCE_PASSWORD, pages: [] as string[] },
+  { name: 'parent', user: process.env.PARENT_USERNAME, pass: process.env.PARENT_PASSWORD, pages: ['/Portal/Start'] },
 ];
 const MAX_PAGES = Number(process.env.A11Y_MAX_PAGES ?? 120);
 const REPORT = process.env.A11Y_REPORT ?? path.join('test-results', 'a11y-report.json');

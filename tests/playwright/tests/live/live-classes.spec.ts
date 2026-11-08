@@ -7,6 +7,8 @@
  *   STUDENT_USERNAME / STUDENT_PASSWORD        a student enrolled in that offering (student steps skipped when unset)
  * Optional: SCREENSHOT_DIR; M10_DEMO_DATA=1 adds checks that need a class open for joining, an ended class with joins and
  * a timetable slot (the preview data has them). The spec schedules a class named "PW … <run>" and cancels it.
+ * LIVE_MEETING_URL: for an institution with no conferencing service (meeting links only), the link the teacher pastes when
+ * scheduling; run it with --grep-invert "admin connects", since that test needs a service that answers its connection test.
  */
 import { test, expect, Page } from '@playwright/test';
 import { randomUUID } from 'crypto';
@@ -14,6 +16,7 @@ import { randomUUID } from 'crypto';
 const OFFERING = process.env.LIVE_OFFERING_ID;
 const SHOTS = process.env.SCREENSHOT_DIR;
 const DEMO = process.env.M10_DEMO_DATA === '1';
+const MEETING_URL = process.env.LIVE_MEETING_URL;
 const RUN = randomUUID().slice(0, 5);
 
 async function login(page: Page, user?: string, pass?: string) {
@@ -75,6 +78,7 @@ test.describe('Live classes @live', () => {
     await form.locator('#ls-start').fill(utcInput(4));
     await form.locator('#ls-duration').fill('45');
     await form.locator('#ls-min').fill('10');
+    if (MEETING_URL) await form.locator('#ls-url').fill(MEETING_URL);
     await form.locator('button', { hasText: 'Schedule' }).click();
     await expect(flash(page)).toContainText('Live class scheduled');
     const item = page.locator(`[data-session="PW class ${RUN}"]`);
@@ -82,6 +86,7 @@ test.describe('Live classes @live', () => {
 
     await item.locator('a', { hasText: 'Edit' }).click();
     await page.locator('#ls-title').fill(`PW class ${RUN} (moved)`);
+    if (MEETING_URL && await page.locator('#ls-url').isVisible()) await page.locator('#ls-url').fill(MEETING_URL);
     await page.locator('[data-schedule-form] button', { hasText: 'Save' }).click();
     await expect(flash(page)).toContainText('Live class saved.');
     const moved = page.locator(`[data-session="PW class ${RUN} (moved)"]`);

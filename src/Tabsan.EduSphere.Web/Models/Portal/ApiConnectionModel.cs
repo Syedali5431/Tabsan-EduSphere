@@ -2863,6 +2863,9 @@ public class AnnouncementsPageModel
     public Guid? SelectedCampusId { get; set; }
     public bool   IncludeInactive { get; set; }
     public bool   CanManage { get; set; }
+    /// <summary>A student: the page lists their own courses only, shows every one of them until they pick one, and has no
+    /// department filter, inactive switch or post form.</summary>
+    public bool   IsStudentView { get; set; }
     public List<AnnouncementItem> Announcements { get; set; } = new();
     public string? SuccessMessage { get; set; }
     public string? ErrorMessage   { get; set; }

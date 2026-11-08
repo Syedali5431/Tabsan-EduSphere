@@ -62,6 +62,101 @@ public class PortalLandingWebIntegrationTests : IClassFixture<WebApplicationFact
     }
 
     [Fact]
+    public async Task Student_LandsOnAnnouncements_OfTheirOwnCourses_WithoutThePostForm()
+    {
+        var api = new FakeApi("Student", visibleMenus: Menu("announcements"));
+        var (client, landing) = await SignInAsync(api);
+
+        Assert.Equal("/Portal/Announcements", landing);
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/Portal/Announcements"));
+
+        // every one of the student's courses, without having to choose first
+        Assert.Contains("Test on Friday", html);       // Algebra (the student's)
+        Assert.Contains("Bring a calculator", html);   // Calculus (the student's)
+        Assert.DoesNotContain("Lab moved", html);      // Mechanics: not the student's course
+        Assert.DoesNotContain("Select a department or course offering", html);
+        Assert.Contains("All my courses", html);
+        Assert.DoesNotContain("name=\"departmentId\"", html);
+        Assert.DoesNotContain("Post Announcement", html);
+        Assert.DoesNotContain("includeInactive\" value=\"true\"", html);
+
+        // only the student's own courses were asked for, and only active announcements
+        var reads = api.Requests.Where(r => r.StartsWith("/api/v1/announcement/", StringComparison.Ordinal)).ToList();
+        Assert.Equal(2, reads.Count);
+        Assert.All(reads, r => Assert.Contains("includeInactive=false", r, StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task TwoInstallationsOnOneHost_DoNotShareTheSignIn()
+    {
+        // Browsers send cookies by host, not port: portal A's cookies also reach portal B on the same server. B used to read
+        // them and call A's API with A's token, showing the other institute's data as if signed in.
+        var a = Portal(new FakeApi("SuperAdmin", visibleMenus: "[]"), "https://api-a.test")
+            .CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = false, BaseAddress = new Uri("https://localhost") });
+        var apiB = new FakeApi("SuperAdmin", visibleMenus: "[]");
+        var b = Portal(apiB, "https://api-b.test")
+            .CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = false, BaseAddress = new Uri("https://localhost") });
+
+        var jar = new Dictionary<string, string>();
+        void Keep(HttpResponseMessage r)
+        {
+            if (!r.Headers.TryGetValues("Set-Cookie", out var values)) return;
+            foreach (var pair in values.Select(v => v.Split(';')[0]))
+            {
+                var at = pair.IndexOf('=');
+                if (at > 0) jar[pair[..at]] = pair[(at + 1)..];
+            }
+        }
+        HttpRequestMessage WithJar(HttpMethod method, string url)
+        {
+            var request = new HttpRequestMessage(method, url);
+            if (jar.Count > 0) request.Headers.Add("Cookie", string.Join("; ", jar.Select(kv => $"{kv.Key}={kv.Value}")));
+            return request;
+        }
+
+        var loginPage = await a.SendAsync(WithJar(HttpMethod.Get, "/Login"));
+        Keep(loginPage);
+        var post = WithJar(HttpMethod.Post, "/Login");
+        post.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["__RequestVerificationToken"] = Token(await loginPage.Content.ReadAsStringAsync()), ["username"] = "tester", ["password"] = "Password#123"
+        });
+        var signedIn = await a.SendAsync(post);
+        Assert.Equal(HttpStatusCode.Redirect, signedIn.StatusCode);
+        Keep(signedIn);
+
+        // A is signed in with these cookies ...
+        var onA = await a.SendAsync(WithJar(HttpMethod.Get, "/Portal/Start"));
+        Assert.Equal(HttpStatusCode.OK, onA.StatusCode);
+
+        // ... and B, sent the very same cookies, is not: it asks for its own sign-in and never calls an API with A's token.
+        var before = apiB.Requests.Count;
+        var onB = await b.SendAsync(WithJar(HttpMethod.Get, "/Portal/Start"));
+        Assert.Equal(HttpStatusCode.Redirect, onB.StatusCode);
+        Assert.Contains("/Login", onB.Headers.Location!.OriginalString, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(apiB.Requests.Skip(before), r => r.StartsWith("/api/v1/sidebar-menu", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SuperAdmin_QuizBuilder_AsksForTheClassList_WithoutTheirOwnHomeCampus()
+    {
+        // The SuperAdmin account belongs to a home tenant and campus. Sent as a filter, they made the API refuse (403) the
+        // class list of every course elsewhere, and the page stopped before loading accommodations and date overrides.
+        var api = new FakeApi("SuperAdmin", visibleMenus: Menu("quizzes"), withHomeCampus: true);
+        var (client, _) = await SignInAsync(api);
+
+        var page = await client.GetAsync($"/Portal/QuizBuilder?quizId={FakeApi.QuizId}");
+        Assert.Equal(HttpStatusCode.OK, page.StatusCode);
+        Assert.DoesNotContain("API request failed", WebUtility.HtmlDecode(await page.Content.ReadAsStringAsync()));
+
+        var roster = Assert.Single(api.Requests, r => r.StartsWith("/api/v1/enrollment/roster/", StringComparison.Ordinal));
+        Assert.DoesNotContain("tenantId=", roster);
+        Assert.DoesNotContain("campusId=", roster);
+        Assert.Contains(api.Requests, r => r.StartsWith("/api/v1/quiz/accommodations/", StringComparison.Ordinal));
+        Assert.Contains(api.Requests, r => r.EndsWith("/overrides", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task Prerequisites_AskOncePerDepartment_NotOncePerCourse()
     {
         var api = new FakeApi("SuperAdmin", visibleMenus: Menu("prerequisites"));
@@ -97,14 +192,17 @@ public class PortalLandingWebIntegrationTests : IClassFixture<WebApplicationFact
     private static string Token(string html)
         => Regex.Match(html, "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"").Groups[1].Value;
 
-    private async Task<(HttpClient Client, string Landing)> SignInAsync(FakeApi api)
-    {
-        var factory = _baseFactory.WithWebHostBuilder(b =>
+    private WebApplicationFactory<WebEntryPointMarker> Portal(FakeApi api, string apiBase = FakeApi.Base)
+        => _baseFactory.WithWebHostBuilder(b =>
         {
             b.UseEnvironment("Testing");
-            b.UseSetting("EduApi:BaseUrl", FakeApi.Base);
+            b.UseSetting("EduApi:BaseUrl", apiBase);
             b.ConfigureTestServices(s => s.Replace(ServiceDescriptor.Singleton<IHttpClientFactory>(new FakeHttpClientFactory(api))));
         });
+
+    private async Task<(HttpClient Client, string Landing)> SignInAsync(FakeApi api)
+    {
+        var factory = Portal(api);
         var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = true, BaseAddress = new Uri("https://localhost") });
         var page = await client.GetStringAsync("/Login");
         var login = await client.PostAsync("/Login", new FormUrlEncodedContent(new Dictionary<string, string>
@@ -120,9 +218,12 @@ public class PortalLandingWebIntegrationTests : IClassFixture<WebApplicationFact
         public HttpClient CreateClient(string name) => new(handler, disposeHandler: false) { BaseAddress = new Uri(FakeApi.Base + "/") };
     }
 
-    private sealed class FakeApi(string role, string visibleMenus) : HttpMessageHandler
+    private sealed class FakeApi(string role, string visibleMenus, bool withHomeCampus = false) : HttpMessageHandler
     {
         public const string Base = "https://api.test";
+        public const string QuizId = "a0000000-0000-0000-0000-00000000000a";
+        private const string HomeTenant = "e0000000-0000-0000-0000-000000000001";
+        private const string HomeCampus = "e0000000-0000-0000-0000-000000000002";
         private const string MathsDept = "d0000000-0000-0000-0000-000000000001";
         private const string ScienceDept = "d0000000-0000-0000-0000-000000000002";
         private const string Mth101 = "c0000000-0000-0000-0000-000000000101";
@@ -135,10 +236,16 @@ public class PortalLandingWebIntegrationTests : IClassFixture<WebApplicationFact
         private string Jwt()
         {
             static string B64(string s) => Convert.ToBase64String(Encoding.UTF8.GetBytes(s)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
-            var payload = JsonSerializer.Serialize(new Dictionary<string, object>
+            var claims = new Dictionary<string, object>
             {
                 ["sub"] = Guid.NewGuid().ToString(), ["unique_name"] = "tester", ["role"] = role, ["exp"] = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds()
-            });
+            };
+            if (withHomeCampus)
+            {
+                claims["tenant_id"] = HomeTenant;
+                claims["campus_id"] = HomeCampus;
+            }
+            var payload = JsonSerializer.Serialize(claims);
             return $"{B64("{\"alg\":\"none\"}")}.{B64(payload)}.sig";
         }
 
@@ -164,6 +271,23 @@ public class PortalLandingWebIntegrationTests : IClassFixture<WebApplicationFact
                     ? $$"""[{"courseId":"{{Mth201}}","courseCode":"MTH-201","courseTitle":"Calculus","prerequisiteCourseId":"{{Mth101}}","prerequisiteCourseCode":"MTH-101","prerequisiteCourseTitle":"Algebra"}]"""
                     : "[]");
             if (path.StartsWith("/api/v1/prerequisite/", StringComparison.Ordinal)) return Json("[]");
+            if (path == $"/api/v1/quiz/{QuizId}")
+                return Json($$"""{"quizId":"{{QuizId}}","courseOfferingId":"{{Mth101}}","title":"Class test","maxAttempts":1,"isPublished":true,"questions":[]}""");
+            if (path.StartsWith("/api/v1/enrollment/roster/", StringComparison.Ordinal))
+                return request.RequestUri.Query.Contains("tenantId=") ? Json("""{"message":"Forbidden"}""", HttpStatusCode.Forbidden) : Json("[]");
+            if (path.StartsWith("/api/v1/quiz/banks", StringComparison.Ordinal)
+                || path.StartsWith("/api/v1/quiz/accommodations/", StringComparison.Ordinal)
+                || path.EndsWith("/overrides", StringComparison.Ordinal))
+                return Json("[]");
+            if (path == "/api/v1/course/offerings/my")
+                return Json($$"""[{"id":"{{Mth101}}","courseTitle":"Algebra","semesterName":"Class 9"},{"id":"{{Mth201}}","courseTitle":"Calculus","semesterName":"Class 9"}]""");
+            if (path.StartsWith("/api/v1/announcement/", StringComparison.Ordinal))
+            {
+                var (title, offering) = path.EndsWith(Mth101, StringComparison.OrdinalIgnoreCase) ? ("Test on Friday", Mth101)
+                    : path.EndsWith(Mth201, StringComparison.OrdinalIgnoreCase) ? ("Bring a calculator", Mth201)
+                    : ("Lab moved", Phy101);
+                return Json($$"""[{"id":"{{Guid.NewGuid()}}","offeringId":"{{offering}}","title":"{{title}}","body":"{{title}}.","authorName":"Teacher","isActive":true,"postedAt":"2026-11-08T08:00:00Z"}]""");
+            }
             if (path is "/api/v1/department" or "/api/v1/helpdesk/tickets" or "/api/v1/helpdesk/tickets/my") return Json("[]");
             return path.Contains("menu", StringComparison.OrdinalIgnoreCase) || path.Contains("notification", StringComparison.OrdinalIgnoreCase)
                 ? Json("[]")

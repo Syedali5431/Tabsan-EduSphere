@@ -880,6 +880,9 @@
  "All live classes": [
   "Views/Shared/Components/UpcomingLiveClasses/Default.cshtml"
  ],
+ "All my courses": [
+  "Views/Portal/Announcements.cshtml"
+ ],
  "All programs": [
   "Views/Portal/Enrollments.cshtml"
  ],
