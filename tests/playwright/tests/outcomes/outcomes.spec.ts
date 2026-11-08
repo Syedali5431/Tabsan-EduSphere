@@ -5,13 +5,16 @@
  *   OUTCOMES_OFFERING_ID                     a course offering with graded work (skipped when unset)
  *   SUPER_ADMIN_USERNAME / SUPER_ADMIN_PASSWORD (or ADMIN_USERNAME / ADMIN_PASSWORD)
  *   the "outcomes" module active
- * Optional: OUTCOMES_QUIZ_ID (a quiz in that offering, to align a question), STUDENT_USERNAME / STUDENT_PASSWORD, SCREENSHOT_DIR.
+ * Optional: OUTCOMES_QUIZ_ID (a quiz in that offering, to align a question), OUTCOMES_COURSE_ID (that offering's course: the
+ * new outcome is made for it, so the quiz can be aligned to it; without it the outcome goes to the first course in the list,
+ * which only works when there is one course), STUDENT_USERNAME / STUDENT_PASSWORD, SCREENSHOT_DIR.
  */
 import { test, expect, Page } from '@playwright/test';
 import { randomUUID } from 'crypto';
 
 const OFFERING = process.env.OUTCOMES_OFFERING_ID;
 const QUIZ = process.env.OUTCOMES_QUIZ_ID;
+const COURSE = process.env.OUTCOMES_COURSE_ID;
 const SHOTS = process.env.SCREENSHOT_DIR;
 const CODE = `CLO-${randomUUID().slice(0, 5).toUpperCase()}`;
 
@@ -47,6 +50,7 @@ test.describe('Learning outcomes @outcomes', () => {
     await page.selectOption('#o-level', 'Course');
     await expect(page.locator('#o-program')).toBeHidden();
     await expect(page.locator('#o-course')).toBeVisible();
+    if (COURSE) await page.selectOption('#o-course', COURSE.toLowerCase());
     await page.fill('#o-code', CODE);
     await page.fill('#o-title', 'Write correct programs using loops and functions');
     await page.selectOption('#o-method', 'NMastery');

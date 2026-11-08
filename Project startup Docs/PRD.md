@@ -1,12 +1,49 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-11-08 — Product Requirements Synchronization (the setup page's Docker .env template hides the password)
+- The API's Database Setup page needs no sign-in while the API has no working database (FR-S7.12). Its **Download Docker .env Template** showed the configured connection string with its password, so anyone who could reach the API during that time could download it. The password is now replaced by `REPLACE_WITH_PASSWORD` (FR-S7.17).
+- Tests on main with this change merged: unit 725/725 (8 new), integration 401/402 (1 long-standing skip), web-integration 117/117, contract 1/1.
+
+### 2026-11-08 — Product Requirements Synchronization (browser suite on a copy of the database; three more fixes)
+- The accessibility fixes and the `/setup` lock-down were merged into main, and the whole browser suite was run: the read-only specs against the School demo data, and the specs that create data against `Tabsan-EduSphere-E2E`, a copy of it served by a second API and portal (ports 5381 and 5263).
+- Three faults found, all fixed:
+  - **The student's home page** (Announcements, where students land after sign-in) showed every course of the campus, a red "Select a department or course offering to view announcements" and no announcements until a course was chosen, and a post form the API would refuse. It now lists the announcements of the student's own courses (FR-S7.14).
+  - **The quiz builder** answered "API request failed with status 403" to the SuperAdmin for every course outside the SuperAdmin's home campus, and then left out accommodations and date overrides (FR-S7.15).
+  - **Two installations on one server shared the sign-in.** Browsers send cookies by host, not port, so after signing in to one portal the other one used its API and token and showed the first institute's data (FR-S7.16). Everyone signs in again once after this update.
+- Accessibility: the spec now also signs in as Admin, Teacher, Finance and Parent (`ADMIN_`, `FACULTY_`, `FINANCE_`, `PARENT_USERNAME`). All six roles: 0 findings of any impact.
+- Specs that create data, on the copy: modules 3/3, assignment policies and groups 4/4, LTI 4/4, outcomes 4/4, grading workspace 2/2, similarity 1/1, live classes 1/1. Two similarity and two live-class tests need the preview data's completed checks and past classes and were skipped. The live-class test that connects BigBlueButton needs a service that answers its connection test, so it runs only against the fake API. The specs got settings for real data: `OUTCOMES_COURSE_ID`, `LIVE_MEETING_URL`, and the student page's heading is looked up inside the page (the AI assistant panel has an `h2` too). The demo homework has typed answers only, so a PDF was handed in on the copy through the portal for the grading workspace; that worked too.
+- The older specs from before Plan M (role menus, login, MFA, certificates, attendance, FYP, edge cases, full student lifecycle) mostly fail against the School data for reasons in the specs. Examples: the University demo accounts, pages that were renamed, an MFA account, a folder on another developer's PC. See §27.9.
+- Tests: unit 717/717, integration 401/402 (1 long-standing skip), web-integration 117/117 (3 new), contract 1/1.
+
+### 2026-11-08 — Product Requirements Synchronization (accessibility regressions fixed)
+- The axe-core scan with the School demo data found serious or critical findings on 13 portal pages (§27.9). All are fixed, and the accessibility spec passes again for SuperAdmin and student pages (5/5, 0 findings of any impact):
+  - **Labels:** every control in the scan now has a name. That covers the menu on/off switches (Sidebar Settings), the rename boxes (Tenants, Campuses, Programs), the Active tick (Grading Configuration), the profile-picture field (User Settings), the empty offering box (Announcements), Select Admin (Admin Users), the department filter (Prerequisites) and the certificate type (Generate Certificates). New texts have Urdu and Arabic translations.
+  - **Contrast:**
+    - Text on the info and warning badges and progress bars is dark in every theme. White on those fills is below 2:1.
+    - The second lines of the selected user in User Settings are no longer faded.
+    - Inline code is darker on light panels.
+
+    The colours are the theme variables `--text-on-bright-fill` and `--code-text` in `site.css`.
+- The 13 pages were also scanned in three light themes and the four dark themes, with the controls above on the page. No serious or critical findings.
+- Tests: unit 717/717, web-integration 111/111. Together with the fixes in the entry below: unit 717/717, integration 388/389 (1 long-standing skip), web-integration 114/114, contract 1/1.
+
+### 2026-11-08 — Product Requirements Synchronization (full check of the portal and the app; three fixes)
+- Every portal page in the menu was opened as SuperAdmin (67 pages), Admin (37), Finance (8), Teacher (29) and Student (17), and every app screen as student, teacher, parent and campus admin. Three faults were found and fixed:
+  - A parent's portal sign-in looped between Dashboard and Helpdesk until the browser gave up. Parents now land on a page that sends them to the app (§27.7).
+  - The Prerequisites page asked the API course by course, so the School demo data's 610 courses used up the per-user request limit in one page load. It now makes one call per department (§27.7).
+  - The parent's child card in the app showed the programme ("Class 1 to 10 …") instead of the child's class (§27.4).
+- Browser suite (Playwright, installed Chrome, School demo data):
+  - Languages: 3/3 pass. The default-language test now clears its account's own language first and always restores what it changed; a failure part-way used to leave the portal in Arabic.
+  - PWA: 2/2 pass.
+  - Accessibility: 4/5 pass. "No serious or critical violations" failed on 13 pages (§27.9); they were fixed the same day (entry above).
+  - The specs that create courses, modules, outcomes, live classes and groups were not run against the demo database.
+
 ### 2026-11-08 — Product Requirements Synchronization (the API's Database Setup page closes on a working server; Installation and Connection Guide v1.1)
-- The API's `/setup` page is open only while the API has no working database. Once the database works, every address that starts with `/setup` answers 404, for everyone (FR-S7.10). Before, anyone who could reach the API, for example phones on the school Wi-Fi, could change the database the API uses or make it connect to any SQL Server.
-- Fixed: on a server without a working database the page itself failed with HTTP 500, because the licence-domain check and the institution context read the database first (FR-S7.11).
-- The page's Docker .env template no longer shows the configured password (FR-S7.12).
+- The API's `/setup` page is open only while the API has no working database. Once the database works, every address that starts with `/setup` answers 404, for everyone (FR-S7.12). Before, anyone who could reach the API, for example phones on the school Wi-Fi, could change the database the API uses or make it connect to any SQL Server.
+- Fixed: on a server without a working database the page itself failed with HTTP 500, because the licence-domain check and the institution context read the database first (FR-S7.13).
 - Installation and Connection Guide v1.1 (34 pages): the setup page's new behaviour, how to change the database of a working installation, and a new Figure 2.1 (§27.8). Blocking `/setup` at IIS or nginx stays as a second line of defence.
 - The open item in §27.9 is closed; what remains is the time while the database is unreachable (§27.9).
-- Tests after the change: unit 725/725 (8 new), integration 400/401 (13 new; 1 long-standing skip), web-integration 111/111, contract 1/1.
+- Tests after the change: unit 717/717, integration 400/401 (13 new; 1 long-standing skip), web-integration 111/111, contract 1/1.
 
 ### 2026-11-08 — Product Requirements Synchronization (a second institute on one server; Installation and Connection Guide)
 - A second installation with its own database was set up next to the first, and a phone was moved between them. This found three faults, all fixed (§27.7):
@@ -6235,6 +6272,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   - Samsung keyboards no longer add a space after the dot in usernames.
   - The app no longer stays on the start spinner when a saved session loads at once.
   - Android network errors show the usual "No connection" message.
+- **FR-S4.9 The parent's child card** shows a School or College child's own class and campus, for example "Class 9 · Gulberg Campus". It used to show the programme, "Class 1 to 10 (Gulberg Campus)", which is the whole school section. University children keep their programme. The API (`api/v1/mobile/children`) sends this line, so the installed app shows it without an update.
 
 ### 27.5 One mobile app for every institute (choosing the server)
 - **FR-S5.1** The standard build has no server built in.
@@ -6302,13 +6340,20 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **FR-S7.7** The first start on a new database creates the first SuperAdmin (from `TABSAN_SUPER_USERNAME`, `TABSAN_SUPER_PASSWORD` and `TABSAN_SUPER_EMAIL`). The roles are now saved before the SuperAdmin is linked to one; before, only the second start created the account.
 - **FR-S7.8** Publishing the API again into a folder that already holds it keeps the API's own `appsettings*.json`. The filter that leaves out the BackgroundJobs settings never matched (MSBuild has no escapes, so its doubled backslash was literal) and ran before those files joined the publish list. A folder already broken by an earlier publish needs those files deleted and a new publish.
 - **FR-S7.9** The portal uses the API address it resolves at start-up everywhere: from `EDUSPHERE_APP_BASE_URL`, an `environments.json` profile, or `EduApi:BaseUrl`. It writes that address in its first lines. Before, the variable and the profile only passed a start-up check, and the pages called the API named in `EduApi:BaseUrl`.
-- **FR-S7.10** The API's Database Setup page (`/setup`, with its Test Connection, Save & Continue, Import, Export and Docker .env actions) needs no sign-in, because a new server has no database and so no users. It is open only while the API has no working database (`DatabaseSetupRuntimeState.RequiresSetup`: the connection string is missing or a placeholder, or the database cannot be reached). Once the database works, every address that starts with `/setup` answers 404, also to SuperAdmins and to the server itself. `DatabaseSetupGateMiddleware` enforces it and explains why in a comment:
+- **FR-S7.10** Signed-in users who may open no menu page have a page of their own, **Portal/Start** (no menu permission needed):
+  - Parents, who have no portal pages, land there after sign-in. It tells them their children's information is in the mobile app and how to connect it.
+  - When the access check refuses Helpdesk itself, it sends the user to Start with the reason, not back to the Dashboard. This applies to a role whose menu lacks Helpdesk, and to anyone while the API cannot be asked. Before, Dashboard and Helpdesk redirected to each other without end.
+- **FR-S7.11** `GET api/v1/prerequisite?departmentId=` returns the prerequisites of every course in a department in one call, and the Prerequisites page uses it, one call per department. The per-course call `GET api/v1/prerequisite/{courseId}` remains.
+- **FR-S7.12** The API's Database Setup page (`/setup`, with its Test Connection, Save & Continue, Import, Export and Docker .env actions) needs no sign-in, because a new server has no database and so no users. It is open only while the API has no working database (`DatabaseSetupRuntimeState.RequiresSetup`: the connection string is missing or a placeholder, or the database cannot be reached). Once the database works, every address that starts with `/setup` answers 404, also to SuperAdmins and to the server itself. `DatabaseSetupGateMiddleware` enforces it and explains why in a comment:
   - SuperAdmin only does not work: a browser opening this page on the API carries no sign-in token (the portal keeps it).
   - The server itself (loopback) is not safe: behind nginx or out-of-process hosting on the same computer every request comes from 127.0.0.1, and forwarded headers can be forged when no known proxy is configured.
 
   Only addresses that start with `/setup` are affected; the two-factor addresses that end in `setup` (`api/v1/auth/mfa/setup`, `api/v1/2fa/setup`) are not. A successful import continues to `/`, like Save & Continue, since `/setup` is closed by then. To change the database of a working installation: change `EDUSPHERE_DB_CONNECTION` or `appsettings.Local.json`, delete `App_Data/database-setup.json` if the page saved one, and restart.
-- **FR-S7.11** The Database Setup page works on a server without a working database. The licence-domain check and the institution context no longer read the database for `/setup` addresses; before, the page failed with HTTP 500 exactly when it was needed (found by starting a published API with a SQL Server that does not exist).
-- **FR-S7.12** The setup page's Docker .env template (`/setup/docker-env`) never shows the configured password. `Password` or `Pwd`, quoted or not, becomes `REPLACE_WITH_PASSWORD`, with a comment line saying so; the API treats that value as not configured. A connection string without a password is shown as it is, and one that cannot be read is not shown at all. Before, anyone who could open the page while the database was unreachable could download the password.
+- **FR-S7.13** The Database Setup page works on a server without a working database. The licence-domain check and the institution context no longer read the database for `/setup` addresses; before, the page failed with HTTP 500 exactly when it was needed (found by starting a published API with a SQL Server that does not exist).
+- **FR-S7.14** A student's Announcements page (their page after sign-in) lists their own courses only and shows the announcements of all of them until they choose one (only active ones). It has no department filter, no "Show inactive" and no post form. Staff keep the department and course filters and the post form.
+- **FR-S7.15** The quiz builder asks for the class list without a tenant or campus when a SuperAdmin opens it, as the other staff pages do: a SuperAdmin's home tenant and campus are not a scope.
+- **FR-S7.16** The portal's sign-in cookies (API address, tokens, identity) belong to one installation. Their names end with a key made from the API address the portal was started with (EduApi:BaseUrl), and they are encrypted for that address. Two portals on one server, on different ports, no longer read each other's sign-in: each asks for its own.
+- **FR-S7.17** The setup page's Docker .env template (`/setup/docker-env`) never shows the configured password. `Password` or `Pwd`, quoted or not, becomes `REPLACE_WITH_PASSWORD`, with a comment line saying so; the API treats that value as not configured. A connection string without a password is shown as it is, and one that cannot be read is not shown at all. Before, anyone who could open the page while the database was unreachable could download the password.
 
 ### 27.8 Documentation and acceptance evidence
 - **Mobile App Connection Guide** (`User Guide/Tabsan-EduSphere-Mobile-App-Connection-Guide.docx` and `.pdf`):
@@ -6334,7 +6379,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 
   The example is "Northfield Model School": database `EduSphere-Northfield`, API on port 5281, portal on 5163, running next to the main installation on SQL Server Express. A phone was moved between the two with Change server. The guide is built by `tools/user-manual/connection-guide`.
 
-  **v1.1** (8 November 2026, 34 pages) follows FR-S7.10: the setup page is open only while the API has no working database (sections 2.4 and 7.5), how to change the database of a working installation, a troubleshooting row for `/setup` answering 404, and the IIS and nginx block kept as a second line of defence. Figure 2.1 was taken again on a second copy of the published API started with a SQL Server that does not exist.
+  **v1.1** (8 November 2026, 34 pages) follows FR-S7.12: the setup page is open only while the API has no working database (sections 2.4 and 7.5), how to change the database of a working installation, a troubleshooting row for `/setup` answering 404, and the IIS and nginx block kept as a second line of defence. Figure 2.1 was taken again on a second copy of the published API started with a SQL Server that does not exist.
 - **Schools sales deck:** `PPT/Tabsan_EduSphere_For_Schools.pptx`, 19 slides made from screenshots of the running app.
 - **Tests,** 2026-11-07, and again on 2026-11-08 after the fixes in FR-S7.7 to FR-S7.9, after a full build with 0 errors:
   - unit 717/717;
@@ -6342,9 +6387,19 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   - web-integration 111/111;
   - contract 1/1.
 
-  A full rebuild also reports five older compiler warnings in the portal (`ScormPlayController.Json` hides an inherited member; unreachable code in four views). They are untouched by this work.
+  A full rebuild also reports 11 older compiler warnings in code this work did not change:
+  - five in the portal (`ScormPlayController.Json` hides an inherited member; unreachable code in four views);
+  - six nullable-reference and XML-comment warnings in `BackupController`, `ResultService`, `ReportService` and `SsoRepository`.
 
-  Again on 2026-11-08 after FR-S7.10 to FR-S7.12: unit 725/725 (8 new tests for the Docker .env template), integration 400/401 (13 new tests for the setup page; the same long-standing skip), web-integration 111/111, contract 1/1.
+  After the fixes in FR-S4.9, FR-S7.10 and FR-S7.11: unit 717/717, integration 388/389 (1 long-standing skip), web-integration 114/114, contract 1/1.
+
+  After FR-S7.12 and FR-S7.13, on their own branch: unit 717/717, integration 400/401 (13 new tests for the setup page; the same long-standing skip), web-integration 111/111, contract 1/1.
+
+  With all of FR-S4.9 and FR-S7.10 to FR-S7.13 and the accessibility fixes merged (8 November 2026, 0 errors): unit 717/717, integration 401/402 (1 long-standing skip), web-integration 114/114, contract 1/1.
+
+  After FR-S7.14 to FR-S7.16: unit 717/717, integration 401/402 (1 long-standing skip), web-integration 117/117, contract 1/1. Each of the three new web tests fails with its fix taken out.
+
+  After FR-S7.17, on main: unit 725/725 (8 new tests for the Docker .env template), integration 401/402 (1 long-standing skip), web-integration 117/117, contract 1/1.
 - **The first SuperAdmin:** a new database needs `TABSAN_SUPER_PASSWORD` in every real environment, and start-up stops with a clear message without it (an empty value counts as missing). Only the Testing environment skips the bootstrap account, because the test suites create their own accounts.
 
   New tests in this period:
@@ -6356,7 +6411,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   | Result labels | Integration and web-integration |
   | Mobile core | Server address parsing, server check, switching, lock, server page, child/class/campus choice, homework, attendance, password change |
   | Mobile API | Integration: classes, campuses, homework, day-by-day attendance, the admin's campus, results order |
-  | Database Setup page | Integration: with a working database every `/setup` address answers 404, also to a SuperAdmin; save, import and test-connection are refused even with a valid anti-forgery token, and nothing is connected or changed; on a test host with no database at all the page, test-connection, save, import and export work and the rest of the API answers 503; a database that stops and starts working opens and closes the page; the two-factor `setup` addresses are unaffected. Unit: the Docker .env template hides the password (SQL login, `pwd`, quoted with `;`, SQLite), keeps a Windows-authentication string as it is and leaves out one it cannot read |
+  | Database Setup page | Integration: with a working database every `/setup` address answers 404, also to a SuperAdmin; save, import and test-connection are refused even with a valid anti-forgery token, and nothing is connected or changed; on a test host with no database at all the page, test-connection, save, import and export work and the rest of the API answers 503; a database that stops and starts working opens and closes the page; the two-factor `setup` addresses are unaffected. Unit (FR-S7.17): the Docker .env template hides the password (SQL login, `pwd`, quoted with `;`, SQLite), keeps a Windows-authentication string as it is and leaves out one it cannot read |
 - **Checked in the running app:**
   - School-only display, on a School-only copy of the database.
   - Both School scripts, on SQL Server Express.
@@ -6368,7 +6423,14 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **iOS.** The build, the local-network permission prompt and plain-HTTP access on the local network need a Mac and an iPhone.
 - **Google Play.** Signing with the institution's upload keystore and publishing an `.aab`. The standard APK is debug-signed, for direct installation only.
 - **Push.** Native push needs the institution's own Firebase project (as in §26.19).
-- **Security: the API's `/setup` page while the database is unreachable.** Closed on 8 November 2026 for working servers: the page answers 404 once the database works (FR-S7.10). It still opens, without sign-in, whenever the API cannot reach its database, for example while SQL Server is stopped or restarting. During that time anyone who can reach the API could point it at another database. The Installation and Connection Guide therefore keeps telling installers to block `/setup` at IIS or nginx as a second line of defence (§7.5 of that guide). The page shows the server, database and user name at those times, but never the password (FR-S7.12).
+- **Accessibility regressions.** The axe-core scan of 8 November 2026 (School demo data) found serious or critical findings on 13 pages, against 0 on 24 October (§26.16):
+  - form controls without labels: Sidebar Settings, Tenant Management, Campus Management, Programs, Grading Configuration, User Settings (SuperAdmin and student) and Announcements;
+  - drop-downs without an accessible name: Admin Users, Prerequisites and Generate Certificates;
+  - low colour contrast: Departments, Enrollment report, User Settings and LTI Tools.
+
+  All were fixed the same day (see the 2026-11-08 entry "accessibility regressions fixed"), and the spec passes again, now for all six roles (SuperAdmin, Admin, Teacher, Finance, Student, Parent), with 0 findings. Still open: it scans the signed-in user's own theme. The other themes were checked by hand on the 13 pages only.
+- **The older browser specs** (from before Plan M: role menus, login, MFA, certificates, attendance, FYP, edge cases, full student lifecycle) do not match the current portal and the School demo data. Examples: they expect a student to land on a page with no messages, menu items the portal has renamed, University demo accounts, an MFA account, and a certificates folder on another developer's PC. They need updating before they can be used as a regression check. The Plan M specs and the accessibility, language and PWA specs are current.
+- **Security: the API's `/setup` page while the database is unreachable.** Closed on 8 November 2026 for working servers: the page answers 404 once the database works (FR-S7.12). It still opens, without sign-in, whenever the API cannot reach its database, for example while SQL Server is stopped or restarting. During that time anyone who can reach the API could point it at another database. The Installation and Connection Guide therefore keeps telling installers to block `/setup` at IIS or nginx as a second line of defence (§7.5 of that guide). The page shows the server, database and user name at those times, but never the password (FR-S7.17).
 
 ---
 

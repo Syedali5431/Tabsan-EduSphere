@@ -25,7 +25,7 @@
         @{ ViewData["InstitutionFilterColumnClass"] = "col-auto"; }
         <partial name="_InstitutionFilter" />
         <div class="col-auto">
-            <select name="departmentId" class="form-select form-select-sm" onchange="this.form.submit()">
+            <select name="departmentId" class="form-select form-select-sm" aria-label="@T["Filter by Department"]" onchange="this.form.submit()">
                 <option value="">@T["All Departments"]</option>
                 @foreach (var d in Model.Departments)
                 {

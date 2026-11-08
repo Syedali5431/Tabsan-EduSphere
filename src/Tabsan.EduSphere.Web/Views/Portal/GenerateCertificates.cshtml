@@ -346,7 +346,7 @@
                                                         <input type="hidden" name="courseId" value="@Model.SelectedCourseId" />
                                                         <input type="hidden" name="semesterId" value="@Model.SelectedSemesterId" />
                                                         <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
-                                                        <select name="documentType" class="form-select form-select-sm" style="max-width: 220px;" required>
+                                                        <select name="documentType" class="form-select form-select-sm" style="max-width: 220px;" required aria-label="@T.Format("Document type for {0}", student.StudentName)">
                                                             <option value="">@T["Select Type"]</option>
                                                             @foreach (var docType in Model.AvailableDocumentTypes)
                                                             {

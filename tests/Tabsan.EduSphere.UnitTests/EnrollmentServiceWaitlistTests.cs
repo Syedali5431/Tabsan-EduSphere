@@ -196,6 +196,7 @@ file sealed class StubAuditService : IAuditService
 file sealed class StubPrerequisiteRepository : IPrerequisiteRepository
 {
     public Task<IReadOnlyList<CoursePrerequisite>> GetByCourseIdAsync(Guid courseId, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<CoursePrerequisite>>([]);
+    public Task<IReadOnlyList<CoursePrerequisite>> GetByDepartmentIdAsync(Guid departmentId, CancellationToken ct = default) => Task.FromResult<IReadOnlyList<CoursePrerequisite>>([]);
     public Task<bool> ExistsAsync(Guid courseId, Guid prerequisiteCourseId, CancellationToken ct = default) => Task.FromResult(false);
     public Task AddAsync(CoursePrerequisite prerequisite, CancellationToken ct = default) => Task.CompletedTask;
     public Task RemoveAsync(Guid courseId, Guid prerequisiteCourseId, CancellationToken ct = default) => Task.CompletedTask;

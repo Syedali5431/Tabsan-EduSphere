@@ -9,6 +9,12 @@ public interface IPrerequisiteRepository
     /// <summary>Returns all prerequisites for the given course (with PrerequisiteCourse loaded).</summary>
     Task<IReadOnlyList<CoursePrerequisite>> GetByCourseIdAsync(Guid courseId, CancellationToken ct = default);
 
+    /// <summary>
+    /// Returns the prerequisites of every course in the department, in one query (Course and PrerequisiteCourse loaded):
+    /// the portal's Prerequisites page asked course by course before, hundreds of calls for one page.
+    /// </summary>
+    Task<IReadOnlyList<CoursePrerequisite>> GetByDepartmentIdAsync(Guid departmentId, CancellationToken ct = default);
+
     /// <summary>Returns true when the prerequisite link already exists.</summary>
     Task<bool> ExistsAsync(Guid courseId, Guid prerequisiteCourseId, CancellationToken ct = default);
 

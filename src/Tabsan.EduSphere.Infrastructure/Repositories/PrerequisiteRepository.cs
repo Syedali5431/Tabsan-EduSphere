@@ -22,6 +22,14 @@ public class PrerequisiteRepository : IPrerequisiteRepository
                     .OrderBy(p => p.PrerequisiteCourse.Code)
                     .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<CoursePrerequisite>> GetByDepartmentIdAsync(Guid departmentId, CancellationToken ct = default)
+        => await _db.CoursePrerequisites
+                    .Include(p => p.Course)
+                    .Include(p => p.PrerequisiteCourse)
+                    .Where(p => p.Course.DepartmentId == departmentId)
+                    .OrderBy(p => p.Course.Code).ThenBy(p => p.PrerequisiteCourse.Code)
+                    .ToListAsync(ct);
+
     /// <summary>Returns true when the prerequisite link already exists.</summary>
     public Task<bool> ExistsAsync(Guid courseId, Guid prerequisiteCourseId, CancellationToken ct = default)
         => _db.CoursePrerequisites.AnyAsync(

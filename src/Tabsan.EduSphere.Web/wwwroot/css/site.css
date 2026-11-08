@@ -156,6 +156,8 @@ html {
   --alert-warning-text: #9a6812;
   --alert-danger-bg: #fff0f2;
   --alert-danger-text: #972939;
+  --text-on-bright-fill: #111827;
+  --code-text: #ab296a;
 }
 
 [data-theme="ocean_blue"] {
@@ -2622,6 +2624,7 @@ html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="gra
   --alert-warning-text: #fde68a;
   --alert-danger-bg: rgba(248, 113, 113, 0.14);
   --alert-danger-text: #fecaca;
+  --code-text: #f9a8d4;
 }
 
 /* Headings, labels and general text */
@@ -2636,7 +2639,7 @@ html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="gra
 }
 html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) .badge.text-dark:is(.bg-warning, .bg-info),
 html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) .badge:is(.bg-warning, .bg-info).text-dark {
-  color: #111827 !important;
+  color: var(--text-on-bright-fill) !important;
 }
 html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) .bg-light.text-dark,
 html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) .bg-white.text-dark {
@@ -2645,7 +2648,6 @@ html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="gra
 html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) :is(.section-kicker, .section-badge, .header-chip-icon, .profile-menu-role, .ai-chat-panel-eyebrow, .ai-chat-panel-status, .ai-chat-suggestion, .ai-chat-assistant-avatar, .ai-chat-thread-badge) {
   color: var(--dark-accent-text);
 }
-html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) code { color: #f9a8d4; }
 html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) a:hover { color: #bae6fd; }
 
 /* Light surfaces become dark surfaces */
@@ -2916,6 +2918,18 @@ html:not(:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme
 html:not(:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"])) .bg-light .btn-outline-primary:not(:hover):not(:active):not(:focus-visible) {
   color: #0a58ca;
   border-color: #0a58ca;
+}
+
+/* WCAG 1.4.3 — text on Bootstrap's bright info and warning fills is dark in every theme (white on them is below 2:1);
+   secondary lines in an active list item are not faded; inline code keeps 4.5:1 on light panels (--code-text). */
+:is(.badge, .progress-bar):is(.bg-info, .bg-warning) {
+  color: var(--text-on-bright-fill);
+}
+.list-group-item.active :is(.opacity-75, .opacity-50) {
+  opacity: 1 !important;
+}
+code {
+  color: var(--code-text);
 }
 
 /* Plan M14.1 — a clearly visible keyboard focus ring (WCAG 2.4.7); mouse clicks keep the softer :focus style above. */

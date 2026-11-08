@@ -462,6 +462,8 @@ public partial interface IEduApiClient
 
     // Phase 15: Enrollment Rules — Prerequisites
     Task<List<PrerequisiteWebItem>> GetPrerequisitesAsync(Guid courseId, CancellationToken ct);
+    /// <summary>The prerequisites of every course in a department, in one call.</summary>
+    Task<List<PrerequisiteWebItem>> GetDepartmentPrerequisitesAsync(Guid departmentId, CancellationToken ct);
     Task AddPrerequisiteAsync(Guid courseId, Guid prerequisiteCourseId, CancellationToken ct);
     Task RemovePrerequisiteAsync(Guid courseId, Guid prerequisiteCourseId, CancellationToken ct);
 
@@ -591,15 +593,32 @@ public partial class EduApiClient : IEduApiClient
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IDataProtector _protector;
+    private readonly string _cookieSuffix;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
-    public EduApiClient(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor, IDataProtectionProvider dataProtectionProvider)
+    public EduApiClient(IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor, IDataProtectionProvider dataProtectionProvider,
+        IConfiguration configuration)
     {
         _httpClientFactory = httpClientFactory;
         _httpContextAccessor = httpContextAccessor;
-        _protector = dataProtectionProvider.CreateProtector("Tabsan.EduSphere.Web.EduApiClientCookies.v1");
+        // The sign-in (API address, tokens, identity) lives in cookies. Browsers keep cookies per host, not per port, so two
+        // installations on one server (portals on :5063 and :5163, say) used to read each other's: after signing in to one,
+        // the other portal showed the first institute's data. Each installation now has cookies of its own, named and
+        // encrypted for the API address it was started with (EduApi:BaseUrl, resolved at start-up).
+        var installation = InstallationKey(configuration["EduApi:BaseUrl"]);
+        _cookieSuffix = installation[..8];
+        _protector = dataProtectionProvider.CreateProtector("Tabsan.EduSphere.Web.EduApiClientCookies.v1", installation);
     }
+
+    /// <summary>A stable key for this installation: the SHA-256 of its normalised API address, in hex.</summary>
+    internal static string InstallationKey(string? apiBaseUrl)
+    {
+        var normalized = (apiBaseUrl ?? string.Empty).Trim().TrimEnd('/').ToLowerInvariant();
+        return Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(normalized))).ToLowerInvariant();
+    }
+
+    private string CookieName(string key) => $"{key}.{_cookieSuffix}";
 
     // Institute filter (0 University, 1 School, 2 College) chosen on the current page via ?institutionType=.
     // Department, program, course, offering and student lookups made while rendering that page are limited
@@ -2032,7 +2051,7 @@ public partial class EduApiClient : IEduApiClient
 
     private string? ReadCookie(string key)
     {
-        var value = _httpContextAccessor.HttpContext?.Request.Cookies[key];
+        var value = _httpContextAccessor.HttpContext?.Request.Cookies[CookieName(key)];
         if (string.IsNullOrWhiteSpace(value))
             return null;
 
@@ -2052,7 +2071,7 @@ public partial class EduApiClient : IEduApiClient
             ?? throw new InvalidOperationException("No active HTTP response found.");
         var isHttpsRequest = _httpContextAccessor.HttpContext?.Request.IsHttps ?? false;
 
-        response.Cookies.Append(key, _protector.Protect(value), new CookieOptions
+        response.Cookies.Append(CookieName(key), _protector.Protect(value), new CookieOptions
         {
             HttpOnly = true,
             IsEssential = true,
@@ -2065,7 +2084,7 @@ public partial class EduApiClient : IEduApiClient
     private void DeleteCookie(string key)
     {
         var isHttpsRequest = _httpContextAccessor.HttpContext?.Request.IsHttps ?? false;
-        _httpContextAccessor.HttpContext?.Response.Cookies.Delete(key, new CookieOptions
+        _httpContextAccessor.HttpContext?.Response.Cookies.Delete(CookieName(key), new CookieOptions
         {
             HttpOnly = true,
             IsEssential = true,
@@ -3524,6 +3543,7 @@ public partial class EduApiClient : IEduApiClient
         public Guid    Id             { get; set; }
         public string? Title          { get; set; }
         public string? Code           { get; set; }
+        public Guid    DepartmentId   { get; set; }
         public Guid?   TenantId       { get; set; }
         public Guid?   CampusId       { get; set; }
         public int     InstitutionType { get; set; }
@@ -3543,6 +3563,7 @@ public partial class EduApiClient : IEduApiClient
         Id             = c.Id,
         Title          = c.Title          ?? "",
         Code           = c.Code           ?? "",
+        DepartmentId   = c.DepartmentId,
         TenantId       = c.TenantId,
         CampusId       = c.CampusId,
         InstitutionType = c.InstitutionType,
@@ -6193,10 +6214,14 @@ public partial class EduApiClient : IEduApiClient
     // ── Phase 15: Enrollment Rules — Prerequisites ────────────────────────────
 
     public async Task<List<PrerequisiteWebItem>> GetPrerequisitesAsync(Guid courseId, CancellationToken ct)
+        => MapPrerequisites(await GetAsync<List<PrerequisiteApiDto>>($"api/v1/prerequisite/{courseId}", ct));
+
+    public async Task<List<PrerequisiteWebItem>> GetDepartmentPrerequisitesAsync(Guid departmentId, CancellationToken ct)
+        => MapPrerequisites(await GetAsync<List<PrerequisiteApiDto>>($"api/v1/prerequisite?departmentId={departmentId}", ct));
+
+    private static List<PrerequisiteWebItem> MapPrerequisites(List<PrerequisiteApiDto>? items)
     {
-        var items = await GetAsync<List<PrerequisiteApiDto>>($"api/v1/prerequisite/{courseId}", ct)
-                    ?? new List<PrerequisiteApiDto>();
-        return items.Select(p => new PrerequisiteWebItem
+        return (items ?? new List<PrerequisiteApiDto>()).Select(p => new PrerequisiteWebItem
         {
             CourseId                = p.CourseId,
             CourseCode              = p.CourseCode ?? "",

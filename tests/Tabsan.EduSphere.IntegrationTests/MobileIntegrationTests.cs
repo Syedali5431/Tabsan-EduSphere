@@ -246,6 +246,7 @@ public class MobileIntegrationTests
             var student = new User($"sc_s_{suffix}", "integration-hash", db.Roles.First(r => r.Name == "Student").Id, $"sc_s_{suffix}@tabsan.local");
             var profile = new StudentProfile(student.Id, $"SC-9-{suffix}", program.Id, department.Id, DateTime.UtcNow.Date);
             profile.UpdateAcademicStanding(3.2m, 3.2m); // a GPA must not reach School users
+            for (var n = 1; n < 9; n++) profile.AdvanceSemester(); // in Class 9 of "Class 1 to 10"
             var parent = new User($"sc_p_{suffix}", "integration-hash", parentRole.Id, $"sc_p_{suffix}@tabsan.local");
             var handedIn = new Assignment(offering.Id, "Exercise 2.1", "Questions 1-10.", DateTime.UtcNow.AddDays(2), 20);
             var notYet = new Assignment(offering.Id, "Word problems", null, DateTime.UtcNow.AddDays(9), 20);
@@ -288,6 +289,8 @@ public class MobileIntegrationTests
         var child = (await parentApp.GetFromJsonAsync<JsonElement>("api/v1/mobile/children")).EnumerateArray().Single();
         Assert.False(child.TryGetProperty("cgpa", out _));
         Assert.Equal(72.9m, child.GetProperty("averagePercent").GetDecimal());
+        // the child's own class and campus, not the programme ("Class 1 to 10 …", the whole school section)
+        Assert.Equal($"Class 9 · School Campus {suffix}", child.GetProperty("programName").GetString());
 
         // The child's announcements: parent accounts have no tenant scope, which the parent-portal route insists on.
         var announcements = await parentApp.GetFromJsonAsync<JsonElement>($"api/v1/mobile/announcements?studentProfileId={profileId}");

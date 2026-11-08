@@ -88,14 +88,23 @@ public sealed class MobileQueries : IMobileQueries
         var children = await _db.ParentStudentLinks.AsNoTracking()
             .Where(l => l.ParentUserId == parentUserId && l.IsActive)
             .Join(_db.StudentProfiles, l => l.StudentProfileId, p => p.Id,
-                (l, p) => new { p.Id, p.UserId, p.RegistrationNumber, ProgramName = p.Program.Name, p.Cgpa, p.Department.InstitutionType })
+                (l, p) => new { p.Id, p.UserId, p.RegistrationNumber, ProgramName = p.Program.Name, p.Cgpa, p.Department.InstitutionType,
+                    p.CurrentSemesterNumber, p.Department.CampusId })
             .ToListAsync(ct);
+        var campusIds = children.Where(c => c.CampusId != null).Select(c => c.CampusId!.Value).Distinct().ToList();
+        var campusNames = await _db.Campuses.AsNoTracking().Where(c => campusIds.Contains(c.Id)).ToDictionaryAsync(c => c.Id, c => c.Name, ct);
         var result = new List<MobileChildSummary>();
         foreach (var c in children)
         {
             var name = await _db.Users.Where(u => u.Id == c.UserId).Select(u => u.FullName ?? u.Username).FirstOrDefaultAsync(ct) ?? c.RegistrationNumber;
             var published = await _db.Results.CountAsync(r => r.StudentProfileId == c.Id && r.IsPublished, ct);
-            result.Add(new MobileChildSummary(c.Id, name, c.RegistrationNumber, c.ProgramName, await AttendancePercentAsync(c.Id, ct),
+            // School and College: the child's own class and campus ("Class 9 · Gulberg Campus"); the programme name there is the
+            // whole section ("Class 1 to 10 (Gulberg Campus)"), which told parents nothing. University keeps the programme.
+            var line = c.InstitutionType == InstitutionType.University
+                ? c.ProgramName
+                : string.Join(" · ", new[] { $"Class {c.CurrentSemesterNumber}", c.CampusId is { } campus ? campusNames.GetValueOrDefault(campus) : null }
+                    .Where(x => !string.IsNullOrWhiteSpace(x)));
+            result.Add(new MobileChildSummary(c.Id, name, c.RegistrationNumber, line, await AttendancePercentAsync(c.Id, ct),
                 GpaOrNull(c.InstitutionType, c.Cgpa), await OutstandingFeesAsync(c.Id, ct), published, await AveragePercentAsync(c.Id, ct)));
         }
         return result.OrderBy(c => c.Name).ToList();

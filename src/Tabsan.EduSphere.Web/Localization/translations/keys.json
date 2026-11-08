@@ -880,6 +880,9 @@
  "All live classes": [
   "Views/Shared/Components/UpcomingLiveClasses/Default.cshtml"
  ],
+ "All my courses": [
+  "Views/Portal/Announcements.cshtml"
+ ],
  "All programs": [
   "Views/Portal/Enrollments.cshtml"
  ],
@@ -1729,6 +1732,9 @@
  ],
  "Choose a level first.": [
   "wwwroot/js/grading-workspace.js"
+ ],
+ "Choose a page from the menu.": [
+  "Views/Portal/Start.cshtml"
  ],
  "Choose a parent from the list to see their children and link more.": [
   "Views/Portal/ParentLinks.cshtml"
@@ -2921,6 +2927,9 @@
  "Document pages": [
   "wwwroot/js/submission-viewer.js"
  ],
+ "Document type for {0}": [
+  "Views/Portal/GenerateCertificates.cshtml"
+ ],
  "Done": [
   "Views (inline expressions)"
  ],
@@ -3557,6 +3566,7 @@
  "Filter by Department": [
   "Views/Portal/Courses.cshtml",
   "Views/Portal/Fyp.cshtml",
+  "Views/Portal/Prerequisites.cshtml",
   "Views/Portal/Programs.cshtml"
  ],
  "Filter by Semester": [
@@ -4816,6 +4826,9 @@
  "Menu": [
   "Views/Portal/SidebarSettings.cshtml"
  ],
+ "Menu {0} is active": [
+  "Views/Portal/SidebarSettings.cshtml"
+ ],
  "Message": [
   "Views/Portal/Announcements.cshtml",
   "Views/Shared/ChatPanel.cshtml"
@@ -5032,6 +5045,11 @@
   "Views/Portal/ReportSettings.cshtml",
   "Views/Portal/SidebarSettings.cshtml",
   "Views/Portal/StudentLifecycle.cshtml",
+  "Views/Portal/TenantManagement.cshtml"
+ ],
+ "Name of {0}": [
+  "Views/Portal/CampusManagement.cshtml",
+  "Views/Portal/Programs.cshtml",
   "Views/Portal/TenantManagement.cshtml"
  ],
  "Name or email": [
@@ -5324,6 +5342,9 @@
  ],
  "No notifications yet.": [
   "Views/Portal/Notifications.cshtml"
+ ],
+ "No offerings available for the selected scope": [
+  "Views/Portal/Announcements.cshtml"
  ],
  "No offerings found": [
   "Views/Portal/Courses.cshtml"
@@ -6084,6 +6105,9 @@
  ],
  "Parent links are managed by Admins and Super Admins.": [
   "Controllers/PortalController.ParentLinks.cs"
+ ],
+ "Parents use the EduSphere mobile app": [
+  "Views/Portal/Start.cshtml"
  ],
  "Part of (optional)": [
   "Views/Portal/Outcomes.cshtml"
@@ -9461,6 +9485,9 @@
  "To (UTC)": [
   "Views/Portal/AuditLogs.cshtml"
  ],
+ "To change your password, open Settings in the app.": [
+  "Views/Portal/Start.cshtml"
+ ],
  "To complete it, students must": [
   "Views/Portal/_ModuleItemsEditor.cshtml"
  ],
@@ -10200,6 +10227,9 @@
  ],
  "Your authenticator registration is preserved so you can re-enable later.": [
   "Views/Portal/TwoFactorSettings.cshtml"
+ ],
+ "Your children's results, attendance, homework, timetable, fees and announcements are in the EduSphere app. Install it on your phone, type the server address your school gave you, and sign in with this username and password.": [
+  "Views/Portal/Start.cshtml"
  ],
  "Your comment was not saved.": [
   "wwwroot/js/submission-page.js"

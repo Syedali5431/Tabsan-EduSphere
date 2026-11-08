@@ -371,14 +371,14 @@ public partial class PortalController : Controller
             {
                 _logger.LogWarning(ex, "Unable to load visible menu keys for action {ActionName} due to API connectivity issue.", action);
                 TempData["PortalMessage"] = "API service is temporarily unavailable. Access checks could not be completed.";
-                context.Result = RedirectToAction(nameof(Dashboard));
+                context.Result = RedirectToAction(DeniedFallback(action));
                 return;
             }
 
             if (!visibleMenuKeys.Contains(requiredMenuKey))
             {
                 TempData["PortalMessage"] = "Access denied for this section based on your current role and menu permissions.";
-                context.Result = RedirectToAction(nameof(Dashboard));
+                context.Result = RedirectToAction(DeniedFallback(action));
                 return;
             }
         }
@@ -420,6 +420,14 @@ public partial class PortalController : Controller
         var identity = _api.GetSessionIdentity();
         return identity is not null && (identity.IsAdmin || identity.IsSuperAdmin || identity.IsFinance);
     }
+
+    /// <summary>
+    /// Where a refused page sends the user. Usually the Dashboard, which sends everyone but SuperAdmins on to Helpdesk; when
+    /// Helpdesk itself is refused (parents have no portal pages, or a SuperAdmin hid Helpdesk for a role, or the API could
+    /// not be asked), that made an endless Dashboard ↔ Helpdesk loop, so Start, which needs no menu permission, ends it.
+    /// </summary>
+    private static string DeniedFallback(string? action)
+        => string.Equals(action, nameof(Helpdesk), StringComparison.OrdinalIgnoreCase) ? nameof(Start) : nameof(Dashboard);
 
     private bool ShouldEnforceSidebarGuard(string? actionName)
         => _api.IsConnected()
@@ -1107,6 +1115,23 @@ public partial class PortalController : Controller
         ViewData["Title"] = "Dashboard";
         var vm = _api.GetConnection();
         return View(vm);
+    }
+
+    /// <summary>
+    /// A page every signed-in user may open (it is in no menu): parents learn that their children are in the mobile app, and
+    /// others whose menu has no Helpdesk see why they landed here and choose a page from the menu.
+    /// </summary>
+    [HttpGet]
+    public IActionResult Start()
+    {
+        if (!_api.IsConnected())
+            return RedirectToAction("Index", "Login");
+        ViewData["Title"] = "Welcome";
+        return View(new StartPageModel
+        {
+            IsParent = _api.GetSessionIdentity()?.IsParent == true,
+            Message = TempData["PortalMessage"]?.ToString()
+        });
     }
 
     [HttpPost]
@@ -10628,19 +10653,20 @@ public partial class PortalController : Controller
             var courses = await _api.GetCourseDetailsAsync(departmentId, null, null, null, ct);
             model.Courses = courses;
 
-            var groups = new List<CoursePrerequisiteGroup>();
-            foreach (var course in courses)
+            // One call per department, not per course: with the School demo data (610 courses) the old loop alone used up
+            // the API's per-user request limit and the page showed "Too many requests".
+            var byCourse = new Dictionary<Guid, List<PrerequisiteWebItem>>();
+            foreach (var department in courses.Select(c => c.DepartmentId).Where(id => id != Guid.Empty).Distinct())
+                foreach (var link in await _api.GetDepartmentPrerequisitesAsync(department, ct))
+                    (byCourse.TryGetValue(link.CourseId, out var list) ? list : byCourse[link.CourseId] = new()).Add(link);
+
+            model.CourseGroups = courses.Select(course => new CoursePrerequisiteGroup
             {
-                var prereqs = await _api.GetPrerequisitesAsync(course.Id, ct);
-                groups.Add(new CoursePrerequisiteGroup
-                {
-                    CourseId      = course.Id,
-                    CourseCode    = course.Code,
-                    CourseTitle   = course.Title,
-                    Prerequisites = prereqs
-                });
-            }
-            model.CourseGroups = groups;
+                CourseId      = course.Id,
+                CourseCode    = course.Code,
+                CourseTitle   = course.Title,
+                Prerequisites = byCourse.GetValueOrDefault(course.Id) ?? new List<PrerequisiteWebItem>()
+            }).ToList();
         }
         catch (Exception ex) when (ex is InvalidOperationException or HttpRequestException)
         {
@@ -12499,17 +12525,21 @@ public partial class PortalController : Controller
         ViewData["Title"] = "Announcements";
         var session = _api.GetSessionIdentity();
         var canManage = session?.IsFaculty == true || session?.IsAdmin == true || session?.IsSuperAdmin == true;
+        // Students land here after sign-in. Before, they got the staff page: every course of the campus, a red
+        // "Select a department or course offering" and no announcements until they chose one, and a post form.
+        var studentView = !canManage && session?.IsStudent == true;
         var tenantId = session?.TenantId;
         var campusId = session?.CampusId;
 
         var model = new AnnouncementsPageModel
         {
             OfferingId     = offeringId ?? Guid.Empty,
-            SelectedDepartmentId = departmentId,
+            SelectedDepartmentId = studentView ? null : departmentId,
             SelectedTenantId = tenantId,
             SelectedCampusId = campusId,
-            IncludeInactive = includeInactive,
+            IncludeInactive = includeInactive && !studentView,
             CanManage      = canManage,
+            IsStudentView  = studentView,
             IsConnected    = _api.IsConnected(),
             SuccessMessage = TempData["SuccessMessage"]?.ToString(),
             ErrorMessage   = TempData["ErrorMessage"]?.ToString()
@@ -12517,60 +12547,73 @@ public partial class PortalController : Controller
         if (!model.IsConnected) return View(model);
         try
         {
-            model.Departments = (await _api.GetDepartmentsAsync(tenantId, campusId, ct))
-                .OrderBy(d => d.Name)
-                .Select(d => new LookupItem { Id = d.Id, Name = d.Name })
-                .ToList();
+            List<Guid> targetOfferingIds;
+            if (studentView)
+            {
+                model.Offerings = (await _api.GetMyOfferingsAsync(ct)).OrderBy(o => o.Name).ToList();
+                if (model.OfferingId != Guid.Empty && !model.Offerings.Any(o => o.Id == model.OfferingId))
+                    model.OfferingId = Guid.Empty;
+                targetOfferingIds = model.OfferingId != Guid.Empty
+                    ? new List<Guid> { model.OfferingId }
+                    : model.Offerings.Select(o => o.Id).ToList();
+            }
+            else
+            {
+                model.Departments = (await _api.GetDepartmentsAsync(tenantId, campusId, ct))
+                    .OrderBy(d => d.Name)
+                    .Select(d => new LookupItem { Id = d.Id, Name = d.Name })
+                    .ToList();
 
-            if (model.SelectedDepartmentId.HasValue && !model.Departments.Any(d => d.Id == model.SelectedDepartmentId.Value))
-                model.SelectedDepartmentId = null;
+                if (model.SelectedDepartmentId.HasValue && !model.Departments.Any(d => d.Id == model.SelectedDepartmentId.Value))
+                    model.SelectedDepartmentId = null;
 
-            var scopedOfferings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, tenantId, campusId, null, ct);
-            model.Offerings = scopedOfferings
-                .OrderBy(o => o.CourseCode)
-                .ThenBy(o => o.CourseTitle)
-                .ThenBy(o => o.SemesterName)
-                .Select(o => new LookupItem
+                var scopedOfferings = await _api.GetCourseOfferingsAsync(model.SelectedDepartmentId, tenantId, campusId, null, ct);
+                model.Offerings = scopedOfferings
+                    .OrderBy(o => o.CourseCode)
+                    .ThenBy(o => o.CourseTitle)
+                    .ThenBy(o => o.SemesterName)
+                    .Select(o => new LookupItem
+                    {
+                        Id = o.Id,
+                        Name = string.IsNullOrWhiteSpace(o.CourseCode)
+                            ? $"{o.CourseTitle} ({o.SemesterName})"
+                            : $"{o.CourseCode} - {o.CourseTitle} ({o.SemesterName})"
+                    })
+                    .ToList();
+
+                // Leave OfferingId at Guid.Empty when the caller didn't pick one - that's the
+                // view's real "All Offerings in Selected Department" state (see the offering
+                // <select> and the "posted to all offerings" copy in Announcements.cshtml), and
+                // the query below already handles it correctly. Silently substituting the
+                // alphabetically-first offering here used to hide that state entirely: every
+                // fresh visit to this page landed scoped to one arbitrary course, and "No
+                // announcements for the selected scope" looked like "there are no announcements
+                // anywhere" when it actually meant "none for that one random course".
+
+                if (model.OfferingId != Guid.Empty && !model.Offerings.Any(o => o.Id == model.OfferingId))
                 {
-                    Id = o.Id,
-                    Name = string.IsNullOrWhiteSpace(o.CourseCode)
-                        ? $"{o.CourseTitle} ({o.SemesterName})"
-                        : $"{o.CourseCode} - {o.CourseTitle} ({o.SemesterName})"
-                })
-                .ToList();
+                    model.OfferingId = Guid.Empty;
+                }
 
-            // Leave OfferingId at Guid.Empty when the caller didn't pick one - that's the
-            // view's real "All Offerings in Selected Department" state (see the offering
-            // <select> and the "posted to all offerings" copy in Announcements.cshtml), and
-            // the query below already handles it correctly. Silently substituting the
-            // alphabetically-first offering here used to hide that state entirely: every
-            // fresh visit to this page landed scoped to one arbitrary course, and "No
-            // announcements for the selected scope" looked like "there are no announcements
-            // anywhere" when it actually meant "none for that one random course".
+                if (model.OfferingId == Guid.Empty && !model.SelectedDepartmentId.HasValue)
+                {
+                    model.ErrorMessage ??= "Select a department or course offering to view announcements.";
+                    return View(model);
+                }
 
-            if (model.OfferingId != Guid.Empty && !model.Offerings.Any(o => o.Id == model.OfferingId))
-            {
-                model.OfferingId = Guid.Empty;
-            }
+                targetOfferingIds = model.OfferingId != Guid.Empty
+                    ? new List<Guid> { model.OfferingId }
+                    : model.Offerings.Select(o => o.Id).ToList();
 
-            if (model.OfferingId == Guid.Empty && !model.SelectedDepartmentId.HasValue)
-            {
-                model.ErrorMessage ??= "Select a department or course offering to view announcements.";
-                return View(model);
-            }
-
-            var targetOfferingIds = model.OfferingId != Guid.Empty
-                ? new List<Guid> { model.OfferingId }
-                : model.Offerings.Select(o => o.Id).ToList();
-
-            if (targetOfferingIds.Count == 0)
-            {
-                model.ErrorMessage ??= "No course offerings are available for the selected department.";
-                return View(model);
+                if (targetOfferingIds.Count == 0)
+                {
+                    model.ErrorMessage ??= "No course offerings are available for the selected department.";
+                    return View(model);
+                }
             }
 
             var announcementBatches = await Task.WhenAll(
-                targetOfferingIds.Select(id => _api.GetAnnouncementsAsync(id, includeInactive, tenantId, campusId, ct)));
+                targetOfferingIds.Select(id => _api.GetAnnouncementsAsync(id, model.IncludeInactive, tenantId, campusId, ct)));
 
             var items = announcementBatches
                 .SelectMany(x => x)
