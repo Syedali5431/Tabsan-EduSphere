@@ -150,7 +150,9 @@
             devicesBox.textContent = '';
             (summary.devices || []).forEach(function (d) {
                 var li = document.createElement('li');
-                li.textContent = (d.deviceLabel || d.endpointHost) + (d.isActive ? '' : ' (stopped)') + ' — added ' + new Date(d.createdAt).toLocaleDateString();
+                // createdAt is UTC without a time zone; add one so the date is not read as local time.
+                var added = typeof d.createdAt === 'string' && /T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(d.createdAt) ? d.createdAt + 'Z' : d.createdAt;
+                li.textContent = (d.deviceLabel || d.endpointHost) + (d.isActive ? '' : ' (stopped)') + ' — added ' + new Date(added).toLocaleDateString();
                 devicesBox.appendChild(li);
             });
         }

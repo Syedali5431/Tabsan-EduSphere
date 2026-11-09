@@ -302,8 +302,10 @@ else
                         <textarea aria-label="@T["Description"]" name="description" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">@T["Due Date"] <span class="text-danger">*</span></label>
-                        <input aria-label="@T["Due Date"]" name="dueDate" type="datetime-local" class="form-control" required />
+                        @* The time is stored as UTC (like the "(UTC)" date boxes on Assignment options); without the label a
+                           teacher typing 17:00 local time gave students a different due time. *@
+                        <label class="form-label">@T["Due Date (UTC)"] <span class="text-danger">*</span></label>
+                        <input aria-label="@T["Due Date (UTC)"]" name="dueDate" type="datetime-local" class="form-control" required />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">@T["Max Marks"] <span class="text-danger">*</span></label>
@@ -345,7 +347,7 @@ else
                             <textarea id="edit_assignmentDescription" name="description" class="form-control" rows="3"></textarea>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label" for="edit_assignmentDueDate">@T["Due Date"] <span class="text-danger">*</span></label>
+                            <label class="form-label" for="edit_assignmentDueDate">@T["Due Date (UTC)"] <span class="text-danger">*</span></label>
                             <input id="edit_assignmentDueDate" name="dueDate" type="datetime-local" class="form-control" required />
                         </div>
                         <div class="mb-3">

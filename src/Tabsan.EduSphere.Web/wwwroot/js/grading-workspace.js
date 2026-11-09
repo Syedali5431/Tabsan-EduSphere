@@ -39,9 +39,16 @@
 
     function url(template, id) { return template.replace('__id__', encodeURIComponent(id)); }
 
+    // Server times are UTC but arrive without a time zone ("2026-11-09T13:20:06"), which the browser would read as
+    // local time (hand-in times showed hours off). A time without a zone is UTC.
+    function parseServerTime(value) {
+        if (typeof value === 'string' && /T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(value)) value += 'Z';
+        return new Date(value);
+    }
+
     function fmtDate(iso) {
         if (!iso) return '';
-        var d = new Date(iso);
+        var d = parseServerTime(iso);
         return isNaN(d) ? '' : d.toLocaleString();
     }
 

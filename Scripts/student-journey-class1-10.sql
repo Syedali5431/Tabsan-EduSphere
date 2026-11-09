@@ -61,9 +61,44 @@ END
 PRINT '=== Student Journey: col11s6 Class 1-10 ===';
 PRINT '';
 
--- Clean any previous journey data for this student (correct FK order)
-DELETE FROM assignment_submissions WHERE AssignmentId IN (SELECT a.Id FROM assignments a INNER JOIN course_offerings co ON co.Id = a.CourseOfferingId INNER JOIN enrollments e ON e.CourseOfferingId = co.Id WHERE e.StudentProfileId = @StudentProfileId);
-DELETE FROM assignments WHERE CourseOfferingId IN (SELECT co.Id FROM course_offerings co INNER JOIN enrollments e ON e.CourseOfferingId = co.Id WHERE e.StudentProfileId = @StudentProfileId);
+-- Clean any previous journey data for this student (children before parents).
+-- Assignments are removed only from the journey's own course offerings (the "IT-COL Class N" semesters created
+-- below). This used to delete every assignment in every course the student was enrolled in, which also wiped
+-- classmates' work in the real demo courses and left those assignments' rubrics behind (rubrics have no foreign key
+-- to assignments, so nothing stopped it: five rubrics were orphaned that way).
+DECLARE @JourneyAssignments TABLE (Id UNIQUEIDENTIFIER PRIMARY KEY);
+INSERT INTO @JourneyAssignments (Id)
+SELECT a.Id FROM assignments a
+INNER JOIN course_offerings co ON co.Id = a.CourseOfferingId
+INNER JOIN semesters se ON se.Id = co.SemesterId
+WHERE se.Name LIKE 'IT-COL Class [0-9]%';
+
+-- The journey's hand-ins, plus this student's own work in any other course (their enrolments go below).
+DECLARE @Submissions TABLE (Id UNIQUEIDENTIFIER PRIMARY KEY);
+INSERT INTO @Submissions (Id)
+SELECT Id FROM assignment_submissions
+WHERE AssignmentId IN (SELECT Id FROM @JourneyAssignments) OR StudentProfileId = @StudentProfileId;
+
+DECLARE @Rubrics TABLE (Id UNIQUEIDENTIFIER PRIMARY KEY);
+INSERT INTO @Rubrics (Id) SELECT Id FROM rubrics WHERE AssignmentId IN (SELECT Id FROM @JourneyAssignments);
+DECLARE @Criteria TABLE (Id UNIQUEIDENTIFIER PRIMARY KEY);
+INSERT INTO @Criteria (Id) SELECT Id FROM rubric_criteria WHERE RubricId IN (SELECT Id FROM @Rubrics);
+
+DELETE FROM rubric_student_grades WHERE AssignmentSubmissionId IN (SELECT Id FROM @Submissions) OR RubricCriterionId IN (SELECT Id FROM @Criteria);
+DELETE FROM peer_reviews WHERE SubmissionId IN (SELECT Id FROM @Submissions) OR AssignmentId IN (SELECT Id FROM @JourneyAssignments);
+DELETE FROM submission_annotations WHERE SubmissionFileId IN (
+    SELECT f.Id FROM submission_files f INNER JOIN submission_attempts t ON t.Id = f.AttemptId WHERE t.SubmissionId IN (SELECT Id FROM @Submissions));
+DELETE FROM submission_files WHERE AttemptId IN (SELECT Id FROM submission_attempts WHERE SubmissionId IN (SELECT Id FROM @Submissions));
+DELETE FROM submission_attempts WHERE SubmissionId IN (SELECT Id FROM @Submissions);
+DELETE FROM submission_comments WHERE SubmissionId IN (SELECT Id FROM @Submissions);
+DELETE FROM submission_provisional_grades WHERE SubmissionId IN (SELECT Id FROM @Submissions);
+DELETE FROM assignment_submissions WHERE Id IN (SELECT Id FROM @Submissions); -- similarity rows go with them (cascade)
+DELETE FROM similarity_documents WHERE AssignmentId IN (SELECT Id FROM @JourneyAssignments);
+DELETE FROM similarity_checks WHERE AssignmentId IN (SELECT Id FROM @JourneyAssignments);
+DELETE FROM rubric_levels WHERE CriterionId IN (SELECT Id FROM @Criteria) OR RubricCriterionId IN (SELECT Id FROM @Criteria);
+DELETE FROM rubric_criteria WHERE Id IN (SELECT Id FROM @Criteria);
+DELETE FROM rubrics WHERE Id IN (SELECT Id FROM @Rubrics);
+DELETE FROM assignments WHERE Id IN (SELECT Id FROM @JourneyAssignments);
 DELETE FROM attendance_records WHERE StudentProfileId = @StudentProfileId;
 DELETE FROM results WHERE StudentProfileId = @StudentProfileId;
 DELETE FROM enrollments WHERE StudentProfileId = @StudentProfileId;

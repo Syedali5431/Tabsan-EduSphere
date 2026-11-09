@@ -3014,6 +3014,9 @@
   "Views/Portal/Payments.cshtml",
   "Views/Portal/ReportAssignments.cshtml"
  ],
+ "Due Date (UTC)": [
+  "Views/Portal/Assignments.cshtml"
+ ],
  "Due {0}": [
   "Views/Portal/AssignmentOptions.cshtml"
  ],

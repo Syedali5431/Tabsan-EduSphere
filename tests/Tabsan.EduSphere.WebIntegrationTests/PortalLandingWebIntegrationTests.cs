@@ -173,6 +173,20 @@ public class PortalLandingWebIntegrationTests : IClassFixture<WebApplicationFact
     }
 
     [Fact]
+    public async Task AssignmentDueDate_SaysItIsUtc()
+    {
+        // The due date is stored as UTC, like the "(UTC)" date boxes on Assignment options. Unlabelled, a teacher who
+        // typed 17:00 meaning local time gave students a different due time (04:00 the next day in Sydney).
+        var api = new FakeApi("Faculty", visibleMenus: Menu("assignments"));
+        var (client, _) = await SignInAsync(api);
+
+        var html = await client.GetStringAsync("/Portal/Assignments");
+
+        Assert.Contains("Due Date (UTC)", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("aria-label=\"Due Date\"", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Prerequisites_AskOncePerDepartment_NotOncePerCourse()
     {
         var api = new FakeApi("SuperAdmin", visibleMenus: Menu("prerequisites"));

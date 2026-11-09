@@ -7,6 +7,11 @@
 			return '';
 		}
 
+		// Server times are UTC but arrive without a time zone; a time without a zone is UTC (not local time).
+		if (typeof value === 'string' && /T\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(value)) {
+			value += 'Z';
+		}
+
 		var date = new Date(value);
 		if (Number.isNaN(date.getTime())) {
 			return '';

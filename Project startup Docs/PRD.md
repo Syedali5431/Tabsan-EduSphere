@@ -1,5 +1,37 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-11-10 — Product Requirements Synchronization (database links checked; student groups tested end to end; three fixes)
+- **Database links**, in the School demo database and the Northfield database:
+  - 147 tables, every one with a primary key. All 124 foreign keys are enabled and trusted. EF reports no pending migrations and no model changes. (`Persistence/Migrations/20260429045000_AddPaymentReceiptReceiptNo.cs` has no `[DbContext]` attribute, so EF ignores it. `Phase51_PaymentReceiptNoCompatibility` replaced it.)
+  - The 159 Guid columns that point at another table without a foreign key were each checked for rows pointing at nothing.
+  - Then the six columns whose target depends on a type column (module items, outcome alignments, outcome results and others).
+  - Then results, attendance, hand-ins and quiz attempts, which must belong to a student enrolled in that course.
+  - Northfield was clean. The demo database had one fault: 5 rubrics (15 criteria, 45 levels) pointed at assignments that no longer existed.
+- **Student groups (FR-M8.3)**: the main database had none, so they were tested on a copy of the School demo data. The teacher and the six Class 9 students of Mathematics (Class 9) worked through the portal. All checks passed; the two grading checks passed once the test waited for the grade to save:
+  - **Teacher:**
+    - made a group set and split the class at random, 2 per group;
+    - added a group and moved a student into it;
+    - made a sign-up set with one student per group;
+    - made an assignment into group work and gave one group its own due date.
+  - **Students:**
+    - each saw their group;
+    - joined and left sign-up groups, and a full group was not offered;
+    - one member handed in for the group, and the groupmate saw the hand-in and was not asked again;
+    - another group did not see it;
+    - a student in no group was told to join one.
+  - **Group discussion:** a group thread was seen by the group and the teacher only.
+  - **Grading:** one grade, and then a regrade, reached both members, and the groupmate saw it in the portal and in the mobile app ("Marks: 17/20").
+  - **Protections:** a set with hand-ins could not be deleted, and the assignment's group set was locked.
+  - The group tests also passed: unit 16, web 5, and 3 integration tests on the real API.
+- Three faults, all fixed:
+  - **Rubrics left behind by the student-journey demo script.** `Scripts/student-journey-class1-10.sql` deleted every assignment in every course the student was enrolled in. That also wiped classmates' work in the real demo courses and left those assignments' rubrics behind: rubrics have no foreign key to assignments.
+    - The script now removes only its own "IT-COL Class N" assignments, and the rubrics and hand-in records under them (attempts, files, annotations, comments, provisional grades, peer reviews) before the assignments.
+    - On a copy, the script ran without errors. It rebuilt the journey (200 assignments, 50 results) and left the other courses' 1,084 assignments and 14,683 hand-ins untouched.
+    - After a backup, the 5 leftover rubrics were deleted from the demo database. A full scan now finds nothing pointing at a missing row.
+  - **Times shown hours off** (FR-S7.21). The API sends UTC times without a time zone ("2026-11-09T13:20:06"). The grading workspace read them as local time, so in Sydney a hand-in at 3:08 pm was listed at 4:08 am. The AI chat times and the "added" date of notification devices had the same problem.
+  - **Due date not marked as UTC** (FR-S7.22). The Create and Edit Assignment dialogs store the due time as UTC but said only "Due Date". A teacher who typed 17:00 gave students 04:00 the next day in Sydney. The boxes now say "Due Date (UTC)", like the other date boxes on Assignment options, Live classes, Module items and Audit logs.
+- Tests: unit 730/730 (5 new), web-integration 122/122 (1 new).
+
 ### 2026-11-09 — Product Requirements Synchronization (every portal form submitted; dialogs out of reach fixed)
 - All 22 modules are on in the School demo data, so every module's pages had been opened in the earlier check today.
 - **Every portal form that saves, creates or deletes**, on a fresh copy of the School demo data, as Student, Teacher, Finance, Admin and SuperAdmin: 221 forms submitted.
@@ -6398,6 +6430,8 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **FR-S7.18** The Results page shows **Export CSV** and **Export PDF** (the result summary) only to SuperAdmin, Admin and Faculty, the roles the API allows. Students were offered them and landed on "Access denied".
 - **FR-S7.19** Dialogs fit the window. While a dialog is open (`body.modal-open`), the cards that lift on hover (`.page-section-card`, `.dashboard-stat-card`) keep no transform and no transition. A dialog inside one then takes the window as its frame: it is as high as the window and scrolls, with its buttons in reach.
 - **FR-S7.20** The on/off switches for a whole scope, **Activate/Deactivate Analytics** and **Activate/Deactivate Reports for Scope**, are shown only to SuperAdmin and Admin, the roles the API allows. Report Center shows "Reports activated (deactivated) for selected scope." as a success, not as an error.
+- **FR-S7.21** Portal scripts read a server time without a time zone as UTC: the grading workspace (hand-ins, attempts, comments), the AI chat's message times and the "added" date of notification devices. The browser then shows each time in the viewer's own time zone.
+- **FR-S7.22** The Create and Edit Assignment dialogs label the due date **Due Date (UTC)**, because it is stored as UTC. This matches the other "(UTC)" date boxes.
 
 ### 27.8 Documentation and acceptance evidence
 - **Mobile App Connection Guide** (`User Guide/Tabsan-EduSphere-Mobile-App-Connection-Guide.docx` and `.pdf`):
@@ -6446,6 +6480,8 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   After FR-S4.10 and FR-S7.18 (9 November 2026): unit 725/725, web-integration 118/118.
 
   After FR-S7.19 and FR-S7.20: unit 725/725, web-integration 121/121.
+
+  After FR-S7.21, FR-S7.22 and the student-journey script fix (10 November 2026): unit 730/730, web-integration 122/122.
 
   After FR-S7.17, on main: unit 725/725 (8 new tests for the Docker .env template), integration 401/402 (1 long-standing skip), web-integration 117/117, contract 1/1.
 - **The first SuperAdmin:** a new database needs `TABSAN_SUPER_PASSWORD` in every real environment, and start-up stops with a clear message without it (an empty value counts as missing). Only the Testing environment skips the bootstrap account, because the test suites create their own accounts.
