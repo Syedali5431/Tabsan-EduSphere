@@ -1595,6 +1595,8 @@ public class ReportCatalogItem
 
 public class ReportCenterPageModel
 {
+    /// <summary>A success message (reports activated or deactivated), shown in green; <see cref="Message"/> is for errors.</summary>
+    public string? Notice { get; set; }
     public bool   IsConnected { get; set; }
     public string? Message    { get; set; }
     public SessionIdentity? Identity { get; set; }

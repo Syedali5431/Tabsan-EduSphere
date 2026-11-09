@@ -22,6 +22,10 @@
         {
             <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>@T.Text(Model.Message)</div>
         }
+        @if (!string.IsNullOrEmpty(Model.Notice))
+        {
+            <div class="alert alert-success" role="status"><i class="bi bi-check-circle me-2"></i>@T.Text(Model.Notice)</div>
+        }
 
         @if (Model.Identity?.IsSuperAdmin == true)
         {
@@ -72,6 +76,10 @@
         }
         else
         {
+            @* Switching reports on or off for a scope is for SuperAdmin and Admin (the API refuses everyone else): Teachers and
+               Finance were offered the button and got "API request failed with status 403". *@
+            @if (Model.Identity?.IsAdmin == true)
+            {
             <form method="post" asp-action="SetReportsActive" class="mb-3 d-flex justify-content-end">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="tenantId" value="@Model.SelectedTenantId" />
@@ -85,6 +93,7 @@
                     <button type="submit" class="btn btn-outline-success" name="isActive" value="true">@T["Activate Reports for Scope"]</button>
                 }
             </form>
+            }
 
             <div class="row g-4">
                 @foreach (var report in Model.Reports)

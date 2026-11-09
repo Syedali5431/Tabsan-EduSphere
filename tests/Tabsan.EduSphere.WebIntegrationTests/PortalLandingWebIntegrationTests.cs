@@ -156,6 +156,22 @@ public class PortalLandingWebIntegrationTests : IClassFixture<WebApplicationFact
         Assert.Contains(api.Requests, r => r.EndsWith("/overrides", StringComparison.Ordinal));
     }
 
+    [Theory]
+    [InlineData("Faculty", false)]
+    [InlineData("Finance", false)]
+    [InlineData("Admin", true)]
+    public async Task AnalyticsOnOffSwitch_IsOfferedOnlyToTheRolesTheApiAllows(string role, bool offered)
+    {
+        // Switching analytics on or off for a scope is SuperAdmin/Admin only at the API; Teachers and Finance were offered
+        // the "Deactivate Analytics" button anyway, and it could only fail.
+        var api = new FakeApi(role, visibleMenus: Menu("analytics"));
+        var (client, _) = await SignInAsync(api);
+
+        var html = await client.GetStringAsync("/Portal/Analytics");
+
+        Assert.Equal(offered, html.Contains("SetAnalyticsActive", StringComparison.Ordinal));
+    }
+
     [Fact]
     public async Task Prerequisites_AskOncePerDepartment_NotOncePerCourse()
     {

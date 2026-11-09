@@ -1,5 +1,28 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-11-09 — Product Requirements Synchronization (every portal form submitted; dialogs out of reach fixed)
+- All 22 modules are on in the School demo data, so every module's pages had been opened in the earlier check today.
+- **Every portal form that saves, creates or deletes**, on a fresh copy of the School demo data, as Student, Teacher, Finance, Admin and SuperAdmin: 221 forms submitted.
+  - Forms that create or change something were sent with the values the page gives them.
+  - Forms that delete or switch something off were sent with an id that does not exist, so the "not found" path was tested without removing the data the other forms needed.
+  - Five were not sent: they end the session, change the portal's own connection, write files on the server (licence upload, the sample CSV in `User Import Sheets`), or change module and menu access for every later test.
+
+  Every other form answered with a page and a message. The few HTTP 400s were the test's own posting; the same forms worked when clicked in a browser. The Teacher's Outcomes "Import" without a file answered HTTP 500 once and HTTP 200 when tried again. For Admin and SuperAdmin the same form answered "Choose the Excel file to import."
+- Three faults, all fixed:
+  - **Dialogs out of reach** (FR-S7.19). A card that lifts on hover is moved with `transform`, and a dialog inside such a card took the card, not the window, as its frame. Edit Material grew to 4,577 px, could not scroll, and its **Save** was below the window on a 900 px-high screen. Every dialog kind was then opened as SuperAdmin and Teacher: all are window-high, with their buttons in reach.
+  - **Switch-off buttons for roles the API refuses** (FR-S7.20). Teachers and Finance were offered **Deactivate Analytics** and **Deactivate Reports for Scope**. The API allows only SuperAdmin and Admin, so the click ended on "API request failed with status 403". Nothing was switched off.
+  - **A success shown as an error**: "Reports activated (deactivated) for selected scope." was in a red box. It is now green.
+- Mobile app, the parts not covered earlier:
+  - A parent switched between their two children on every tab.
+  - The dark theme was used on several screens.
+  - A child's page opened.
+  - A course material opened in the browser, and a quiz opened the portal at the server's address.
+  - **Add a file** opened the phone's file picker.
+  - **Take a photo** asked for camera permission, then opened the camera, and cancelling came back to the hand-in page.
+
+  The app is in English only (FR-S4.6), so there was no language to switch.
+- Tests: unit 725/725, web-integration 121/121 (3 new).
+
 ### 2026-11-09 — Product Requirements Synchronization (every portal button and every app screen tested; five fixes)
 - **Portal**, on a copy of the School demo data, signed in as each of the six roles: every page in the menu opened (SuperAdmin 67, Admin 37, Teacher 29, Student 17, Finance 8, Parent 2); every link, download and filter form on those pages followed (about 1,950); and every button that only shows, hides or filters clicked (about 400). Buttons that save, delete or send were not clicked: any request that would have changed data was blocked, and none was made. Results:
   - **One fault:** a student's Results page offered **Export CSV** and **Export PDF**, staff reports that the API refuses to students, and both ended on "Access denied" (FR-S7.18).
@@ -6373,6 +6396,8 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **FR-S7.16** The portal's sign-in cookies (API address, tokens, identity) belong to one installation. Their names end with a key made from the API address the portal was started with (EduApi:BaseUrl), and they are encrypted for that address. Two portals on one server, on different ports, no longer read each other's sign-in: each asks for its own.
 - **FR-S7.17** The setup page's Docker .env template (`/setup/docker-env`) never shows the configured password. `Password` or `Pwd`, quoted or not, becomes `REPLACE_WITH_PASSWORD`, with a comment line saying so; the API treats that value as not configured. A connection string without a password is shown as it is, and one that cannot be read is not shown at all. Before, anyone who could open the page while the database was unreachable could download the password.
 - **FR-S7.18** The Results page shows **Export CSV** and **Export PDF** (the result summary) only to SuperAdmin, Admin and Faculty, the roles the API allows. Students were offered them and landed on "Access denied".
+- **FR-S7.19** Dialogs fit the window. While a dialog is open (`body.modal-open`), the cards that lift on hover (`.page-section-card`, `.dashboard-stat-card`) keep no transform and no transition. A dialog inside one then takes the window as its frame: it is as high as the window and scrolls, with its buttons in reach.
+- **FR-S7.20** The on/off switches for a whole scope, **Activate/Deactivate Analytics** and **Activate/Deactivate Reports for Scope**, are shown only to SuperAdmin and Admin, the roles the API allows. Report Center shows "Reports activated (deactivated) for selected scope." as a success, not as an error.
 
 ### 27.8 Documentation and acceptance evidence
 - **Mobile App Connection Guide** (`User Guide/Tabsan-EduSphere-Mobile-App-Connection-Guide.docx` and `.pdf`):
@@ -6419,6 +6444,8 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   After FR-S7.14 to FR-S7.16: unit 717/717, integration 401/402 (1 long-standing skip), web-integration 117/117, contract 1/1. Each of the three new web tests fails with its fix taken out.
 
   After FR-S4.10 and FR-S7.18 (9 November 2026): unit 725/725, web-integration 118/118.
+
+  After FR-S7.19 and FR-S7.20: unit 725/725, web-integration 121/121.
 
   After FR-S7.17, on main: unit 725/725 (8 new tests for the Docker .env template), integration 401/402 (1 long-standing skip), web-integration 117/117, contract 1/1.
 - **The first SuperAdmin:** a new database needs `TABSAN_SUPER_PASSWORD` in every real environment, and start-up stops with a clear message without it (an empty value counts as missing). Only the Testing environment skips the bootstrap account, because the test suites create their own accounts.

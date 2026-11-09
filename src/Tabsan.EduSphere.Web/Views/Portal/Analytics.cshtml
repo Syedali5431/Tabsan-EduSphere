@@ -161,6 +161,9 @@ else
                 </div>
             </form>
 
+            @* Switching analytics on or off is for SuperAdmin and Admin (the API refuses everyone else). *@
+            @if (Model.Identity?.IsAdmin == true)
+            {
             <form asp-action="SetAnalyticsActive" method="post" class="mt-3 d-flex justify-content-end">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="institutionType" value="@Model.SelectedInstitutionType" />
@@ -174,6 +177,7 @@ else
                     @(Model.IsAnalyticsActive ? T.Text("Deactivate Analytics") : T.Text("Activate Analytics"))
                 </button>
             </form>
+            }
         </div>
     </div>
 

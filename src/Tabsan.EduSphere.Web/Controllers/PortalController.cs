@@ -8890,7 +8890,8 @@ public partial class PortalController : Controller
             Identity = identity,
             SelectedTenantId = tenantId,
             SelectedCampusId = campusId,
-            Message = TempData["PortalMessage"]?.ToString()
+            Message = TempData["PortalMessage"]?.ToString(),
+            Notice = TempData["PortalNotice"]?.ToString()
         };
         if (!model.IsConnected) return View(model);
         try
@@ -8975,7 +8976,8 @@ public partial class PortalController : Controller
                 else
                     await _api.DeactivateReportsScopeAsync(tenantId, campusId, ct);
 
-                TempData["PortalMessage"] = isActive
+                // a success, shown in green (Report Center shows PortalMessage as an error)
+                TempData["PortalNotice"] = isActive
                     ? "Reports activated for selected scope."
                     : "Reports deactivated for selected scope.";
             }

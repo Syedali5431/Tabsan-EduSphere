@@ -424,6 +424,15 @@ html {
   box-shadow: var(--shadow-md);
 }
 
+/* A dialog (Bootstrap modal) is placed against the window only while none of its ancestors has a transform. The hover
+   lift above made the card that frame instead: a dialog inside a card (Edit Material, for one) grew as tall as the card,
+   could not scroll, and its Save button was out of reach. No card lifts, or animates, while a dialog is open. */
+body.modal-open .page-section-card,
+body.modal-open .dashboard-stat-card {
+  transform: none;
+  transition: none;
+}
+
 .filter-toolbar .form-select,
 .filter-toolbar .form-control {
   min-width: 0;
