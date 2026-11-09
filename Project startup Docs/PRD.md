@@ -1,5 +1,17 @@
 <!-- markdownlint-disable MD001 MD003 MD012 MD022 MD024 MD025 MD026 MD032 MD041 MD060 -->
 
+### 2026-11-09 — Product Requirements Synchronization (every portal button and every app screen tested; five fixes)
+- **Portal**, on a copy of the School demo data, signed in as each of the six roles: every page in the menu opened (SuperAdmin 67, Admin 37, Teacher 29, Student 17, Finance 8, Parent 2); every link, download and filter form on those pages followed (about 1,950); and every button that only shows, hides or filters clicked (about 400). Buttons that save, delete or send were not clicked: any request that would have changed data was blocked, and none was made. Results:
+  - **One fault:** a student's Results page offered **Export CSV** and **Export PDF**, staff reports that the API refuses to students, and both ended on "Access denied" (FR-S7.18).
+  - The other failures were all the API's per-user request limit (600 a minute), reached by the test opening links several times a second: re-opened one per second and a half, they all worked. Pages answer such a burst with a bare HTTP 500 (§27.9).
+- **Mobile app** (Android emulator), as student, teacher, parent, campus admin and SuperAdmin, on the copy: every tab and every screen under More, and the actions that change data. A student handed in homework (the list then says "Not graded yet") and replied in a discussion. A teacher took attendance, graded a submission and posted an announcement. An admin marked all notifications read and changed the password, and a password that breaks the policy was refused with the policy shown. The SuperAdmin chose a campus. Four faults, all fixed (FR-S4.10):
+  - With the server unreachable, Home stayed blank, and Notifications said "No notifications yet." Both now say "No connection to EduSphere". A course page that failed to load was blank too.
+  - The "nothing here" boxes no longer appear under an error.
+  - "Attendance saved." (and every other result or error on those screens) was shown at the top of the scrolled page, out of sight of the Save button at the bottom of the class list. It now stays above the scrolling content.
+  - A parent's course page marked assignments "Hand in"; it says "Not handed in", as the Homework tab does.
+- The app fixes need a new APK (the standard build in `artifacts/standard` is from 7 November). The API and the portal are unchanged for the app.
+- Tests: unit 725/725, web-integration 118/118.
+
 ### 2026-11-08 — Product Requirements Synchronization (the setup page's Docker .env template hides the password)
 - The API's Database Setup page needs no sign-in while the API has no working database (FR-S7.12). Its **Download Docker .env Template** showed the configured connection string with its password, so anyone who could reach the API during that time could download it. The password is now replaced by `REPLACE_WITH_PASSWORD` (FR-S7.17).
 - Tests on main with this change merged: unit 725/725 (8 new), integration 401/402 (1 long-standing skip), web-integration 117/117, contract 1/1.
@@ -6273,6 +6285,12 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   - The app no longer stays on the start spinner when a saved session loads at once.
   - Android network errors show the usual "No connection" message.
 - **FR-S4.9 The parent's child card** shows a School or College child's own class and campus, for example "Class 9 · Gulberg Campus". It used to show the programme, "Class 1 to 10 (Gulberg Campus)", which is the whole school section. University children keep their programme. The API (`api/v1/mobile/children`) sends this line, so the installed app shows it without an update.
+- **FR-S4.10 The app says what went wrong.**
+  - Home and course pages are drawn before their data arrives, so a failed load shows its message ("No connection to EduSphere …") instead of a blank screen.
+  - Notifications has the same error box as the other lists.
+  - A list's "nothing here" box is hidden while the page shows an error.
+  - On the screens built from the shared page layout (Take attendance, grading, new announcement, discussions, hand in, change password, settings), the busy sign and the result message stay above the scrolling content, in view of the button that caused them.
+  - A parent's course page marks an assignment "Not handed in", never "Hand in".
 
 ### 27.5 One mobile app for every institute (choosing the server)
 - **FR-S5.1** The standard build has no server built in.
@@ -6354,6 +6372,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 - **FR-S7.15** The quiz builder asks for the class list without a tenant or campus when a SuperAdmin opens it, as the other staff pages do: a SuperAdmin's home tenant and campus are not a scope.
 - **FR-S7.16** The portal's sign-in cookies (API address, tokens, identity) belong to one installation. Their names end with a key made from the API address the portal was started with (EduApi:BaseUrl), and they are encrypted for that address. Two portals on one server, on different ports, no longer read each other's sign-in: each asks for its own.
 - **FR-S7.17** The setup page's Docker .env template (`/setup/docker-env`) never shows the configured password. `Password` or `Pwd`, quoted or not, becomes `REPLACE_WITH_PASSWORD`, with a comment line saying so; the API treats that value as not configured. A connection string without a password is shown as it is, and one that cannot be read is not shown at all. Before, anyone who could open the page while the database was unreachable could download the password.
+- **FR-S7.18** The Results page shows **Export CSV** and **Export PDF** (the result summary) only to SuperAdmin, Admin and Faculty, the roles the API allows. Students were offered them and landed on "Access denied".
 
 ### 27.8 Documentation and acceptance evidence
 - **Mobile App Connection Guide** (`User Guide/Tabsan-EduSphere-Mobile-App-Connection-Guide.docx` and `.pdf`):
@@ -6399,6 +6418,8 @@ This section covers the requirements delivered after Plan M, from 26 October to 
 
   After FR-S7.14 to FR-S7.16: unit 717/717, integration 401/402 (1 long-standing skip), web-integration 117/117, contract 1/1. Each of the three new web tests fails with its fix taken out.
 
+  After FR-S4.10 and FR-S7.18 (9 November 2026): unit 725/725, web-integration 118/118.
+
   After FR-S7.17, on main: unit 725/725 (8 new tests for the Docker .env template), integration 401/402 (1 long-standing skip), web-integration 117/117, contract 1/1.
 - **The first SuperAdmin:** a new database needs `TABSAN_SUPER_PASSWORD` in every real environment, and start-up stops with a clear message without it (an empty value counts as missing). Only the Testing environment skips the bootstrap account, because the test suites create their own accounts.
 
@@ -6429,6 +6450,7 @@ This section covers the requirements delivered after Plan M, from 26 October to 
   - low colour contrast: Departments, Enrollment report, User Settings and LTI Tools.
 
   All were fixed the same day (see the 2026-11-08 entry "accessibility regressions fixed"), and the spec passes again, now for all six roles (SuperAdmin, Admin, Teacher, Finance, Student, Parent), with 0 findings. Still open: it scans the signed-in user's own theme. The other themes were checked by hand on the 13 pages only.
+- **A burst over the API's request limit** (600 a minute per user) makes portal pages answer a bare HTTP 500 instead of a message such as "Too many requests, wait a moment". Normal use stays far below the limit; scripted use, or many pages opened at once, can reach it.
 - **The older browser specs** (from before Plan M: role menus, login, MFA, certificates, attendance, FYP, edge cases, full student lifecycle) do not match the current portal and the School demo data. Examples: they expect a student to land on a page with no messages, menu items the portal has renamed, University demo accounts, an MFA account, and a certificates folder on another developer's PC. They need updating before they can be used as a regression check. The Plan M specs and the accessibility, language and PWA specs are current.
 - **Security: the API's `/setup` page while the database is unreachable.** Closed on 8 November 2026 for working servers: the page answers 404 once the database works (FR-S7.12). It still opens, without sign-in, whenever the API cannot reach its database, for example while SQL Server is stopped or restarting. During that time anyone who can reach the API could point it at another database. The Installation and Connection Guide therefore keeps telling installers to block `/setup` at IIS or nginx as a second line of defence (§7.5 of that guide). The page shows the server, database and user name at those times, but never the password (FR-S7.17).
 

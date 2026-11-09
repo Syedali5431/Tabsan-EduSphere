@@ -310,6 +310,15 @@ internal static class Ui
 		return box;
 	}
 
+	/// <summary>The "nothing here" box of a list that <paramref name="vm"/> loads. It is hidden while the page shows an error:
+	/// a load that failed (no connection, say) must not also claim there is nothing.</summary>
+	public static Border Empty(string text, PageViewModel vm)
+	{
+		var box = Empty(text);
+		box.SetBinding(VisualElement.IsVisibleProperty, new Binding(nameof(PageViewModel.Error), source: vm, converter: new IsBlank()));
+		return box;
+	}
+
 	/// <summary>An input in a rounded frame (entries, editors, pickers).</summary>
 	public static Border Field(View input)
 	{
@@ -434,11 +443,15 @@ internal static class Ui
 	public static ContentPage Page(string title, PageViewModel vm, params View[] children)
 	{
 		var stack = new VerticalStackLayout { Padding = 16, Spacing = 10 };
-		stack.Add(Busy());
-		stack.Add(Status(vm));
-		stack.Add(Notice());
 		foreach (var c in children) stack.Add(c);
-		return new ContentPage { Title = title, BindingContext = vm, Content = new ScrollView { Content = stack } };
+		// The busy sign and the result of an action ("Attendance saved.", "Grade saved.", or the error) stay above the
+		// scrolling content. The buttons that cause them are often at the bottom of a long list (a class register, the
+		// submissions to grade), and a message at the top of the scrolled content was out of sight.
+		var messages = new VerticalStackLayout { Padding = new Thickness(16, 8, 16, 0), Spacing = 6, Children = { Busy(), Status(vm), Notice() } };
+		var grid = new Grid { RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star) } };
+		grid.Add(messages, 0, 0);
+		grid.Add(new ScrollView { Content = stack }, 0, 1);
+		return new ContentPage { Title = title, BindingContext = vm, Content = grid };
 	}
 
 	/// <summary>Colour for a percentage: green from 75, amber from 50, red below.</summary>
@@ -475,6 +488,13 @@ internal sealed class BoldWhenTrue : IValueConverter
 internal sealed class NotEmpty : IValueConverter
 {
 	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is string s && s.Length > 0;
+	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
+}
+
+/// <summary>True for no text (null or empty).</summary>
+internal sealed class IsBlank : IValueConverter
+{
+	public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) => value is not string s || s.Length == 0;
 	public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) => throw new NotSupportedException();
 }
 

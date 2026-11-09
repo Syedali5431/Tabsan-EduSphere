@@ -52,6 +52,10 @@ public class ResultsPageWebIntegrationTests : IClassFixture<WebApplicationFactor
         Assert.Contains($"data-resultid=\"{SchoolResultId}\"", html);
         Assert.Contains($"data-resultid=\"{UniversityTotalId}\"", html);
         Assert.DoesNotContain("data-resultid=\"00000000-0000-0000-0000-000000000000\"", html);
+
+        // The result-summary exports are staff reports the API refuses to students: no buttons that end on "Access denied".
+        Assert.DoesNotContain("ExportResultSummaryCsv", html);
+        Assert.DoesNotContain("ExportResultSummaryPdf", html);
     }
 
     private static string Decode(string value) => WebUtility.HtmlDecode(value).Trim();

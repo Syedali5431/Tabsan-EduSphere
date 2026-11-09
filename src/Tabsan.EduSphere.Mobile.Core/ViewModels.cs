@@ -352,10 +352,14 @@ public sealed class CourseViewModel : PageViewModel
         => _portalBaseUrl() is { } portal ? _launcher.OpenAsync(new Uri($"{portal.TrimEnd('/')}/Portal/TakeQuiz?quizId={quiz.Id}")) : Task.CompletedTask;
 
     /// <summary>What an assignment card says: teachers see how much waits to be graded, students their own work's state.</summary>
-    public static string AssignmentState(CourseAssignment a, bool isTeacher)
+    /// <summary>The assignment's chip on a course page. A parent reads "Not handed in", as on the Homework tab: "Hand in" is
+    /// the student's action, and a parent cannot hand in.</summary>
+    public static string AssignmentState(CourseAssignment a, bool isTeacher, bool isParent = false)
         => isTeacher
             ? a.ToGrade switch { null => AppText.Get("ToGrade"), 0 => AppText.Get("NothingToGrade"), var n => string.Format(AppText.Get("ToGradeCount"), n) }
-            : a.Marks is { } m ? $"{AppText.Get("Marks")}: {m:0.##}/{a.MaxMarks:0.##}" : a.Submitted ? AppText.Get("NotGradedYet") : AppText.Get("HandIn");
+            : a.Marks is { } m ? $"{AppText.Get("Marks")}: {m:0.##}/{a.MaxMarks:0.##}"
+            : a.Submitted ? AppText.Get("NotGradedYet")
+            : AppText.Get(isParent ? "NotHandedIn" : "HandIn");
 }
 
 public sealed class SubmitAssignmentViewModel : PageViewModel

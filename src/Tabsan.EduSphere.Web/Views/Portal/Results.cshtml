@@ -443,8 +443,11 @@ else
                         <div class="text-muted small mt-1">@T["Publishing is approval-gated and available to Admin/SuperAdmin roles only."]</div>
                     }
                 }
-                else if (string.Equals(currentAction, "Results", StringComparison.OrdinalIgnoreCase) && Model.Results.Count > 0)
+                else if (string.Equals(currentAction, "Results", StringComparison.OrdinalIgnoreCase) && Model.Results.Count > 0
+                         && (User.IsInRole("Faculty") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")))
                 {
+                    @* The result-summary downloads are staff reports (the API allows SuperAdmin, Admin and Faculty only):
+                       students were offered them and landed on "Access denied". *@
                     <div class="responsive-action-group">
                         <form asp-action="ExportResultSummaryCsv" method="get" class="d-inline">
                             <input type="hidden" name="departmentId" value="@Model.SelectedDepartmentId" />

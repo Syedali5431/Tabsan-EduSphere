@@ -191,6 +191,9 @@ public sealed class HomePage : ContentPage
 			_campus = new CampusViewModel(client, selection);
 			_campus.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(CampusViewModel.Summary)) Render(); };
 		}
+		// Drawn once now, so the greeting and the error box are there before (or without) any data: when the first load
+		// failed, Home used to stay blank, with no "No connection" message.
+		Render();
 		Ui.ApplyDirection(this);
 	}
 
@@ -350,7 +353,7 @@ public sealed class TimetablePage : ContentPage
 				}));
 				return new VerticalStackLayout { Padding = new Thickness(16, 0), Children = { header, classes } };
 			}),
-			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoClasses")) },
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoClasses"), vm) },
 			Footer = new ContentView { HeightRequest = 24 }
 		};
 		Content = Ui.ListLayout(vm, Ui.ScopeBar(selection), list);
@@ -380,7 +383,7 @@ public sealed class CoursesPage : ContentPage
 			ItemsSource = vm.Courses,
 			SelectionMode = SelectionMode.Single,
 			Footer = new ContentView { HeightRequest = 16 },
-			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoCourses")) },
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoCourses"), vm) },
 			ItemTemplate = new DataTemplate(() =>
 			{
 				var initials = new Label();
@@ -432,6 +435,7 @@ public sealed class CoursePage : ContentPage
 		BindingContext = vm;
 		Content = new ScrollView { Content = _body };
 		vm.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(CourseViewModel.Detail)) Render(); };
+		Render(); // the error box is there from the start: a course that failed to load used to be a blank page
 		Ui.ApplyDirection(this);
 	}
 
@@ -470,7 +474,7 @@ public sealed class CoursePage : ContentPage
 		if (d.Assignments.Count > 0) _body.Add(Ui.Heading(Ui.T("Assignments")));
 		foreach (var a in d.Assignments)
 		{
-			var state = CourseViewModel.AssignmentState(a, d.IsTeacher);
+			var state = CourseViewModel.AssignmentState(a, d.IsTeacher, parent);
 			var color = d.IsTeacher ? (a.ToGrade is > 0 ? Ui.Warn : Ui.Good)
 				: a.Marks is not null ? Ui.Good : a.Submitted ? Ui.Sky : a.DueDate < DateTime.UtcNow ? Ui.Bad : Ui.Accent;
 			var card = Ui.Card(Ui.Row(null, Ui.Lines(Ui.Title(a.Title), Ui.Small($"{Ui.T("Due")}: {Ui.Date(a.DueDate)}")), Ui.Chip(state, color)));
@@ -568,7 +572,7 @@ public sealed class DiscussionsPage : ContentPage
 		Title = Ui.T("Discussions");
 		var list = new VerticalStackLayout { Spacing = 0 };
 		BindableLayout.SetItemsSource(list, vm.Threads);
-		BindableLayout.SetEmptyView(list, Ui.Empty(Ui.T("NoDiscussions")));
+		BindableLayout.SetEmptyView(list, Ui.Empty(Ui.T("NoDiscussions"), vm));
 		BindableLayout.SetItemTemplate(list, new DataTemplate(() =>
 		{
 			var initials = new Label();
@@ -802,7 +806,7 @@ public sealed class ResultsPage : ContentPage
 	{
 		var cards = new VerticalStackLayout { Spacing = 0, BindingContext = vm };
 		BindableLayout.SetItemsSource(cards, vm.Cards);
-		BindableLayout.SetEmptyView(cards, Ui.Empty(Ui.T("NoReportCards")));
+		BindableLayout.SetEmptyView(cards, Ui.Empty(Ui.T("NoReportCards"), vm));
 		BindableLayout.SetItemTemplate(cards, new DataTemplate(() =>
 		{
 			var period = Ui.Title();
@@ -845,7 +849,7 @@ public sealed class ResultsPage : ContentPage
 	internal static View Build(ResultsViewModel results, AttendanceViewModel? attendance, ReportCardsViewModel reportCards)
 	{
 		var layout = new VerticalStackLayout { Padding = new Thickness(16, 4, 16, 24), Spacing = 4 };
-		var resultsEmpty = Ui.Empty(Ui.T("NoResults"));
+		var resultsEmpty = Ui.Empty(Ui.T("NoResults"), results);
 		layout.Add(Ui.Status(results));
 		layout.Add(Ui.Heading(Ui.T("Results")));
 		var resultList = new VerticalStackLayout { Spacing = 0, BindingContext = results };
@@ -958,7 +962,7 @@ public sealed class AttendancePage : ContentPage
 			};
 			var days = new VerticalStackLayout { Spacing = 0 };
 			BindableLayout.SetItemsSource(days, vm.Days);
-			BindableLayout.SetEmptyView(days, Ui.Empty(Ui.T("NoAttendance")));
+			BindableLayout.SetEmptyView(days, Ui.Empty(Ui.T("NoAttendance"), vm));
 			BindableLayout.SetItemTemplate(days, new DataTemplate(() =>
 			{
 				var date = Ui.Title(size: 14);
@@ -1012,7 +1016,7 @@ public sealed class HomeworkPage : ContentPage
 			ItemsSource = vm.Items,
 			SelectionMode = SelectionMode.Single,
 			Footer = new ContentView { HeightRequest = 16 },
-			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoHomework")) },
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoHomework"), vm) },
 			ItemTemplate = new DataTemplate(() =>
 			{
 				var title = Ui.Title();
@@ -1177,7 +1181,7 @@ public sealed class NotificationsPage : ContentPage
 			ItemsSource = vm.Items,
 			RemainingItemsThreshold = 3,
 			RemainingItemsThresholdReachedCommand = vm.MoreCommand,
-			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoNotifications")) },
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoNotifications"), vm) },
 			Header = new ContentView { HeightRequest = 8 },
 			ItemTemplate = new DataTemplate(() =>
 			{
@@ -1200,7 +1204,8 @@ public sealed class NotificationsPage : ContentPage
 		ToolbarItems.Add(new ToolbarItem { Text = Ui.T("MarkAllRead"), Command = vm.MarkAllReadCommand });
 		var refresh = new RefreshView { Content = list, Command = vm.LoadCommand };
 		refresh.SetBinding(RefreshView.IsRefreshingProperty, nameof(PageViewModel.IsBusy));
-		Content = refresh;
+		// The error box on top, as on the other lists: without it a failed load showed only "No notifications yet."
+		Content = Ui.ListLayout(vm, new ContentView(), refresh);
 		Ui.ApplyDirection(this);
 	}
 

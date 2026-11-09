@@ -703,6 +703,9 @@ public class MobileAppTests
         Assert.Equal("To grade", CourseViewModel.AssignmentState(new CourseAssignment(), isTeacher: true)); // an API without the count
         Assert.Equal("Not graded yet", CourseViewModel.AssignmentState(new CourseAssignment { Submitted = true, ToGrade = 0 }, isTeacher: false));
         Assert.Equal("Hand in", CourseViewModel.AssignmentState(new CourseAssignment(), isTeacher: false));
+        // a parent cannot hand in: the course page says so, as the Homework tab does
+        Assert.Equal("Not handed in", CourseViewModel.AssignmentState(new CourseAssignment(), isTeacher: false, isParent: true));
+        Assert.Equal("Not graded yet", CourseViewModel.AssignmentState(new CourseAssignment { Submitted = true }, isTeacher: false, isParent: true));
 
         Assert.Equal("TMS-GUL-MTH09 · Room 9 · Main Block", new ClassSlot { CourseCode = "TMS-GUL-MTH09", Room = "Room 9", Building = "Main Block" }.Details);
         var now = new DateTime(2026, 10, 27, 0, 0, 0, DateTimeKind.Utc);
