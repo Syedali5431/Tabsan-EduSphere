@@ -9785,3 +9785,218 @@ GO
 COMMIT;
 GO
 
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE TABLE [calendar_feed_tokens] (
+        [Id] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [TokenHash] nvarchar(64) NOT NULL,
+        [TokenEncrypted] nvarchar(500) NOT NULL,
+        [LastUsedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_calendar_feed_tokens] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_calendar_feed_tokens_users_UserId] FOREIGN KEY ([UserId]) REFERENCES [users] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE TABLE [due_reminder_logs] (
+        [Id] uniqueidentifier NOT NULL,
+        [Kind] tinyint NOT NULL,
+        [ItemId] uniqueidentifier NOT NULL,
+        [StudentProfileId] uniqueidentifier NOT NULL,
+        [DueAt] datetime2 NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_due_reminder_logs] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_calendar_feed_tokens_hash] ON [calendar_feed_tokens] ([TokenHash]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_calendar_feed_tokens_user] ON [calendar_feed_tokens] ([UserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE INDEX [IX_due_reminder_logs_created] ON [due_reminder_logs] ([CreatedAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_due_reminder_logs_item_student_due] ON [due_reminder_logs] ([Kind], [ItemId], [StudentProfileId], [DueAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261126103407_CalendarFeedAndDueReminders', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE TABLE [conversations] (
+        [Id] uniqueidentifier NOT NULL,
+        [Subject] nvarchar(200) NOT NULL,
+        [CreatedByUserId] uniqueidentifier NOT NULL,
+        [CourseOfferingId] uniqueidentifier NULL,
+        [LastMessageAt] datetime2 NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_conversations] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE TABLE [conversation_messages] (
+        [Id] uniqueidentifier NOT NULL,
+        [ConversationId] uniqueidentifier NOT NULL,
+        [SenderUserId] uniqueidentifier NOT NULL,
+        [Body] nvarchar(4000) NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_conversation_messages] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_conversation_messages_conversations_ConversationId] FOREIGN KEY ([ConversationId]) REFERENCES [conversations] ([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_conversation_messages_users_SenderUserId] FOREIGN KEY ([SenderUserId]) REFERENCES [users] ([Id]) ON DELETE NO ACTION
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE TABLE [conversation_participants] (
+        [Id] uniqueidentifier NOT NULL,
+        [ConversationId] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [LastReadAt] datetime2 NULL,
+        [LastNotifiedAt] datetime2 NULL,
+        [ArchivedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_conversation_participants] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_conversation_participants_conversations_ConversationId] FOREIGN KEY ([ConversationId]) REFERENCES [conversations] ([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_conversation_participants_users_UserId] FOREIGN KEY ([UserId]) REFERENCES [users] ([Id]) ON DELETE NO ACTION
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE INDEX [IX_conversation_messages_conversation_time] ON [conversation_messages] ([ConversationId], [CreatedAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE INDEX [IX_conversation_messages_SenderUserId] ON [conversation_messages] ([SenderUserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_conversation_participants_conversation_user] ON [conversation_participants] ([ConversationId], [UserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE INDEX [IX_conversation_participants_user] ON [conversation_participants] ([UserId], [ArchivedAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE INDEX [IX_conversations_last_message] ON [conversations] ([LastMessageAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261126121558_Messaging', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+

@@ -2072,14 +2072,26 @@ public class DeadlineFormModel
     public bool     IsActive           { get; set; } = true;
 }
 
-/// <summary>View model for the Academic Calendar page (all roles).</summary>
+/// <summary>
+/// View model for the Calendar page (all roles): a month of the person's homework, quizzes, live classes and key dates,
+/// and their private link for Google Calendar, Outlook or a phone.
+/// </summary>
 public class AcademicCalendarPageModel
 {
-    public bool                 IsConnected  { get; set; }
-    public string?              Message      { get; set; }
-    public List<LookupItem>     Semesters    { get; set; } = new();
-    public Guid?                SelectedSemesterId { get; set; }
-    public List<DeadlineWebItem> Deadlines   { get; set; } = new();
+    public bool    IsConnected { get; set; }
+    public string? Message     { get; set; }
+    /// <summary>The first day of the month shown.</summary>
+    public DateOnly Month      { get; set; }
+    public List<Tabsan.EduSphere.Application.Calendar.CalendarEventDto> Events { get; set; } = new();
+    public bool    CanManageKeyDates { get; set; }
+    /// <summary>The person's calendar link through the portal (/calendar/&lt;token&gt;.ics), null when they have none.</summary>
+    public string? FeedUrl     { get; set; }
+    public DateTime? FeedCreatedAt { get; set; }
+    public DateTime? FeedLastUsedAt { get; set; }
+
+    public string? WebcalUrl => FeedUrl is null ? null : "webcal://" + FeedUrl[(FeedUrl.IndexOf("://", StringComparison.Ordinal) + 3)..];
+    public string? GoogleUrl => WebcalUrl is null ? null : "https://calendar.google.com/calendar/render?cid=" + Uri.EscapeDataString(WebcalUrl);
+    public string? OutlookUrl => FeedUrl is null ? null : "https://outlook.live.com/calendar/0/addfromweb?url=" + Uri.EscapeDataString(FeedUrl) + "&name=" + Uri.EscapeDataString("EduSphere");
 }
 
 /// <summary>View model for the Admin Deadline Management page.</summary>

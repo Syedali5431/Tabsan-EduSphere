@@ -443,6 +443,8 @@ public static class DatabaseSeeder
         var myOutcomes       = await Upsert("my_outcomes",       "My Outcomes",        "Your mastery of course learning outcomes", 42);
         var liveClasses      = await Upsert("live_classes",      "Live Classes",       "Scheduled online classes: join, recordings and attendance (Plan M10)", 43);
         var courseContent    = await Upsert("course_content",    "Course Content",     "Your courses' modules, what each item needs and your progress (Plan M7)", 44);
+        var calendar         = await Upsert("calendar",          "Calendar",           "Homework due dates, quizzes, live classes and key dates, with a link for your own calendar app", 45);
+        var messages         = await Upsert("messages",          "Messages",           "Private messages between teachers, students, parents and the school office", 46);
         var assignments      = await Upsert("assignments",       "Assignments",        "Manage and submit assignments",                  14);
         var attendance       = await Upsert("attendance",        "Attendance",         "Record and view attendance",                     15);
         var enterAttendance  = await Upsert("enter_attendance",  "Enter Attendance",   "Manual attendance entry and CSV import workflow", 15);
@@ -679,6 +681,14 @@ public static class DatabaseSeeder
         EnsureRoleAccess(courseContent.Id, "Admin",   isAllowed: false);
         EnsureRoleAccess(courseContent.Id, "Faculty", isAllowed: false);
         EnsureRoleAccess(courseContent.Id, "Student", isAllowed: true);
+        // Calendar: everyone with courses or key dates (parents use the app).
+        EnsureRoleAccess(calendar.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(calendar.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(calendar.Id, "Student", isAllowed: true);
+        // Messages: everyone who signs in to the portal (parents write from the app).
+        EnsureRoleAccess(messages.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(messages.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(messages.Id, "Student", isAllowed: true);
 
         // Assignments: Admin + Faculty + Student
         EnsureRoleAccess(assignments.Id, "Admin",   isAllowed: true);
@@ -818,6 +828,8 @@ public static class DatabaseSeeder
         EnsureRoleAccess(myOutcomes.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(liveClasses.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(courseContent.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(calendar.Id, "Finance", isAllowed: false);
+        EnsureRoleAccess(messages.Id, "Finance", isAllowed: true); // fee questions from parents
         EnsureRoleAccess(prerequisites.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(gradebook.Id, "Finance", isAllowed: false);
         EnsureRoleAccess(rubricManage.Id, "Finance", isAllowed: false);

@@ -66,6 +66,8 @@ public partial class App : Application
 			"results" => shell.HasRoute("results") ? "results" : "home",
 			"attendance" => shell.HasRoute("attendance") ? "attendance" : "home",
 			"home" => "home",
+			"calendar" => shell.HasRoute("calendar") ? "calendar" : "home",
+			"messages" => "messages",
 			_ => "notifications"
 		};
 		if (!shell.HasRoute(route)) route = "notifications";

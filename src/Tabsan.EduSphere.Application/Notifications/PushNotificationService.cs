@@ -30,7 +30,9 @@ public sealed class PushNotificationService : IPushNotificationService
         (NotificationType.AttendanceAlert, "Attendance alerts", "/Portal/Notifications"),
         (NotificationType.System, "System notices", "/Portal/Notifications"),
         (NotificationType.Announcement, "Announcements", "/Portal/Announcements"),
-        (NotificationType.LiveClass, "Live classes", "/Portal/LiveClasses")
+        (NotificationType.LiveClass, "Live classes", "/Portal/LiveClasses"),
+        (NotificationType.DueReminder, "Due-date reminders", "/Portal/AcademicCalendar"),
+        (NotificationType.Message, "Messages", "/Portal/Messages")
     ];
 
     private readonly IPushSubscriptionRepository _repo;

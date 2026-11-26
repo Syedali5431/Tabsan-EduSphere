@@ -3218,6 +3218,91 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.ToTable("backup_verification_logs", (string)null);
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Calendar.CalendarFeedToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("TokenEncrypted")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("IX_calendar_feed_tokens_hash");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_calendar_feed_tokens_user");
+
+                    b.ToTable("calendar_feed_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Calendar.DueReminderLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DueAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Kind")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_due_reminder_logs_created");
+
+                    b.HasIndex("Kind", "ItemId", "StudentProfileId", "DueAt")
+                        .IsUnique()
+                        .HasDatabaseName("IX_due_reminder_logs_item_student_due");
+
+                    b.ToTable("due_reminder_logs", (string)null);
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.DataProtection.DataClassificationEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -5877,6 +5962,124 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .HasDatabaseName("IX_lti_used_nonces_tool_value");
 
                     b.ToTable("lti_used_nonces", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CourseOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastMessageAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastMessageAt")
+                        .HasDatabaseName("IX_conversations_last_message");
+
+                    b.ToTable("conversations", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.ConversationMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("ConversationId", "CreatedAt")
+                        .HasDatabaseName("IX_conversation_messages_conversation_time");
+
+                    b.ToTable("conversation_messages", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.ConversationParticipant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastNotifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_conversation_participants_conversation_user");
+
+                    b.HasIndex("UserId", "ArchivedAt")
+                        .HasDatabaseName("IX_conversation_participants_user");
+
+                    b.ToTable("conversation_participants", (string)null);
                 });
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Mobile.MobileCrashReport", b =>
@@ -8636,6 +8839,15 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Calendar.CalendarFeedToken", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Fyp.FypMeeting", b =>
                 {
                     b.HasOne("Tabsan.EduSphere.Domain.Fyp.FypProject", "Project")
@@ -8902,6 +9114,36 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .WithMany("Deployments")
                         .HasForeignKey("ToolId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.ConversationMessage", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tabsan.EduSphere.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.ConversationParticipant", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Messaging.Conversation", null)
+                        .WithMany("Participants")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tabsan.EduSphere.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
@@ -9351,6 +9593,11 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Lti.LtiTool", b =>
                 {
                     b.Navigation("Deployments");
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.Conversation", b =>
+                {
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Outcomes.Outcome", b =>

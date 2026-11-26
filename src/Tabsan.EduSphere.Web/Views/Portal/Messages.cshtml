@@ -1,0 +1,74 @@
+@model Tabsan.EduSphere.Web.Models.Portal.MessagesPageModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    ViewData["Title"] = T.Text("Messages");
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
+}
+else
+{
+    <section class="card border-0 shadow-sm" data-messages aria-labelledby="messages-title">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <h2 class="h5 mb-0 me-auto" id="messages-title">@(Model.Archived ? T.Text("Archived conversations") : T.Text("Inbox"))</h2>
+                @if (Model.Archived)
+                {
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Messages">@T["Inbox"]</a>
+                }
+                else
+                {
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Messages" asp-route-archived="true">@T["Archived"]</a>
+                }
+                <a class="btn btn-sm btn-primary" asp-action="NewMessage" data-new-message>@T["New message"]</a>
+            </div>
+
+            @if (Model.Conversations.Count == 0)
+            {
+                <p class="text-muted mb-0">@(Model.Archived ? T.Text("No archived conversations.") : T.Text("No messages yet. Write to a teacher, a student, a parent or the school office with New message."))</p>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var c in Model.Conversations)
+                    {
+                        var with = string.Join(", ", c.With.Select(p => p.Name));
+                        <li class="list-group-item px-0" data-conversation="@c.Subject">
+                            <a class="d-flex gap-3 text-decoration-none text-reset" asp-action="MessageThread" asp-route-id="@c.Id">
+                                <span class="flex-grow-1 min-w-0">
+                                    <span class="d-flex align-items-center gap-2">
+                                        <span class="@(c.Unread > 0 ? "fw-bold" : "fw-semibold") text-truncate">@c.Subject</span>
+                                        @if (c.Unread > 0)
+                                        {
+                                            <span class="badge text-bg-primary" data-unread="@c.Unread">@T.Format("{0} new", c.Unread)</span>
+                                        }
+                                    </span>
+                                    <span class="d-block small text-muted text-truncate">@with</span>
+                                    @if (c.LastMessage is not null)
+                                    {
+                                        <span class="d-block small text-truncate">@(c.LastFromMe ? T.Text("You") + ": " : c.LastSenderName is null ? "" : c.LastSenderName + ": ")@c.LastMessage</span>
+                                    }
+                                </span>
+                                <time class="small text-muted text-nowrap" datetime="@DateTime.SpecifyKind(c.LastMessageAt, DateTimeKind.Utc).ToString("o")" data-local-time="short">@c.LastMessageAt.ToString("dd MMM HH:mm") UTC</time>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script src="~/js/messages.js" asp-append-version="true" defer></script>
+}

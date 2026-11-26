@@ -123,6 +123,17 @@ public partial class PortalController : Controller
         [nameof(LiveClasses)] = "live_classes",
         [nameof(LiveSessionAttendance)] = "live_classes",
         [nameof(LiveClassSettings)] = "live_class_settings",
+        // The calendar and its private link.
+        [nameof(AcademicCalendar)] = "calendar",
+        [nameof(ResetCalendarFeed)] = "calendar",
+        [nameof(RemoveCalendarFeed)] = "calendar",
+        // Messages.
+        [nameof(Messages)] = "messages",
+        [nameof(MessageThread)] = "messages",
+        [nameof(ReplyMessage)] = "messages",
+        [nameof(ArchiveConversation)] = "messages",
+        [nameof(NewMessage)] = "messages",
+        [nameof(SendMessage)] = "messages",
         // Plan M13: SCORM packages are course content; the xAPI store is a system setting.
         [nameof(UploadScormPackage)] = "lms_manage",
         [nameof(UpdateScormPackage)] = "lms_manage",
@@ -10331,26 +10342,7 @@ public partial class PortalController : Controller
         return RedirectToAction(nameof(DashboardSettings));
     }
 
-    // -- Phase 12: Academic Calendar --------------------------------------------
-
-    [HttpGet]
-    public async Task<IActionResult> AcademicCalendar(Guid? semesterId, CancellationToken ct)
-    {
-        ViewData["Title"] = "Academic Calendar";
-        var model = new AcademicCalendarPageModel
-        {
-            IsConnected        = _api.IsConnected(),
-            SelectedSemesterId = semesterId
-        };
-        if (!model.IsConnected) return View(model);
-        try
-        {
-            model.Semesters = await _api.GetSemestersAsync(ct);
-            model.Deadlines = await _api.GetCalendarDeadlinesAsync(semesterId, ct);
-        }
-        catch (Exception ex) { model.Message = ex.Message; }
-        return View(model);
-    }
+    // -- Phase 12: Academic Calendar (the page is in PortalController.Calendar.cs) ---
 
     [HttpGet]
     public async Task<IActionResult> AcademicDeadlines(Guid? semesterId, CancellationToken ct)

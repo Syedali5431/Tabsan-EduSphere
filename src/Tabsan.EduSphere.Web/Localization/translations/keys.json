@@ -130,6 +130,9 @@
  "+ minutes": [
   "Views/Portal/QuizBuilder.cshtml"
  ],
+ "+{0} more": [
+  "wwwroot/js/calendar.js"
+ ],
  ", and": [
   "Views/Portal/SidebarSettings.cshtml"
  ],
@@ -211,6 +214,9 @@
  ],
  "A modern workspace for institutional operations": [
   "Views/Portal/Dashboard.cshtml"
+ ],
+ "A new calendar link is ready. The old link no longer works: subscribe again with the new one.": [
+  "Controllers"
  ],
  "A new signing key is active. The previous key stays published for a while so tools that cached it keep working.": [
   "Controllers"
@@ -323,9 +329,6 @@
  "Absent": [
   "Views (inline expressions)",
   "Views/Portal/Attendance.cshtml"
- ],
- "Academic Calendar": [
-  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Academic Management": [
   "Views/Shared/_Layout.cshtml"
@@ -573,6 +576,9 @@
  "Add another": [
   "Views/Portal/Outcomes.cshtml"
  ],
+ "Add calendar, Subscribe from web, then paste the link.": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "Add comment": [
   "Views/Portal/AssignmentSubmission.cshtml",
   "wwwroot/js/grading-workspace.js"
@@ -585,6 +591,12 @@
  ],
  "Add group": [
   "Views/Portal/AssignmentPolicies.cshtml"
+ ],
+ "Add it by hand": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
+ "Add it to Google Calendar on a computer; it then appears in the phone's calendar.": [
+  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Add item": [
   "Views/Portal/_ModuleItemsEditor.cshtml"
@@ -610,9 +622,18 @@
  "Add the options and tick every correct one. With partial credit, wrong picks cancel right picks.": [
   "wwwroot/js/quiz-editor.js"
  ],
+ "Add to Google Calendar": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
+ "Add to Outlook": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "Add to calendar": [
   "Views/Portal/LiveClasses.cshtml",
   "Views/Shared/Components/UpcomingLiveClasses/Default.cshtml"
+ ],
+ "Add to your own calendar": [
+  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Additional certificate file not found.": [
   "Controllers"
@@ -806,7 +827,6 @@
   "Views (inline expressions)"
  ],
  "All Semesters": [
-  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/AcademicDeadlines.cshtml",
   "Views/Portal/Assignments.cshtml",
   "Views/Portal/Quizzes.cshtml"
@@ -864,6 +884,10 @@
   "Views/Portal/Rooms.cshtml",
   "Views/Portal/TimetableTeacher.cshtml"
  ],
+ "All day": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "wwwroot/js/calendar.js"
+ ],
  "All departments": [
   "Views/Portal/Assignments.cshtml",
   "Views/Portal/TimetableTeacher.cshtml"
@@ -879,6 +903,10 @@
  ],
  "All live classes": [
   "Views/Shared/Components/UpcomingLiveClasses/Default.cshtml"
+ ],
+ "All messages": [
+  "Views/Portal/MessageThread.cshtml",
+  "Views/Portal/NewMessage.cshtml"
  ],
  "All my courses": [
   "Views/Portal/Announcements.cshtml"
@@ -1104,6 +1132,15 @@
  ],
  "Arabic": [
   "Views/Portal/LanguageSettings.cshtml"
+ ],
+ "Archive": [
+  "Views/Portal/MessageThread.cshtml"
+ ],
+ "Archived": [
+  "Views/Portal/Messages.cshtml"
+ ],
+ "Archived conversations": [
+  "Views/Portal/Messages.cshtml"
  ],
  "Arial": [
   "Views/Portal/DashboardSettings.cshtml"
@@ -1535,6 +1572,13 @@
  "Calculate mastery from": [
   "Views/Portal/Outcomes.cshtml"
  ],
+ "Calendar": [
+  "Sidebar",
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
+ "Calendar apps check the link every few hours; Google Calendar can take up to a day to show changes.": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "Campus": [
   "Views/Portal/Analytics.cshtml",
   "Views/Portal/Announcements.cshtml",
@@ -1622,6 +1666,10 @@
  "Cancel this receipt?": [
   "Views/Portal/Payments.cshtml"
  ],
+ "Cancelled": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "wwwroot/js/calendar.js"
+ ],
  "Cannot reach the API at {0}. Make sure the API is running.": [
   "Controllers"
  ],
@@ -1674,6 +1722,9 @@
  ],
  "Change Password": [
   "Views/Portal/UserSettings.cshtml"
+ ],
+ "Change month": [
+  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Change your password": [
   "Views/Portal/ForceChangePassword.cshtml",
@@ -1854,7 +1905,11 @@
   "Views/Portal/SsoSettings.cshtml"
  ],
  "Close": [
+  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/HelpdeskDetail.cshtml",
+  "Views/Portal/MessageThread.cshtml",
+  "Views/Portal/Messages.cshtml",
+  "Views/Portal/NewMessage.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/Prerequisites.cshtml",
   "Views/Portal/QuestionBanks.cshtml",
@@ -1985,6 +2040,9 @@
   "Views/Portal/Helpdesk.cshtml",
   "Views/Portal/HelpdeskCreate.cshtml",
   "Views/Portal/HelpdeskDetail.cshtml",
+  "Views/Portal/MessageThread.cshtml",
+  "Views/Portal/Messages.cshtml",
+  "Views/Portal/NewMessage.cshtml",
   "Views/Portal/Notifications.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/Programs.cshtml",
@@ -2069,10 +2127,17 @@
  "Conversation": [
   "Views/Portal/HelpdeskDetail.cshtml"
  ],
+ "Conversation not found.": [
+  "Controllers"
+ ],
  "Conversations": [
   "Views/Portal/AiChat.cshtml"
  ],
+ "Copied.": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "Copy": [
+  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/SsoSettings.cshtml"
  ],
  "Copy questions from a bank": [
@@ -2388,6 +2453,9 @@
  "Create meetings with this service": [
   "Views/Portal/LiveClassSettings.cshtml"
  ],
+ "Create my calendar link": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "Create one": [
   "Views/Portal/QuizBuilder.cshtml"
  ],
@@ -2496,7 +2564,6 @@
   "Controllers"
  ],
  "Date": [
-  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/AcademicDeadlines.cshtml",
   "Views/Portal/Attendance.cshtml",
   "Views/Portal/GraduationApplicationDetail.cshtml"
@@ -2522,9 +2589,6 @@
  ],
  "Day Filter": [
   "Views/Portal/TimetableStudent.cshtml"
- ],
- "Days Remaining": [
-  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Deactivate": [
   "Views (inline expressions)",
@@ -2565,9 +2629,6 @@
  ],
  "Deadlines": [
   "Views/Portal/AcademicDeadlines.cshtml"
- ],
- "Deadlines & Key Dates": [
-  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Decision": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
@@ -2844,7 +2905,6 @@
   "Views/Portal/Courses.cshtml"
  ],
  "Description": [
-  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/AcademicDeadlines.cshtml",
   "Views/Portal/Assignments.cshtml",
   "Views/Portal/CourseMaterial.cshtml",
@@ -3004,7 +3064,9 @@
   "Views/Portal/Enrollments.cshtml"
  ],
  "Due": [
-  "Views/Portal/ReportPayments.cshtml"
+  "Views/Portal/AcademicCalendar.cshtml",
+  "Views/Portal/ReportPayments.cshtml",
+  "wwwroot/js/calendar.js"
  ],
  "Due (UTC)": [
   "Views/Portal/AssignmentOptions.cshtml"
@@ -3055,6 +3117,9 @@
  ],
  "Each prompt has one correct answer. Wrong extra answers make it harder.": [
   "wwwroot/js/quiz-editor.js"
+ ],
+ "Each student or parent you write to gets a conversation of their own; they do not see each other's names or replies.": [
+  "Views/Portal/NewMessage.cshtml"
  ],
  "Each student's mastery of the outcomes assessed in a course, from posted grades and finished quizzes.": [
   "Views/Portal/OutcomeMastery.cshtml"
@@ -3573,7 +3638,6 @@
   "Views/Portal/Programs.cshtml"
  ],
  "Filter by Semester": [
-  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/AcademicDeadlines.cshtml"
  ],
  "Filter by Student": [
@@ -3596,6 +3660,7 @@
  ],
  "Finance": [
   "Sidebar",
+  "Views (inline expressions)",
   "Views/Portal/UserImport.cshtml"
  ],
  "Finance access is limited to finance modules. Academic sections are blocked.": [
@@ -3618,6 +3683,9 @@
  ],
  "Find active files and links published by your faculty.": [
   "Views/Portal/CourseMaterialStudent.cshtml"
+ ],
+ "Find people": [
+  "Views/Portal/NewMessage.cshtml"
  ],
  "Finish \"{0}\" before choosing another part.": [
   "Views/Portal/ScormPlay.cshtml",
@@ -3964,6 +4032,10 @@
  "Guidance state": [
   "Views/Portal/Results.cshtml"
  ],
+ "Handed in": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "wwwroot/js/calendar.js"
+ ],
  "Helpdesk": [
   "Sidebar",
   "Views/Shared/_Layout.cshtml"
@@ -3992,6 +4064,9 @@
  ],
  "Hide students already in every ticked course": [
   "Views/Portal/Enrollments.cshtml"
+ ],
+ "Homework": [
+  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "How alignment works": [
   "Views/Portal/Outcomes.cshtml"
@@ -4108,6 +4183,7 @@
   "Views/Portal/ParentLinks.cshtml"
  ],
  "Inbox": [
+  "Views/Portal/Messages.cshtml",
   "Views/Portal/Notifications.cshtml",
   "Views/Shared/_Layout.cshtml"
  ],
@@ -4296,6 +4372,13 @@
  "Key ID": [
   "Views/Portal/LtiTools.cshtml"
  ],
+ "Key date": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "wwwroot/js/calendar.js"
+ ],
+ "Key dates": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "LMS Manage": [
   "Sidebar"
  ],
@@ -4341,6 +4424,9 @@
  ],
  "Last enrollment run": [
   "Views/Portal/Enrollments.cshtml"
+ ],
+ "Last read by a calendar app: {0}.": [
+  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Last score": [
   "Views/Portal/ScormReport.cshtml"
@@ -4507,6 +4593,9 @@
  "Linked {0}": [
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
+ "List": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "List the items in the CORRECT order — students get them shuffled.": [
   "wwwroot/js/quiz-editor.js"
  ],
@@ -4525,6 +4614,10 @@
  "Live assistant": [
   "Views/Shared/ChatPanel.cshtml"
  ],
+ "Live class": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "wwwroot/js/calendar.js"
+ ],
  "Live class attendance": [
   "Controllers (page titles)"
  ],
@@ -4538,6 +4631,7 @@
   "Controllers"
  ],
  "Live classes": [
+  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/CourseLms.cshtml",
   "Views/Shared/Components/UpcomingLiveClasses/Default.cshtml"
  ],
@@ -4624,6 +4718,12 @@
  "Main navigation": [
   "Views/Shared/_Layout.cshtml"
  ],
+ "Make a new link": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
+ "Make a new link? The current link stops working, and calendars subscribed to it stop updating.": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "Make sure users have linked accounts or that automatic linking is on.": [
   "Views/Portal/SsoSettings.cshtml"
  ],
@@ -4643,7 +4743,6 @@
   "Views/Portal/CourseMaterial.cshtml"
  ],
  "Manage Deadlines": [
-  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/AcademicDeadlines.cshtml"
  ],
  "Manage Rooms": [
@@ -4658,6 +4757,9 @@
  ],
  "Manage curriculum inventory and {0} offerings with institution-aware scoping.": [
   "Views/Portal/Courses.cshtml"
+ ],
+ "Manage key dates": [
+  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Manage modules": [
   "Views/Portal/ModuleProgress.cshtml"
@@ -4834,6 +4936,7 @@
  ],
  "Message": [
   "Views/Portal/Announcements.cshtml",
+  "Views/Portal/NewMessage.cshtml",
   "Views/Shared/ChatPanel.cshtml"
  ],
  "Message is required.": [
@@ -4843,7 +4946,10 @@
   "Views/Shared/ChatPanel.cshtml"
  ],
  "Messages": [
-  "Views/Portal/Helpdesk.cshtml"
+  "Sidebar",
+  "Views/Portal/Helpdesk.cshtml",
+  "Views/Portal/MessageThread.cshtml",
+  "Views/Portal/Messages.cshtml"
  ],
  "Met": [
   "Views/Portal/OutcomeAttainment.cshtml"
@@ -4979,6 +5085,7 @@
   "Views/Portal/TimetableAdmin.cshtml"
  ],
  "Month": [
+  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/ReportPayments.cshtml"
  ],
  "Months": [
@@ -4990,6 +5097,9 @@
  ],
  "Move down": [
   "Views/Portal/TakeQuizAttempt.cshtml"
+ ],
+ "Move to inbox": [
+  "Views/Portal/MessageThread.cshtml"
  ],
  "Move up": [
   "Views/Portal/TakeQuizAttempt.cshtml",
@@ -5058,6 +5168,9 @@
  "Name or email": [
   "Views/Portal/UserSettings.cshtml"
  ],
+ "Name, course or child": [
+  "Views/Portal/NewMessage.cshtml"
+ ],
  "Name:": [
   "Views/Portal/ReportTranscript.cshtml"
  ],
@@ -5110,6 +5223,10 @@
  "New group set": [
   "Views/Portal/AssignmentPolicies.cshtml"
  ],
+ "New message": [
+  "Views/Portal/Messages.cshtml",
+  "Views/Portal/NewMessage.cshtml"
+ ],
  "New password": [
   "Views/Portal/UserSettings.cshtml"
  ],
@@ -5132,6 +5249,9 @@
  ],
  "Next is not used in this part of the package; choose from the contents.": [
   "wwwroot/js/scorm-page.js"
+ ],
+ "Next month": [
+  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Next student": [
   "Views/Portal/GradingWorkspace.cshtml"
@@ -5182,6 +5302,9 @@
  ],
  "No applications found.": [
   "Views/Portal/GraduationApplications.cshtml"
+ ],
+ "No archived conversations.": [
+  "Views/Portal/Messages.cshtml"
  ],
  "No assigned timetable entries found.": [
   "Views/Portal/TimetableTeacher.cshtml"
@@ -5249,9 +5372,6 @@
  ],
  "No credentials yet.": [
   "Views/Portal/XapiSettings.cshtml"
- ],
- "No deadlines found for the selected filter.": [
-  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "No deadlines found. Add one using the button above.": [
   "Views/Portal/AcademicDeadlines.cshtml"
@@ -5330,6 +5450,9 @@
  ],
  "No materials found": [
   "Views/Portal/CourseMaterial.cshtml"
+ ],
+ "No messages yet. Write to a teacher, a student, a parent or the school office with New message.": [
+  "Views/Portal/Messages.cshtml"
  ],
  "No missing work needed a grade.": [
   "Controllers"
@@ -5539,6 +5662,9 @@
  "No work was handed in by the due date, so this is the missing-work grade.": [
   "Views/Portal/AssignmentSubmission.cshtml"
  ],
+ "Nobody found. You can write to the people your role connects you with: your teachers, your students and their parents, or the school office.": [
+  "Views/Portal/NewMessage.cshtml"
+ ],
  "Nobody is enrolled in this course yet.": [
   "Views/Portal/Enrollments.cshtml"
  ],
@@ -5623,6 +5749,9 @@
   "Views/Portal/Helpdesk.cshtml",
   "Views/Portal/HelpdeskCreate.cshtml",
   "Views/Portal/HelpdeskDetail.cshtml",
+  "Views/Portal/MessageThread.cshtml",
+  "Views/Portal/Messages.cshtml",
+  "Views/Portal/NewMessage.cshtml",
   "Views/Portal/Notifications.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/Programs.cshtml",
@@ -5656,6 +5785,10 @@
  ],
  "Not met": [
   "Views/Portal/OutcomeAttainment.cshtml"
+ ],
+ "Not published": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "wwwroot/js/calendar.js"
  ],
  "Not specified": [
   "Views/Portal/ParentLinks.cshtml"
@@ -5692,6 +5825,10 @@
  ],
  "Notes:": [
   "Views/Portal/StudyPlanDetail.cshtml"
+ ],
+ "Nothing in the calendar this month.": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "wwwroot/js/calendar.js"
  ],
  "Nothing is open.": [
   "wwwroot/js/scorm-page.js"
@@ -5747,6 +5884,9 @@
  ],
  "Offerings appear here once a course is assigned to faculty and {0}.": [
   "Views/Portal/Courses.cshtml"
+ ],
+ "Office": [
+  "Views (inline expressions)"
  ],
  "Offline — answers will be saved when the connection returns.": [
   "wwwroot/js/take-quiz.js"
@@ -5922,6 +6062,9 @@
  "Open in a new tab": [
   "Views/Lti/Frame.cshtml"
  ],
+ "Open in my calendar app": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "Open link": [
   "Views/Portal/CourseMaterial.cshtml"
  ],
@@ -6028,6 +6171,9 @@
   "Models/Portal/ParentLinkPageModels.cs",
   "Views/Portal/ParentLinks.cshtml"
  ],
+ "Other calendars, +, From URL, then paste the link.": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "Outcome": [
   "Views/Portal/Enrollments.cshtml",
   "Views/Portal/Outcomes.cshtml"
@@ -6057,12 +6203,22 @@
  "Overall CGPA:": [
   "Views/Portal/Results.cshtml"
  ],
+ "Overdue": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "wwwroot/js/calendar.js"
+ ],
  "Override removed.": [
   "Controllers"
  ],
  "Overview": [
   "Sidebar",
   "Views/Shared/_Layout.cshtml"
+ ],
+ "Own closing time": [
+  "wwwroot/js/calendar.js"
+ ],
+ "Own due date": [
+  "wwwroot/js/calendar.js"
  ],
  "Package (zip)": [
   "Views/Shared/Components/ScormPackages/Default.cshtml"
@@ -6090,7 +6246,8 @@
   "Views/Portal/_QuizQuestionEditor.cshtml"
  ],
  "Parent": [
-  "Sidebar"
+  "Sidebar",
+  "Views (inline expressions)"
  ],
  "Parent Links": [
   "Sidebar",
@@ -6108,6 +6265,12 @@
  ],
  "Parent links are managed by Admins and Super Admins.": [
   "Controllers/PortalController.ParentLinks.cs"
+ ],
+ "Parent of {0}": [
+  "Views/Portal/NewMessage.cshtml"
+ ],
+ "Parents": [
+  "Views (inline expressions)"
  ],
  "Parents use the EduSphere mobile app": [
   "Views/Portal/Start.cshtml"
@@ -6394,6 +6557,9 @@
   "Views/Portal/Helpdesk.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/ScormPlay.cshtml"
+ ],
+ "Previous month": [
+  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Previous student": [
   "Views/Portal/GradingWorkspace.cshtml"
@@ -6709,6 +6875,10 @@
  "Quiz builder": [
   "Controllers (page titles)"
  ],
+ "Quiz closes": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "wwwroot/js/calendar.js"
+ ],
  "Quiz deactivated.": [
   "Controllers"
  ],
@@ -6735,6 +6905,7 @@
  ],
  "Quizzes": [
   "Sidebar",
+  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/Quizzes.cshtml",
   "Views/Shared/_Layout.cshtml"
  ],
@@ -6827,6 +6998,9 @@
  ],
  "Recent": [
   "Views/Shared/ChatPanel.cshtml"
+ ],
+ "Recipients": [
+  "Views/Portal/NewMessage.cshtml"
  ],
  "Recording": [
   "Views/Portal/LiveClasses.cshtml"
@@ -7017,7 +7191,8 @@
  ],
  "Reply": [
   "Views/Portal/DiscussionThread.cshtml",
-  "Views/Portal/DiscussionThreadDetail.cshtml"
+  "Views/Portal/DiscussionThreadDetail.cshtml",
+  "Views/Portal/MessageThread.cshtml"
  ],
  "Reply deleted.": [
   "Controllers"
@@ -7624,6 +7799,9 @@
  "School mode": [
   "Views/Portal/Dashboard.cshtml"
  ],
+ "School office": [
+  "Views (inline expressions)"
+ ],
  "Scope Selection": [
   "Views/Portal/TimetableAdmin.cshtml"
  ],
@@ -7654,6 +7832,7 @@
  "Search": [
   "Views/Portal/AuditLogs.cshtml",
   "Views/Portal/Enrollments.cshtml",
+  "Views/Portal/NewMessage.cshtml",
   "Views/Portal/ParentLinks.cshtml",
   "Views/Portal/Search.cshtml",
   "Views/Portal/UserSettings.cshtml",
@@ -7981,7 +8160,6 @@
  ],
  "Semester": [
   "Views (inline expressions)",
-  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/AcademicDeadlines.cshtml",
   "Views/Portal/Analytics.cshtml",
   "Views/Portal/ReportEnrollment.cshtml",
@@ -8023,7 +8201,9 @@
   "Views/Portal/Dashboard.cshtml"
  ],
  "Send": [
-  "Views/Portal/AiChat.cshtml"
+  "Views/Portal/AiChat.cshtml",
+  "Views/Portal/MessageThread.cshtml",
+  "Views/Portal/NewMessage.cshtml"
  ],
  "Send a test": [
   "Views/Portal/Notifications.cshtml"
@@ -8042,6 +8222,9 @@
  ],
  "Sent as": [
   "Views/Portal/LibraryConfig.cshtml"
+ ],
+ "Sent: {0} conversations, one for each student or parent.": [
+  "Controllers"
  ],
  "Separate SuperAdmin sections for School, College, and University grading policy.": [
   "Views/Portal/GradingConfig.cshtml"
@@ -8077,6 +8260,9 @@
  "Settings saved.": [
   "Controllers"
  ],
+ "Settings, Calendar, Accounts, Add Account, Other, Add Subscribed Calendar, then paste the link.": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "Setup": [
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
@@ -8109,6 +8295,7 @@
  ],
  "Show": [
   "Views (inline expressions)",
+  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/AssignmentPolicies.cshtml",
   "Views/Portal/LiveClasses.cshtml",
   "Views/Portal/ModuleProgress.cshtml",
@@ -8274,6 +8461,9 @@
  "Some answers are still being marked.": [
   "Views/Portal/QuizReview.cshtml"
  ],
+ "Some students have their own dates": [
+  "wwwroot/js/calendar.js"
+ ],
  "Split at random": [
   "Views/Portal/AssignmentPolicies.cshtml"
  ],
@@ -8282,6 +8472,9 @@
  ],
  "Sr.": [
   "Views/Portal/ViewQuizzes.cshtml"
+ ],
+ "Staff": [
+  "Views (inline expressions)"
  ],
  "Stage": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
@@ -8535,6 +8728,7 @@
  ],
  "Students": [
   "Sidebar",
+  "Views (inline expressions)",
   "Views/Portal/Analytics.cshtml",
   "Views/Portal/Students.cshtml",
   "Views/Shared/_Layout.cshtml"
@@ -8616,6 +8810,7 @@
   "Views/Portal/GradingConfig.cshtml",
   "Views/Portal/Helpdesk.cshtml",
   "Views/Portal/HelpdeskCreate.cshtml",
+  "Views/Portal/NewMessage.cshtml",
   "Views/Portal/Results.cshtml",
   "Views/Portal/TimetableAdmin.cshtml",
   "Views/Portal/TimetableStudent.cshtml",
@@ -8800,6 +8995,10 @@
  "Take Action": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
  ],
+ "Taken": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "wwwroot/js/calendar.js"
+ ],
  "Taking quizzes is available to students.": [
   "Controllers"
  ],
@@ -8813,6 +9012,7 @@
   "Views/Portal/LtiTools.cshtml"
  ],
  "Teacher": [
+  "Views (inline expressions)",
   "Views/Portal/Enrollments.cshtml",
   "Views/Portal/TimetableAdmin.cshtml",
   "Views/Portal/TimetableStudent.cshtml"
@@ -8830,6 +9030,9 @@
  ],
  "Teacher timetable deactivated.": [
   "Controllers"
+ ],
+ "Teachers": [
+  "Views (inline expressions)"
  ],
  "Teams: required · Zoom: “me”": [
   "Views/Portal/LiveClassSettings.cshtml"
@@ -8974,7 +9177,16 @@
  "The browser's language (English when it is not offered)": [
   "Views/Portal/LanguageSettings.cshtml"
  ],
+ "The calendar could not be loaded.": [
+  "Controllers"
+ ],
  "The calendar file is not available.": [
+  "Controllers"
+ ],
+ "The calendar link could not be created.": [
+  "Controllers"
+ ],
+ "The calendar link could not be turned off.": [
   "Controllers"
  ],
  "The certificate includes the university seal, student name, degree title, CGPA, and official signatures.": [
@@ -8988,6 +9200,18 @@
  ],
  "The comment was not saved.": [
   "wwwroot/js/grading-workspace.js"
+ ],
+ "The conversation could not be changed.": [
+  "Controllers"
+ ],
+ "The conversation could not be loaded.": [
+  "Controllers"
+ ],
+ "The conversation is archived. A new message brings it back to your inbox.": [
+  "Controllers"
+ ],
+ "The conversation is back in your inbox.": [
+  "Controllers"
  ],
  "The credentials could not be created.": [
   "Controllers/PortalController.Scorm.cs"
@@ -9046,10 +9270,19 @@
  "The link could not be removed.": [
   "Controllers/PortalController.ParentLinks.cs"
  ],
+ "The list of people could not be loaded.": [
+  "Controllers"
+ ],
  "The live classes could not be loaded.": [
   "Controllers"
  ],
  "The mapping could not be saved.": [
+  "Controllers"
+ ],
+ "The message could not be sent.": [
+  "Controllers"
+ ],
+ "The messages could not be loaded.": [
   "Controllers"
  ],
  "The microphone is not available. Attach a file instead.": [
@@ -9298,6 +9531,9 @@
  "This mirrors the plug-in login hand-off endpoint used after the password step.": [
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
+ "This month": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
  "This package is not available.": [
   "Controllers/PortalController.Scorm.cs"
  ],
@@ -9457,7 +9693,6 @@
   "Views/Portal/QuestionBanks.cshtml"
  ],
  "Title": [
-  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/AcademicDeadlines.cshtml",
   "Views/Portal/Analytics.cshtml",
   "Views/Portal/Announcements.cshtml",
@@ -9650,6 +9885,12 @@
  ],
  "Turn on 2FA": [
   "Views/Portal/TwoFactorSettings.cshtml"
+ ],
+ "Turn the link off": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
+ "Turn the link off? Calendars subscribed to it stop updating.": [
+  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Two-Factor Authentication": [
   "Sidebar",
@@ -9995,6 +10236,7 @@
   "Views/Portal/LmsManage.cshtml"
  ],
  "View": [
+  "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/GraduationApplications.cshtml",
   "Views/Portal/GraduationApply.cshtml",
   "Views/Portal/Helpdesk.cshtml"
@@ -10147,6 +10389,9 @@
   "Views/Portal/Buildings.cshtml",
   "Views/Portal/Rooms.cshtml"
  ],
+ "You": [
+  "Views/Portal/MessageThread.cshtml"
+ ],
  "You are not allowed to approve this application at its current stage.": [
   "Controllers"
  ],
@@ -10231,6 +10476,15 @@
  "Your authenticator registration is preserved so you can re-enable later.": [
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
+ "Your calendar link": [
+  "Views/Portal/AcademicCalendar.cshtml"
+ ],
+ "Your calendar link is ready.": [
+  "Controllers"
+ ],
+ "Your calendar link is turned off. Calendars subscribed to it stop updating.": [
+  "Controllers"
+ ],
  "Your children's results, attendance, homework, timetable, fees and announcements are in the EduSphere app. Install it on your phone, type the server address your school gave you, and sign in with this username and password.": [
   "Views/Portal/Start.cshtml"
  ],
@@ -10251,6 +10505,9 @@
  ],
  "Your groups for group assignments and group discussions.": [
   "Views/Portal/MyGroups.cshtml"
+ ],
+ "Your homework, quizzes, live classes and key dates appear in Google Calendar, Outlook or your phone's calendar and stay up to date there. The link is private: anyone who has it can see your calendar.": [
+  "Views/Portal/AcademicCalendar.cshtml"
  ],
  "Your identity provider reports a role that does not match this EduSphere account. Contact your administrator.": [
   "Controllers"
@@ -10662,6 +10919,9 @@
  "{0} member(s)": [
   "Views/Portal/AssignmentPolicies.cshtml"
  ],
+ "{0} new": [
+  "Views/Portal/Messages.cshtml"
+ ],
  "{0} not enrolled": [
   "Views/Portal/Enrollments.cshtml"
  ],
@@ -10730,6 +10990,9 @@
  ],
  "{0} this program?": [
   "Views/Portal/Programs.cshtml"
+ ],
+ "{0} to mark": [
+  "wwwroot/js/calendar.js"
  ],
  "{0} total": [
   "Views/Portal/AdminUsers.cshtml"

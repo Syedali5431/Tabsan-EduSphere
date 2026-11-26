@@ -645,6 +645,20 @@ builder.Services.AddScoped<IReportService, Tabsan.EduSphere.Infrastructure.Repor
 // ── Phase 12: Academic Calendar ───────────────────────────────────────────
 builder.Services.AddScoped<IAcademicDeadlineRepository, AcademicDeadlineRepository>();
 builder.Services.AddScoped<IAcademicCalendarService, AcademicCalendarService>();
+// One calendar (homework, quizzes, live classes, key dates), its private feed link and due-date reminders.
+builder.Services.Configure<Tabsan.EduSphere.Application.Calendar.CalendarOptions>(builder.Configuration.GetSection(Tabsan.EduSphere.Application.Calendar.CalendarOptions.SectionName));
+builder.Services.PostConfigure<Tabsan.EduSphere.Application.Calendar.CalendarOptions>(o =>
+{
+    // Links in calendar entries go to the portal: the calendar's own setting, else the address the app is given.
+    if (string.IsNullOrWhiteSpace(o.PortalBaseUrl))
+        o.PortalBaseUrl = builder.Configuration["Mobile:PortalBaseUrl"] is { Length: > 0 } mobile ? mobile : builder.Configuration["LiveClasses:PortalBaseUrl"];
+});
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Calendar.ICalendarQueries, Tabsan.EduSphere.Infrastructure.Calendar.CalendarQueries>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Calendar.CalendarService>();
+builder.Services.AddHostedService<Tabsan.EduSphere.API.Services.DueReminderWorker>();
+// Messages between teachers, students, parents and the school office.
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Messaging.IMessagingQueries, Tabsan.EduSphere.Infrastructure.Messaging.MessagingQueries>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Messaging.MessagingService>();
 
 // ── Phase 13: Global Search ───────────────────────────────────────────────
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISearchRepository, Tabsan.EduSphere.Infrastructure.Repositories.SearchRepository>();

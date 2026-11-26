@@ -27,7 +27,13 @@ public enum NotificationType
     Announcement = 6,
 
     /// <summary>Plan M10: live class scheduled, moved, cancelled or starting soon.</summary>
-    LiveClass = 7
+    LiveClass = 7,
+
+    /// <summary>Homework or a quiz is due soon and the student has not handed it in yet.</summary>
+    DueReminder = 8,
+
+    /// <summary>A new message in one of the person's conversations.</summary>
+    Message = 9
 }
 
 /// <summary>

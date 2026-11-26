@@ -207,6 +207,13 @@ public class ApplicationDbContext : DbContext
     // Plan M4.3 — Web Push.
     public DbSet<Tabsan.EduSphere.Domain.Notifications.PushSubscription> PushSubscriptions => Set<Tabsan.EduSphere.Domain.Notifications.PushSubscription>();
     public DbSet<Tabsan.EduSphere.Domain.Notifications.NotificationPreference> NotificationPreferences => Set<Tabsan.EduSphere.Domain.Notifications.NotificationPreference>();
+    // Calendar feed links and the due-date reminders already sent.
+    public DbSet<Tabsan.EduSphere.Domain.Calendar.CalendarFeedToken> CalendarFeedTokens => Set<Tabsan.EduSphere.Domain.Calendar.CalendarFeedToken>();
+    public DbSet<Tabsan.EduSphere.Domain.Calendar.DueReminderLog> DueReminderLogs => Set<Tabsan.EduSphere.Domain.Calendar.DueReminderLog>();
+    // Messaging between teachers, students, parents and staff.
+    public DbSet<Tabsan.EduSphere.Domain.Messaging.Conversation> Conversations => Set<Tabsan.EduSphere.Domain.Messaging.Conversation>();
+    public DbSet<Tabsan.EduSphere.Domain.Messaging.ConversationParticipant> ConversationParticipants => Set<Tabsan.EduSphere.Domain.Messaging.ConversationParticipant>();
+    public DbSet<Tabsan.EduSphere.Domain.Messaging.ConversationMessage> ConversationMessages => Set<Tabsan.EduSphere.Domain.Messaging.ConversationMessage>();
 
     /// <summary>Published and draft result marks per student per course offering.</summary>
     public DbSet<Result> Results => Set<Result>();

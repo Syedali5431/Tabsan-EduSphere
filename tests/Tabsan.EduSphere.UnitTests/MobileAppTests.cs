@@ -1178,4 +1178,168 @@ public class MobileAppTests
         Assert.Equal("http://10.0.2.2:5181", ServerAddress.Display("http://10.0.2.2:5181")); // plain http stays visible
         Assert.Equal("https://edu.myschool.com", new ServerViewModel(client).Address); // Change server starts from the current one
     }
+
+    // ── calendar ───────────────────────────────────────────────────────────────────────────────
+
+    private sealed class Opened : ILauncherService
+    {
+        public readonly List<Uri> Uris = [];
+        public Task OpenAsync(Uri uri) { Uris.Add(uri); return Task.CompletedTask; }
+    }
+
+    [Fact]
+    public void CalendarDays_StartToday_KeepOverdueWork_AndSayTodayAndTomorrow()
+    {
+        AppText.Language = "en";
+        var today = DateTime.Today;
+        CalendarEntry At(DateTime local, string kind, string title, string? status = null, bool allDay = false)
+            => new() { Kind = kind, Title = title, Status = status, AllDay = allDay, StartsAt = allDay ? local.Date : local.ToUniversalTime() };
+        var entries = new[]
+        {
+            At(today.AddDays(-2).AddHours(10), "Assignment", "Old essay", "Overdue"),   // still to hand in: shown
+            At(today.AddDays(-1).AddHours(10), "Assignment", "Done essay", "Done"),     // past and done: not shown
+            At(today.AddHours(15), "LiveClass", "Revision"),
+            At(today.AddHours(9), "Quiz", "Week 3"),
+            At(today, "KeyDate", "Sports day", allDay: true),
+            At(today.AddDays(1).AddHours(8), "Assignment", "Map work")
+        };
+
+        var days = CalendarViewModel.Group(entries, today);
+
+        Assert.Equal(3, days.Count);
+        Assert.True(days[0].IsPast);
+        Assert.Equal(new[] { "Old essay" }, days[0].Entries.Select(e => e.Title));
+        Assert.Equal((AppText.Get("Today"), true), (days[1].Day, days[1].IsToday));
+        Assert.Equal(new[] { "Sports day", "Week 3", "Revision" }, days[1].Entries.Select(e => e.Title)); // all-day first, then by time
+        Assert.Equal(AppText.Get("Tomorrow"), days[2].Day);
+        Assert.Equal(today.AddDays(5).ToString("dddd d MMMM"), CalendarViewModel.DayLabel(today.AddDays(5), today));
+    }
+
+    [Fact]
+    public void CalendarEntry_ReadsAsTheStudentTeacherOrParentNeeds()
+    {
+        AppText.Language = "en";
+        var start = new DateTime(2026, 12, 1, 4, 30, 0, DateTimeKind.Utc);
+        var live = new CalendarEntry { Kind = "LiveClass", Title = "Revision", StartsAt = start, EndsAt = start.AddMinutes(45), CourseCode = "MATH-9" };
+        Assert.Equal($"{start.ToLocalTime():HH:mm}–{start.AddMinutes(45).ToLocalTime():HH:mm}", live.Time);
+        Assert.Equal("Live class: Revision", live.What);
+
+        var child = new CalendarEntry { Kind = "Assignment", Title = "Essay", StartsAt = start, CourseCode = "ENG-9", StudentName = "Ali Raza", OwnDates = true, Status = "Overdue" };
+        Assert.Equal("Ali: Due: Essay", child.What);
+        Assert.Equal("ENG-9 · Own due date", child.Details);
+        Assert.Equal("Overdue", child.StatusText);
+
+        var teacher = new CalendarEntry { Kind = "Assignment", Title = "Essay", StartsAt = start, CourseCode = "ENG-9", ToMark = 3, SomeHaveOwnDates = true, Status = "Draft" };
+        Assert.Equal($"ENG-9 · {string.Format(AppText.Get("ToGradeCount"), 3)} · Some students have their own dates", teacher.Details);
+        Assert.Equal("Not published", teacher.StatusText);
+
+        var keyDate = new CalendarEntry { Kind = "KeyDate", Title = "Exams begin", StartsAt = new DateTime(2026, 12, 7), AllDay = true, CourseTitle = "Term 1", Note = "Bring your card" };
+        Assert.Equal(("All day", new DateTime(2026, 12, 7)), (keyDate.Time, keyDate.LocalDay)); // a key date stays on its date
+        Assert.Equal("Term 1 · Bring your card", keyDate.Details);
+        Assert.Equal("Taken", new CalendarEntry { Kind = "Quiz", Status = "Done" }.StatusText);
+    }
+
+    [Fact]
+    public async Task Calendar_LoadsTheRangeForTheChild_AndAddsTheLinkToThePhonesCalendar()
+    {
+        AppText.Language = "en";
+        var (client, api, _) = Client();
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login(role: "Student"))
+           .On("GET /api/v1/calendar/events", HttpStatusCode.OK, """{"from":"2026-11-19T00:00:00Z","to":"2026-12-31T00:00:00Z","events":[{"id":"assignment:1","kind":"Assignment","title":"Essay","startsAt":"2030-01-02T12:00:00"}]}""")
+           .On("GET /api/v1/calendar/feed", HttpStatusCode.NoContent, "")
+           .On("POST /api/v1/calendar/feed", HttpStatusCode.OK, """{"token":"abc","path":"/api/v1/calendar/feed/abc.ics","createdAt":"2026-11-26T00:00:00Z"}""");
+        await client.SignInAsync("ann", "pw");
+        var opened = new Opened();
+        var vm = new CalendarViewModel(client, launcher: opened);
+
+        var rows = await client.GetCalendarAsync(new DateTime(2026, 11, 19, 0, 0, 0, DateTimeKind.Utc), new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc), Guid.Parse("11111111-1111-1111-1111-111111111111"));
+        Assert.Single(rows);
+        var query = api.Calls.Last(c => c.Key == "GET /api/v1/calendar/events").Request.RequestUri!.Query;
+        Assert.Equal("?from=2026-11-19T00:00:00Z&to=2026-12-31T00:00:00Z&studentProfileId=11111111-1111-1111-1111-111111111111", Uri.UnescapeDataString(query));
+
+        await vm.SubscribeAsync();
+        // Android's calendar cannot subscribe by itself: Google Calendar adds the link to the account.
+        Assert.Equal("https://calendar.google.com/calendar/render?cid=" + Uri.EscapeDataString("webcal://api.test/api/v1/calendar/feed/abc.ics"), opened.Uris.Single().OriginalString);
+        Assert.Contains(api.Calls, c => c.Key == "POST /api/v1/calendar/feed"); // created on first use
+
+        var iphone = new EduSphereClient(new HttpClient(api) { BaseAddress = new Uri("https://api.test/") }, new Store(), new AppSettings("https://api.test", "1.2.0", "ios"));
+        Assert.Equal("webcal://api.test/api/v1/calendar/feed/abc.ics", iphone.CalendarSubscribeUrl(new CalendarFeed { Path = "/api/v1/calendar/feed/abc.ics" }));
+        Assert.Equal("https://api.test/api/v1/calendar/feed/abc.ics", iphone.CalendarFeedUrl(new CalendarFeed { Path = "/api/v1/calendar/feed/abc.ics" }, webcal: false));
+    }
+
+    // ── messages ───────────────────────────────────────────────────────────────────────────────
+
+    private const string Teacher = "11111111-0000-0000-0000-000000000001", Office = "11111111-0000-0000-0000-000000000002";
+
+    [Fact]
+    public async Task NewMessage_KeepsTicksAcrossSearches_ChecksTheMessage_AndSends()
+    {
+        AppText.Language = "en";
+        var (client, api, _) = Client();
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, Login(role: "Parent"))
+           .On("GET /api/v1/messages/contacts", HttpStatusCode.OK, $$"""[{"userId":"{{Teacher}}","name":"Ms Khan","role":"Faculty","detail":"Mathematics · Fatima","group":"Teachers"},{"userId":"{{Office}}","name":"Mr Shah","role":"Admin","group":"Office"}]""")
+           .On("GET /api/v1/messages/contacts", HttpStatusCode.OK, $$"""[{"userId":"{{Office}}","name":"Mr Shah","role":"Admin","group":"Office"}]""")
+           .On("POST /api/v1/messages/conversations", HttpStatusCode.OK, """{"conversationIds":["22222222-0000-0000-0000-000000000001"]}""");
+        await client.SignInAsync("ann", "pw");
+        var vm = new NewMessageViewModel(client);
+        IReadOnlyList<Guid>? sent = null;
+        vm.Sent += (_, ids) => sent = ids;
+
+        await vm.LoadAsync();
+        Assert.Equal(("Teacher · Mathematics · Fatima", "Teachers"), (vm.Contacts[0].Description, vm.Contacts[0].GroupTitle));
+        Assert.Equal(("School office", "Office"), (vm.Contacts[1].Description, vm.Contacts[1].GroupTitle));
+        await vm.SendAsync();
+        Assert.Equal(AppText.Get("ChooseRecipients"), vm.Error);
+
+        vm.Contacts[0].IsSelected = true;
+        vm.Search = "shah";
+        await vm.LoadAsync(); // the teacher is no longer listed but stays chosen
+        Assert.Equal("?search=shah", api.Calls.Last(c => c.Key == "GET /api/v1/messages/contacts").Request.RequestUri!.Query);
+        Assert.Equal(1, vm.SelectedCount);
+        await vm.SendAsync();
+        Assert.Equal(AppText.Get("EnterSubject"), vm.Error);
+        vm.Subject = "Homework";
+        vm.Body = "Fatima was ill on Monday.";
+        await vm.SendAsync();
+
+        Assert.Null(vm.Error);
+        Assert.Equal(Guid.Parse("22222222-0000-0000-0000-000000000001"), Assert.Single(sent!));
+        using var body = JsonDocument.Parse(api.Calls.Last(c => c.Key == "POST /api/v1/messages/conversations").Body!);
+        Assert.Equal(Teacher, body.RootElement.GetProperty("recipientIds")[0].GetString());
+        Assert.Equal("Homework", body.RootElement.GetProperty("subject").GetString());
+        Assert.Equal("Parent of Fatima", new MessageContact { Role = "Parent", Detail = "Fatima" }.Description);
+    }
+
+    [Fact]
+    public async Task Conversation_ShowsTheOthers_SendsReplies_AndArchives()
+    {
+        AppText.Language = "en";
+        var (client, api, _) = Client();
+        var me = Guid.NewGuid();
+        var login = JsonSerializer.Serialize(new { accessToken = "a1", refreshToken = "r1", accessTokenExpiry = DateTime.UtcNow.AddMinutes(15), role = "Student", userId = me, username = "ali" });
+        const string Id = "22222222-0000-0000-0000-000000000009";
+        var detail = $$"""{"id":"{{Id}}","subject":"Science fair","people":[{"userId":"{{Teacher}}","name":"Ms Khan","role":"Faculty"},{"userId":"{{me}}","name":"Ali","role":"Student"}],"messages":[{"id":"33333333-0000-0000-0000-000000000001","senderUserId":"{{me}}","senderName":"Ali","body":"Can I bring a friend?","sentAt":"2026-11-27T09:00:00","mine":true},{"id":"33333333-0000-0000-0000-000000000002","senderUserId":"{{Teacher}}","senderName":"Ms Khan","body":"Yes.","sentAt":"2026-11-27T09:05:00","mine":false}],"archived":false}""";
+        api.On("POST /api/v1/auth/login", HttpStatusCode.OK, login)
+           .On($"GET /api/v1/messages/conversations/{Id}", HttpStatusCode.OK, detail)
+           .On($"POST /api/v1/messages/conversations/{Id}/messages", HttpStatusCode.OK, "{}")
+           .On($"POST /api/v1/messages/conversations/{Id}/archive", HttpStatusCode.OK, "true");
+        await client.SignInAsync("ali", "pw");
+        var vm = new ConversationViewModel(client);
+        var archived = false;
+        vm.Archived += (_, _) => archived = true;
+
+        await vm.LoadAsync(Guid.Parse(Id));
+        Assert.Equal(("Science fair", "Ms Khan (Teacher)"), (vm.Subject, vm.People)); // not the student themself
+        Assert.Equal(new[] { "You", "Ms Khan" }, vm.Messages.Select(m => m.Who));
+
+        await vm.SendAsync();
+        Assert.Equal(AppText.Get("WriteMessage"), vm.Error);
+        vm.Reply = " Thank you! ";
+        await vm.SendAsync();
+        Assert.Equal("""{"body":"Thank you!"}""", api.Calls.Last(c => c.Key.EndsWith("/messages", StringComparison.Ordinal)).Body);
+        Assert.Equal("", vm.Reply);
+
+        await vm.ArchiveAsync();
+        Assert.True(archived);
+    }
 }

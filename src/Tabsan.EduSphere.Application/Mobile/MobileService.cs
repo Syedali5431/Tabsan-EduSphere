@@ -219,6 +219,8 @@ public sealed partial class MobileService : IMobileService
                 NotificationType.AttendanceAlert => "attendance",
                 NotificationType.Announcement => "announcements",
                 NotificationType.LiveClass => "home",
+                NotificationType.DueReminder => "calendar",
+                NotificationType.Message => "messages",
                 _ => "notifications"
             }
         });

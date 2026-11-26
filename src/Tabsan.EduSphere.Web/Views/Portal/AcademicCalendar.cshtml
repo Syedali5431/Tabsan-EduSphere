@@ -1,17 +1,79 @@
 @model Tabsan.EduSphere.Web.Models.Portal.AcademicCalendarPageModel
-@{ ViewData["Title"] = T.Text("Academic Calendar"); }
-
-@if (TempData["Message"] is string msg)
-{
-    var cls = msg.StartsWith("Error") ? "alert-danger" : "alert-success";
-    <div class="alert @cls alert-dismissible fade show" role="alert">
-        @T.Text(msg)
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
-    </div>
+@using System.Globalization
+@using System.Text.Json
+@using Tabsan.EduSphere.Application.Calendar
+@{
+    ViewData["Title"] = T.Text("Calendar");
+    var month = Model.Month.ToString("yyyy-MM", CultureInfo.InvariantCulture);
+    var previous = Model.Month.AddMonths(-1).ToString("yyyy-MM", CultureInfo.InvariantCulture);
+    var next = Model.Month.AddMonths(1).ToString("yyyy-MM", CultureInfo.InvariantCulture);
+    var thisMonth = DateTime.UtcNow.ToString("yyyy-MM", CultureInfo.InvariantCulture);
+    var monthStart = Model.Month.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+    var monthEnd = monthStart.AddMonths(1);
+    // Without scripts the page lists the month's entries in UTC; the script lays them out in the browser's time zone.
+    var inMonth = Model.Events.Where(e => e.StartsAt >= monthStart && e.StartsAt < monthEnd).ToList();
+    var kinds = new[]
+    {
+        (Kind: CalendarKinds.Assignment, Label: T.Text("Homework")),
+        (Kind: CalendarKinds.Quiz, Label: T.Text("Quizzes")),
+        (Kind: CalendarKinds.LiveClass, Label: T.Text("Live classes")),
+        (Kind: CalendarKinds.KeyDate, Label: T.Text("Key dates"))
+    };
+    string KindClass(string kind) => "calendar-" + kind.ToLowerInvariant();
+    string Prefix(CalendarEventDto e) => e.Kind switch
+    {
+        CalendarKinds.Assignment => T.Text("Due"),
+        CalendarKinds.Quiz => T.Text("Quiz closes"),
+        CalendarKinds.LiveClass => T.Text("Live class"),
+        _ => T.Text("Key date")
+    };
+    string? StatusLabel(CalendarEventDto e) => e.Status switch
+    {
+        CalendarStatuses.Done => e.Kind == CalendarKinds.Quiz ? T.Text("Taken") : T.Text("Handed in"),
+        CalendarStatuses.Overdue => T.Text("Overdue"),
+        CalendarStatuses.Cancelled => T.Text("Cancelled"),
+        CalendarStatuses.Draft => T.Text("Not published"),
+        _ => null
+    };
+    string StatusBadge(string? status) => status switch
+    {
+        CalendarStatuses.Done => "text-bg-success",
+        CalendarStatuses.Overdue => "text-bg-danger",
+        CalendarStatuses.Cancelled => "text-bg-secondary",
+        _ => "text-bg-light border"
+    };
+    var data = JsonSerializer.Serialize(new
+    {
+        month,
+        events = Model.Events.Select(e => new
+        {
+            id = e.Id,
+            kind = e.Kind,
+            title = e.Title,
+            start = DateTime.SpecifyKind(e.StartsAt, DateTimeKind.Utc).ToString("o", CultureInfo.InvariantCulture),
+            end = e.EndsAt is { } end ? DateTime.SpecifyKind(end, DateTimeKind.Utc).ToString("o", CultureInfo.InvariantCulture) : null,
+            allDay = e.AllDay,
+            course = e.CourseCode,
+            courseTitle = e.CourseTitle,
+            status = e.Status,
+            note = e.Note,
+            url = e.Url,
+            student = e.StudentName,
+            ownDates = e.OwnDates,
+            toMark = e.ToMark,
+            someOwnDates = e.SomeHaveOwnDates
+        })
+    }).Replace("<", "\\u003c");
 }
+
 @if (!string.IsNullOrWhiteSpace(Model.Message))
 {
-    <div class="alert alert-warning">@T.Text(Model.Message)</div>
+    var cls = Model.Message.StartsWith("Your calendar link", StringComparison.Ordinal) || Model.Message.StartsWith("A new calendar link", StringComparison.Ordinal)
+        ? "alert-success" : "alert-warning";
+    <div class="alert @cls alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
 }
 
 @if (!Model.IsConnected)
@@ -20,83 +82,132 @@
 }
 else
 {
-    @* Plan M10: live classes appear next to the academic calendar. *@
+    @* Plan M10: live classes open for joining are listed with their Join buttons. *@
     @await Component.InvokeAsync("UpcomingLiveClasses")
-    <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body">
-            <form method="get" asp-action="AcademicCalendar" class="row g-2 align-items-end"
-                  data-cascade-filter data-filter-role="@(User.IsInRole("SuperAdmin") ? "SuperAdmin" : User.IsInRole("Admin") ? "Admin" : User.IsInRole("Faculty") ? "Faculty" : "Student")">
-                <div class="col-md-4">
-                    <label class="form-label">@T["Filter by Semester"]</label>
-                    <select aria-label="@T["Filter by Semester"]" name="semesterId" class="form-select" onchange="this.form.submit()">
-                        <option value="">@T["All Semesters"]</option>
-                        @foreach (var s in Model.Semesters)
-                        {
-                            <option value="@s.Id" selected="@(Model.SelectedSemesterId == s.Id ? "selected" : null)">@s.Name</option>
-                        }
-                    </select>
-                </div>
-                @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
-                {
-                    <div class="col-auto">
-                        <a asp-action="AcademicDeadlines" asp-route-semesterId="@Model.SelectedSemesterId"
-                           class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-cog"></i> @T["Manage Deadlines"]
-                        </a>
-                    </div>
-                }
-            </form>
-        </div>
-    </div>
 
-    <div class="card border-0 shadow-sm">
+    <section class="card border-0 shadow-sm mb-3" data-calendar aria-labelledby="calendar-title">
         <div class="card-body">
-            <h2 class="h5 mb-3">
-                @T["Deadlines &amp; Key Dates"]
-                <span class="badge bg-secondary ms-1">@Model.Deadlines.Count</span>
-            </h2>
-            @if (Model.Deadlines.Count == 0)
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                <nav class="btn-group" aria-label="@T["Change month"]">
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="AcademicCalendar" asp-route-month="@previous" aria-label="@T["Previous month"]" data-calendar-previous><span aria-hidden="true">&lsaquo;</span></a>
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="AcademicCalendar" asp-route-month="@thisMonth">@T["This month"]</a>
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="AcademicCalendar" asp-route-month="@next" aria-label="@T["Next month"]" data-calendar-next><span aria-hidden="true">&rsaquo;</span></a>
+                </nav>
+                <h2 class="h5 mb-0 me-auto" id="calendar-title" data-calendar-title>@Model.Month.ToString("MMMM yyyy", CultureInfo.CurrentCulture)</h2>
+                <div class="btn-group" role="group" aria-label="@T["View"]" data-calendar-views hidden>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-calendar-view="month" aria-pressed="true">@T["Month"]</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-calendar-view="list" aria-pressed="false">@T["List"]</button>
+                </div>
+                @if (Model.CanManageKeyDates)
+                {
+                    <a asp-action="AcademicDeadlines" class="btn btn-sm btn-outline-primary">@T["Manage key dates"]</a>
+                }
+            </div>
+
+            <fieldset class="d-flex flex-wrap gap-3 small mb-3" data-calendar-filters hidden>
+                <legend class="visually-hidden">@T["Show"]</legend>
+                @foreach (var k in kinds)
+                {
+                    <label class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" checked data-calendar-kind="@k.Kind" />
+                        <span class="calendar-swatch @KindClass(k.Kind)" aria-hidden="true"></span> @k.Label
+                    </label>
+                }
+            </fieldset>
+
+            <div data-calendar-month class="calendar-month-wrap" hidden></div>
+
+            <div data-calendar-list>
+                @if (inMonth.Count == 0)
+                {
+                    <p class="text-muted mb-0" data-calendar-empty>@T["Nothing in the calendar this month."]</p>
+                }
+                else
+                {
+                    @foreach (var day in inMonth.GroupBy(e => e.StartsAt.Date).OrderBy(g => g.Key))
+                    {
+                        <h3 class="h6 mt-3 mb-2">@day.Key.ToString("dddd d MMMM", CultureInfo.CurrentCulture)</h3>
+                        <ul class="list-unstyled calendar-agenda mb-0">
+                            @foreach (var e in day)
+                            {
+                                var status = StatusLabel(e);
+                                <li class="calendar-item @KindClass(e.Kind)" data-calendar-entry="@e.Kind">
+                                    <span class="calendar-time">@(e.AllDay ? T.Text("All day") : $"{e.StartsAt:HH:mm} UTC")</span>
+                                    <span class="calendar-what">
+                                        <span class="text-muted">@Prefix(e):</span>
+                                        @if (e.Url is not null) { <a href="@e.Url">@e.Title</a> } else { @e.Title }
+                                        @if (!string.IsNullOrWhiteSpace(e.CourseCode)) { <span class="text-muted small">· @e.CourseCode</span> }
+                                        @if (status is not null) { <span class="badge @StatusBadge(e.Status) ms-1">@status</span> }
+                                    </span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                }
+            </div>
+            <script type="application/json" id="calendar-data">@Html.Raw(data)</script>
+        </div>
+    </section>
+
+    <section class="card border-0 shadow-sm" aria-labelledby="calendar-feed-title" data-calendar-feed-card>
+        <div class="card-body">
+            <h2 class="h5" id="calendar-feed-title">@T["Add to your own calendar"]</h2>
+            <p class="text-muted small">@T["Your homework, quizzes, live classes and key dates appear in Google Calendar, Outlook or your phone's calendar and stay up to date there. The link is private: anyone who has it can see your calendar."]</p>
+            @if (Model.FeedUrl is null)
             {
-                <p class="text-muted">@T["No deadlines found for the selected filter."]</p>
+                <form method="post" asp-action="ResetCalendarFeed">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="month" value="@month" />
+                    <button class="btn btn-primary btn-sm">@T["Create my calendar link"]</button>
+                </form>
             }
             else
             {
-                <div class="table-responsive">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>@T["Semester"]</th>
-                                <th>@T["Title"]</th>
-                                <th>@T["Date"]</th>
-                                <th>@T["Days Remaining"]</th>
-                                <th>@T["Description"]</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var d in Model.Deadlines)
-                            {
-                                var badgeClass = d.DaysUntilDeadline <= 0 ? "bg-secondary"
-                                              : d.DaysUntilDeadline <= 3 ? "bg-danger"
-                                              : d.DaysUntilDeadline <= 7 ? "bg-warning text-dark"
-                                              : "bg-success";
-                                <tr>
-                                    <td>@d.SemesterName</td>
-                                    <td><strong>@d.Title</strong></td>
-                                    <td>@d.DeadlineDate.ToString("dd MMM yyyy")</td>
-                                    <td>
-                                        <span class="badge @badgeClass">
-                                            @(d.DaysUntilDeadline <= 0 ? T.Text("Passed")
-                                              : d.DaysUntilDeadline == 1 ? T.Text("Tomorrow")
-                                              : $"{d.DaysUntilDeadline} days")
-                                        </span>
-                                    </td>
-                                    <td class="text-muted small">@d.Description</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                <label class="form-label small" for="calendar-feed-url">@T["Your calendar link"]</label>
+                <div class="input-group input-group-sm mb-2">
+                    <input id="calendar-feed-url" class="form-control font-monospace" readonly value="@Model.FeedUrl" data-calendar-feed-url />
+                    <button type="button" class="btn btn-outline-secondary" data-calendar-copy>@T["Copy"]</button>
+                </div>
+                <p class="small text-success mb-2" data-calendar-copied hidden role="status">@T["Copied."]</p>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <a class="btn btn-sm btn-outline-primary" href="@Model.GoogleUrl" target="_blank" rel="noopener noreferrer">@T["Add to Google Calendar"]</a>
+                    <a class="btn btn-sm btn-outline-primary" href="@Model.OutlookUrl" target="_blank" rel="noopener noreferrer">@T["Add to Outlook"]</a>
+                    <a class="btn btn-sm btn-outline-primary" href="@Model.WebcalUrl">@T["Open in my calendar app"]</a>
+                </div>
+                <details class="small mb-3">
+                    <summary>@T["Add it by hand"]</summary>
+                    <ul class="mt-2 mb-0">
+                        <li><strong>Google Calendar</strong>: @T["Other calendars, +, From URL, then paste the link."]</li>
+                        <li><strong>Outlook</strong>: @T["Add calendar, Subscribe from web, then paste the link."]</li>
+                        <li><strong>iPhone</strong>: @T["Settings, Calendar, Accounts, Add Account, Other, Add Subscribed Calendar, then paste the link."]</li>
+                        <li><strong>Android</strong>: @T["Add it to Google Calendar on a computer; it then appears in the phone's calendar."]</li>
+                    </ul>
+                </details>
+                <p class="small text-muted mb-2">
+                    @T["Calendar apps check the link every few hours; Google Calendar can take up to a day to show changes."]
+                    @if (Model.FeedLastUsedAt is { } used)
+                    {
+                        <span>@T.Format("Last read by a calendar app: {0}.", $"{used.ToUniversalTime():dd MMM yyyy HH:mm} UTC")</span>
+                    }
+                </p>
+                <div class="d-flex flex-wrap gap-2">
+                    <form method="post" asp-action="ResetCalendarFeed" onsubmit="return confirm('@T.Js("Make a new link? The current link stops working, and calendars subscribed to it stop updating.")')">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="month" value="@month" />
+                        <input type="hidden" name="replace" value="true" />
+                        <button class="btn btn-sm btn-outline-secondary">@T["Make a new link"]</button>
+                    </form>
+                    <form method="post" asp-action="RemoveCalendarFeed" onsubmit="return confirm('@T.Js("Turn the link off? Calendars subscribed to it stop updating.")')">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="month" value="@month" />
+                        <button class="btn btn-sm btn-outline-danger">@T["Turn the link off"]</button>
+                    </form>
                 </div>
             }
         </div>
-    </div>
+    </section>
+}
+
+@section Scripts {
+    <script src="~/js/calendar.js" asp-append-version="true" defer></script>
 }
