@@ -1,0 +1,4 @@
+Username,Email,FullName,Role,DepartmentId,InstitutionType,MobileNumber,CampusAssignments
+admin1,admin1@tabsan.local,Admin One,Admin,,University,+61412345678,
+faculty1,faculty1@tabsan.local,Faculty One,Faculty,{valid-department-guid},University,+61412345679,{campus-guid-1}
+student1,student1@tabsan.local,Student One,Student,{valid-department-guid},School,+61412345680,{campus-guid-1}|{campus-guid-2}
