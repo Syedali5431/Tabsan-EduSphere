@@ -48,6 +48,18 @@ public sealed class SignInPage : ContentPage
 		confirmPassword.SetBinding(Entry.TextProperty, nameof(SignInViewModel.ConfirmPassword));
 		var confirmField = Ui.Field(confirmPassword);
 		confirmField.SetBinding(IsVisibleProperty, nameof(SignInViewModel.NeedsNewPassword));
+		// Demo installations only: after the shared demo username, choose the role to open (school admin, teacher, student, parent).
+		var demoRole = new Picker { Title = Ui.T("SignInAs"), AutomationId = "demorole" };
+		void ShowDemoRoles()
+		{
+			demoRole.ItemsSource = vm.DemoRoles.Select(r => $"{Ui.T("SignInAs")}: {Ui.RoleName(r)}").ToList();
+			demoRole.SelectedIndex = vm.DemoRoles.Count == 0 ? -1 : Math.Clamp(vm.DemoRoleIndex, 0, vm.DemoRoles.Count - 1);
+		}
+		demoRole.SelectedIndexChanged += (_, _) => { if (demoRole.SelectedIndex >= 0) vm.DemoRoleIndex = demoRole.SelectedIndex; };
+		var demoField = Ui.Field(demoRole);
+		demoField.SetBinding(IsVisibleProperty, nameof(SignInViewModel.IsDemo));
+		vm.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(SignInViewModel.DemoRoles)) ShowDemoRoles(); };
+		ShowDemoRoles();
 		var signIn = Ui.Primary(Ui.T("SignIn"));
 		signIn.AutomationId = "signin";
 		signIn.Margin = new Thickness(0, 6, 0, 0);
@@ -88,7 +100,7 @@ public sealed class SignInPage : ContentPage
 			Children =
 			{
 				Ui.Title(Ui.T("SignInTitle"), 20), Ui.Small(Ui.T("SignInHint")), Ui.Busy(), Ui.Status(vm), Ui.Notice(),
-				Ui.Field(username), Ui.Field(password), mfaField, newPasswordField, confirmField, signIn, or, providers, update, server
+				Ui.Field(username), Ui.Field(password), demoField, mfaField, newPasswordField, confirmField, signIn, or, providers, update, server
 			}
 		}, padding: 20);
 		form.Margin = new Thickness(18, -48, 18, 0);

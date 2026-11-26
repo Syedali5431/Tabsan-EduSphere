@@ -16,6 +16,11 @@ the phone, light, dark), change password (current, then the new one twice), vers
 Sign-in: username + password (+ authenticator code when 2FA is on), or the institution's single sign-on in the system
 browser. The app is in English (the core keeps Urdu/Arabic texts, but the app no longer offers a language choice).
 
+Demo servers only: when the API's `DemoLogin` settings are on, `api/v1/mobile/config` lists a demo username and its roles, and
+typing that username (`demo`) shows **Sign in as** (SuperAdmin, Admin, Teacher, Student, Parent). The API checks the demo
+password and opens the chosen role's account, so one login shows every role. Off by default; the same APK works on every
+server. Accounts and settings: `Scripts/School-Demo-Data/README.md` (*Demo sign-in*).
+
 ## One app for every institute
 
 The standard build has no server built in. On first start it asks for the **institute's server address**, checks it

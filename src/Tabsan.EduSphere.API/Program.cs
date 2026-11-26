@@ -263,6 +263,9 @@ builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, opts) =>
 // Binds JwtSettings section from appsettings.json so options are strongly-typed.
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<AuthSecurityOptions>(builder.Configuration.GetSection(AuthSecurityOptions.SectionName));
+// Demo installations only: one shared sign-in that opens the chosen role's account (off unless DemoLogin:Enabled).
+builder.Services.Configure<Tabsan.EduSphere.Application.Auth.DemoLoginOptions>(
+    builder.Configuration.GetSection(Tabsan.EduSphere.Application.Auth.DemoLoginOptions.SectionName));
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()!;
 var authSecuritySettings = builder.Configuration.GetSection(AuthSecurityOptions.SectionName).Get<AuthSecurityOptions>() ?? new AuthSecurityOptions();
 

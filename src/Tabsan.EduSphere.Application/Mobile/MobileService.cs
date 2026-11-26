@@ -33,11 +33,13 @@ public sealed partial class MobileService : IMobileService
     private readonly INativePushSender _push;
     private readonly MobileOptions _options;
     private readonly ILogger<MobileService>? _logger;
+    private readonly Auth.DemoLoginOptions _demo;
 
     public MobileService(IMobileRepository repo, IDistributedCache cache, IAuthService auth, IPortalBrandingService branding,
         IPortalLanguageService languages, INativePushSender push, IOptions<MobileOptions> options,
-        ISsoSignInService? sso = null, ILogger<MobileService>? logger = null)
+        ISsoSignInService? sso = null, ILogger<MobileService>? logger = null, IOptions<Auth.DemoLoginOptions>? demoLogin = null)
     {
+        _demo = demoLogin?.Value ?? new Auth.DemoLoginOptions();
         _repo = repo;
         _cache = cache;
         _auth = auth;
@@ -67,7 +69,9 @@ public sealed partial class MobileService : IMobileService
             _options.PortalBaseUrl?.TrimEnd('/'), _options.AppRedirectUri,
             defaultLanguage,
             PortalLanguages.All.Select(l => new MobileLanguage(l, PortalLanguages.EnglishName(l), PortalLanguages.NativeName(l), PortalLanguages.IsRtl(l))).ToList(),
-            providers, _options.Fcm.Enabled && _push.IsConfigured);
+            providers, _options.Fcm.Enabled && _push.IsConfigured,
+            DemoUsername: _demo.Enabled && _demo.Accounts.Count > 0 ? _demo.Username : null,
+            DemoRoles: _demo.Enabled && _demo.Accounts.Count > 0 ? _demo.Accounts.Select(a => a.Role).ToList() : null);
     }
 
     public bool IsSupportedVersion(string? appVersion)

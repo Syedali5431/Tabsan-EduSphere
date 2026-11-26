@@ -17,7 +17,11 @@ public sealed record LoginRequest(
     string? MfaCode = null,
 
     [property: StringLength(512)]
-    string? DeviceInfo = null);
+    string? DeviceInfo = null,
+
+    // Demo installations only (DemoLogin:Enabled): the role whose account the shared demo sign-in opens.
+    [property: StringLength(32)]
+    string? DemoRole = null);
 
 /// <summary>
 /// Returned on a successful login.

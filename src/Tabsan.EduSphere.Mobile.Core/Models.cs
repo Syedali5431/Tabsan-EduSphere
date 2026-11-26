@@ -57,6 +57,10 @@ public sealed class MobileConfig
     public List<MobileLanguage> Languages { get; set; } = [];
     public List<SsoProvider> SsoProviders { get; set; } = [];
     public bool PushEnabled { get; set; }
+    /// <summary>Demo installations only: the shared demo username; typing it lets people choose the role to open.</summary>
+    public string? DemoUsername { get; set; }
+    /// <summary>Demo installations only: the roles the demo sign-in can open, in order (Admin, Faculty, Student, Parent).</summary>
+    public List<string>? DemoRoles { get; set; }
 }
 
 public sealed class ClassSlot

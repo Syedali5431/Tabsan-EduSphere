@@ -421,6 +421,40 @@ public class MobileAppTests
         Assert.DoesNotContain(api2.Calls, c => c.Key.Contains("login"));
     }
 
+    [Fact]
+    public async Task SignInViewModel_DemoUsername_ChoosesTheRole_OthersSendNone()
+    {
+        var (client, api, _) = Client();
+        api.On("GET /api/v1/mobile/config", HttpStatusCode.OK, """{"institutionName":"Demo","demoUsername":"demo","demoRoles":["Admin","Faculty","Student","Parent"]}""")
+           .On("POST /api/v1/auth/login", HttpStatusCode.OK, Login(role: "Faculty"));
+        var vm = new SignInViewModel(client, new NoBrowser(), Settings) { Username = "ann", Password = "pw" };
+        await vm.LoadAsync();
+        Assert.False(vm.IsDemo);
+        Assert.Null(vm.DemoRole);
+        await vm.SignInAsync();
+        Assert.Null(JsonDocument.Parse(api.Calls.Last().Body!).RootElement.GetProperty("demoRole").GetString());
+
+        var changes = new List<string?>();
+        vm.PropertyChanged += (_, e) => changes.Add(e.PropertyName);
+        vm.Username = " Demo ";
+        Assert.Contains(nameof(SignInViewModel.IsDemo), changes);
+        Assert.True(vm.IsDemo);
+        Assert.Equal(["Admin", "Faculty", "Student", "Parent"], vm.DemoRoles);
+        Assert.Equal("Admin", vm.DemoRole); // the first role until another is chosen
+        vm.DemoRoleIndex = 1;
+        vm.Password = "pw";
+        await vm.SignInAsync();
+        Assert.Equal("Faculty", JsonDocument.Parse(api.Calls.Last().Body!).RootElement.GetProperty("demoRole").GetString());
+
+        // A server without demo sign-in: nothing to choose, even for the username "demo".
+        var (plain, api2, _) = Client();
+        api2.On("GET /api/v1/mobile/config", HttpStatusCode.OK, """{"institutionName":"School"}""");
+        var normal = new SignInViewModel(plain, new NoBrowser(), Settings) { Username = "demo", Password = "pw" };
+        await normal.LoadAsync();
+        Assert.False(normal.IsDemo);
+        Assert.Empty(normal.DemoRoles);
+    }
+
     private sealed class NoBrowser : IBrowserAuthenticator
     {
         public Task<Uri?> AuthenticateAsync(Uri start, Uri callback) => Task.FromResult<Uri?>(null);

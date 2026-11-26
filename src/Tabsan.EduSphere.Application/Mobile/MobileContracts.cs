@@ -54,7 +54,9 @@ public sealed record MobileConfigResponse(
     string MinimumVersion, string LatestVersion, string? AndroidStoreUrl, string? IosStoreUrl,
     string? PortalBaseUrl, string AppRedirectUri,
     string DefaultLanguage, IReadOnlyList<MobileLanguage> Languages,
-    IReadOnlyList<MobileSsoProvider> SsoProviders, bool PushEnabled);
+    IReadOnlyList<MobileSsoProvider> SsoProviders, bool PushEnabled,
+    // Demo installations only (DemoLogin:Enabled): the shared demo username and the roles it can open, in order.
+    string? DemoUsername = null, IReadOnlyList<string>? DemoRoles = null);
 
 public sealed record MobileClass(int DayOfWeek, string Day, string Start, string End, string Subject, string? CourseCode, string? Room,
     string? Building, string? Teacher, Guid? CourseId, Guid? OfferingId);

@@ -181,10 +181,20 @@ public sealed class EduSphereClient
     public Task<MobileConfig?> GetConfigAsync(string? tenant = null, CancellationToken ct = default)
         => SendAsync<MobileConfig>(HttpMethod.Get, "api/v1/mobile/config" + (string.IsNullOrWhiteSpace(tenant) ? "" : "?tenant=" + Uri.EscapeDataString(tenant)), null, anonymous: true, ct);
 
-    /// <summary>Username and password (and the authenticator code when the account has one).</summary>
-    public async Task<SignInResult> SignInAsync(string username, string password, string? mfaCode = null, CancellationToken ct = default)
+    /// <summary>
+    /// Username and password (and the authenticator code when the account has one). <paramref name="demoRole"/>: demo
+    /// installations only, the role whose account the shared demo sign-in opens (<see cref="MobileConfig.DemoRoles"/>).
+    /// </summary>
+    public async Task<SignInResult> SignInAsync(string username, string password, string? mfaCode = null, CancellationToken ct = default,
+        string? demoRole = null)
     {
-        using var request = Request(HttpMethod.Post, "api/v1/auth/login", new { username, password, mfaCode = string.IsNullOrWhiteSpace(mfaCode) ? null : mfaCode.Trim() }, anonymous: true);
+        using var request = Request(HttpMethod.Post, "api/v1/auth/login", new
+        {
+            username,
+            password,
+            mfaCode = string.IsNullOrWhiteSpace(mfaCode) ? null : mfaCode.Trim(),
+            demoRole = string.IsNullOrWhiteSpace(demoRole) ? null : demoRole
+        }, anonymous: true);
         using var response = await TransportAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         if (response.IsSuccessStatusCode)

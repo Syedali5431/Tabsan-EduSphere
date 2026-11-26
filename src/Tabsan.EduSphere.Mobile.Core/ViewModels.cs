@@ -45,6 +45,7 @@ public sealed class SignInViewModel : PageViewModel
     private string _confirmPassword = "";
     private MobileConfig? _config;
     private VersionPolicy.State _version;
+    private int _demoRoleIndex;
 
     public SignInViewModel(EduSphereClient client, IBrowserAuthenticator browser, AppSettings settings)
     {
@@ -56,15 +57,34 @@ public sealed class SignInViewModel : PageViewModel
         LoadCommand = new AsyncCommand(LoadAsync);
     }
 
-    public string Username { get => _username; set => Set(ref _username, value); }
+    public string Username { get => _username; set { if (Set(ref _username, value)) OnPropertyChanged(nameof(IsDemo)); } }
     public string Password { get => _password; set => Set(ref _password, value); }
+
+    /// <summary>Demo installations only: the roles the shared demo sign-in can open (empty elsewhere).</summary>
+    public IReadOnlyList<string> DemoRoles => Config?.DemoRoles ?? [];
+    /// <summary>Demo installations only: the shared demo username was typed, so the role to open is chosen before signing in.</summary>
+    public bool IsDemo => DemoRoles.Count > 0 && !string.IsNullOrWhiteSpace(Config?.DemoUsername)
+        && string.Equals(Username.Trim(), Config!.DemoUsername!.Trim(), StringComparison.OrdinalIgnoreCase);
+    /// <summary>The chosen role (index into <see cref="DemoRoles"/>); the first by default.</summary>
+    public int DemoRoleIndex { get => _demoRoleIndex; set => Set(ref _demoRoleIndex, value); }
+    /// <summary>The role sent with the sign-in: only for the demo username, otherwise null.</summary>
+    public string? DemoRole => IsDemo ? DemoRoles[Math.Clamp(DemoRoleIndex, 0, DemoRoles.Count - 1)] : null;
     public string MfaCode { get => _mfaCode; set => Set(ref _mfaCode, value); }
     public bool NeedsMfa { get => _needsMfa; private set => Set(ref _needsMfa, value); }
     /// <summary>The account still has its temporary password (imported accounts): a new one is chosen before the app opens.</summary>
     public bool NeedsNewPassword { get => _needsNewPassword; private set => Set(ref _needsNewPassword, value); }
     public string NewPassword { get => _newPassword; set => Set(ref _newPassword, value); }
     public string ConfirmPassword { get => _confirmPassword; set => Set(ref _confirmPassword, value); }
-    public MobileConfig? Config { get => _config; private set => Set(ref _config, value); }
+    public MobileConfig? Config
+    {
+        get => _config;
+        private set
+        {
+            if (!Set(ref _config, value)) return;
+            OnPropertyChanged(nameof(DemoRoles));
+            OnPropertyChanged(nameof(IsDemo));
+        }
+    }
     public VersionPolicy.State VersionState { get => _version; private set => Set(ref _version, value); }
     public ObservableCollection<SsoProvider> Providers { get; } = [];
     /// <summary>The institute's server, as shown under the form (with "Change server" unless the build is locked to it).</summary>
@@ -93,7 +113,7 @@ public sealed class SignInViewModel : PageViewModel
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password)) { Error = AppText.Get("WrongCredentials"); return; }
         if (NeedsNewPassword) { await ChangePasswordAsync(); return; }
         SignInResult? result = null;
-        await RunAsync(async () => result = await _client.SignInAsync(Username.Trim(), Password, NeedsMfa ? MfaCode : null));
+        await RunAsync(async () => result = await _client.SignInAsync(Username.Trim(), Password, NeedsMfa ? MfaCode : null, demoRole: DemoRole));
         if (result is null) return;
         Handle(result);
     }

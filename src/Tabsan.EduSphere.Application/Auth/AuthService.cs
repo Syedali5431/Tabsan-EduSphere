@@ -31,6 +31,8 @@ public class AuthService : IAuthService
     private readonly ILoginActivityRepository _loginActivity;
     // Plan M1.4 - optional so existing constructions (tests, tools) keep working without SSO.
     private readonly ISsoLoginPolicy? _ssoPolicy;
+    // Demo installations only: the shared demo sign-in (off unless DemoLogin:Enabled).
+    private readonly DemoLoginOptions _demo;
 
     public AuthService(
         IUserRepository userRepo,
@@ -44,7 +46,8 @@ public class AuthService : IAuthService
         ITwoFactorStateStore twoFactorState,
         IOptions<AuthSecurityOptions> security,
         ILoginActivityRepository? loginActivity = null,
-        ISsoLoginPolicy? ssoPolicy = null)
+        ISsoLoginPolicy? ssoPolicy = null,
+        IOptions<DemoLoginOptions>? demoLogin = null)
     {
         _userRepo        = userRepo;
         _sessionRepo     = sessionRepo;
@@ -58,6 +61,7 @@ public class AuthService : IAuthService
         _security        = security.Value;
         _loginActivity   = loginActivity!;
         _ssoPolicy       = ssoPolicy;
+        _demo            = demoLogin?.Value ?? new DemoLoginOptions();
     }
 
     public Task<AuthSecurityProfileResponse> GetSecurityProfileAsync(CancellationToken ct = default)
@@ -150,8 +154,50 @@ public class AuthService : IAuthService
             return LoginResult.Fail(LoginFailureReason.SsoRequired);
         }
 
+        // Demo installations: the demo password is verified above; the session opens the chosen role's account.
+        if (_demo.IsDemoUsername(user.Username))
+            return await CompleteDemoLoginAsync(user, request, ipAddress, ct);
+
         return await CompleteLoginAsync(user, request.Username, request.MfaCode, mfaSatisfiedExternally: false,
             ipAddress, request.DeviceInfo, loginMethod: null, ct);
+    }
+
+    /// <summary>
+    /// The shared demo sign-in (<see cref="DemoLoginOptions"/>): after the demo account's own password was verified, opens the
+    /// account configured for <see cref="LoginRequest.DemoRole"/> (the first role when none is given). The session, tokens and
+    /// every page then belong to that account. Its MFA and password ageing are not applied (method "demo"); both accounts are
+    /// audited. Fails like wrong credentials when the role is unknown or its account is missing, inactive or locked.
+    /// </summary>
+    private async Task<LoginResult> CompleteDemoLoginAsync(User demoUser, LoginRequest request, string? ipAddress, CancellationToken ct)
+    {
+        var choice = _demo.Resolve(request.DemoRole);
+        var target = choice is null ? null : await _userRepo.GetByUsernameAsync(choice.Username, ct);
+        if (choice is null || target is null || !target.IsActive || target.IsCurrentlyLockedOut())
+        {
+            await _audit.LogAsync(new AuditLog(
+                "LoginFailed",
+                "User",
+                entityId: demoUser.Id.ToString(),
+                actorUserId: demoUser.Id,
+                newValuesJson: JsonSerializer.Serialize(new { reason = "demo_role_unavailable", role = request.DemoRole, account = choice?.Username }),
+                ipAddress: ipAddress), ct);
+            await RecordLoginActivityAsync(demoUser.Id, request.Username, ipAddress, null, request.DeviceInfo,
+                false, nameof(LoginFailureReason.InvalidCredentials), null, false, ct, authMethod: "demo");
+            return LoginResult.Fail(LoginFailureReason.InvalidCredentials);
+        }
+
+        demoUser.RecordLogin(); // the demo password was right: clear its failed attempts
+        _userRepo.Update(demoUser);
+        await _audit.LogAsync(new AuditLog(
+            "DemoLogin",
+            "User",
+            entityId: target.Id.ToString(),
+            actorUserId: demoUser.Id,
+            newValuesJson: JsonSerializer.Serialize(new { role = choice.Role, account = target.Username }),
+            ipAddress: ipAddress), ct);
+
+        return await CompleteLoginAsync(target, target.Username, mfaCode: null, mfaSatisfiedExternally: true,
+            ipAddress, request.DeviceInfo, loginMethod: "demo", ct);
     }
 
     // ── Plan M1: SSO login ─────────────────────────────────────────────────────

@@ -24,6 +24,7 @@ public static class AppText
         ["Username"] = ("Username", "صارف نام", "اسم المستخدم"),
         ["Password"] = ("Password", "پاس ورڈ", "كلمة المرور"),
         ["AuthenticatorCode"] = ("Authenticator code", "تصدیقی کوڈ", "رمز المصادقة"),
+        ["SignInAs"] = ("Sign in as", "بطور سائن اِن کریں", "تسجيل الدخول بصفة"),
         ["EnterAuthenticatorCode"] = ("Enter the code from your authenticator app.", "اپنی تصدیقی ایپ کا کوڈ درج کریں۔", "أدخل الرمز من تطبيق المصادقة."),
         ["SignInWith"] = ("Sign in with {0}", "{0} کے ساتھ سائن اِن کریں", "تسجيل الدخول باستخدام {0}"),
         ["UseSso"] = ("Your institution uses single sign-on. Use your organization's button below.", "آپ کا ادارہ سنگل سائن آن استعمال کرتا ہے۔ نیچے اپنے ادارے کا بٹن استعمال کریں۔", "تستخدم مؤسستك تسجيل الدخول الموحد. استخدم زر مؤسستك أدناه."),
