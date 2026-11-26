@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Wait for SQL Server readiness
         run: |
@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload database validation report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ci-postdeployment-checks
           path: ci-postdeployment-checks.txt
@@ -133,7 +133,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Wait for SQL Server readiness
         run: |
@@ -149,7 +149,7 @@ jobs:
           exit 1
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
 
@@ -184,14 +184,14 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-trx
           path: TestResults
 
       - name: Upload module health summary
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-module-health-summary
           path: |
@@ -207,7 +207,7 @@ jobs:
 
       - name: Upload vulnerability report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vulnerability-report
           path: vuln-report.txt
@@ -215,15 +215,44 @@ jobs:
   load-test:
     runs-on: ubuntu-latest
     needs: build-test
-    # Only run load tests on pushes to main (not every PR to save minutes)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # TEMPORARY: also on pull requests while this job is repaired; then pushes to main only (not every PR, to save minutes).
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: EduSphere!CiSql2026
+        ports:
+          - 1433:1433
+
+    env:
+      MSSQL_SA_PASSWORD: EduSphere!CiSql2026
+      # The API's first choice of database. Without it the API sees CI and uses the "CI/CD" profile in environments.json,
+      # whose sa password is not this runner's.
+      EDUSPHERE_DB_CONNECTION: "Server=localhost,1433;Database=TabsanEduSphere_LoadTest;User Id=sa;Password=EduSphere!CiSql2026;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=true"
+      TABSAN_SUPER_USERNAME: superadmin
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+
+      - name: Wait for SQL Server readiness
+        run: |
+          for i in {1..60}; do
+            if docker exec "${{ job.services.mssql.id }}" /opt/mssql-tools18/bin/sqlcmd \
+              -S localhost -U sa -P "$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" >/dev/null 2>&1; then
+              echo "SQL Server is ready."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "SQL Server did not become ready in time."
+          exit 1
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
 
@@ -234,13 +263,21 @@ jobs:
 
       - name: Start API (background)
         run: |
-          dotnet run --project src/Tabsan.EduSphere.API --configuration Release \
-            --urls "http://localhost:5000" &
+          # The database is empty, so start-up creates it and a SuperAdmin; this run's throwaway password is made here
+          # and kept out of the log. k6 signs in with it.
+          SUPER_PASSWORD="Ci-$(openssl rand -hex 16)-Aa1!"
+          echo "::add-mask::$SUPER_PASSWORD"
+          echo "TABSAN_SUPER_PASSWORD=$SUPER_PASSWORD" >> "$GITHUB_ENV"
+          TABSAN_SUPER_PASSWORD="$SUPER_PASSWORD" nohup dotnet run --project src/Tabsan.EduSphere.API --configuration Release --no-build \
+            --urls "http://localhost:5000" > api.log 2>&1 &
           echo "Waiting for API to be ready..."
-          timeout 60 bash -c 'until curl -sf http://localhost:5000/health; do sleep 2; done'
+          if ! timeout 180 bash -c 'until curl -sf http://localhost:5000/health > /dev/null; do sleep 3; done'; then
+            echo "API did not become healthy; last lines of its log:"
+            tail -n 80 api.log
+            exit 1
+          fi
         env:
           ASPNETCORE_ENVIRONMENT: Development
-          ConnectionStrings__DefaultConnection: "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=TabsanEduSphere_CI;Integrated Security=True;"
 
       - name: Install k6
         run: |
@@ -251,29 +288,35 @@ jobs:
 
       - name: Run load test (smoke only in CI)
         run: |
+          # The sign-in suite, scaled down to a one-minute smoke run.
           k6 run --env BASE_URL=http://localhost:5000 \
-            --env K6_SCENARIO=smoke \
+            --env TEST_USERNAME="$TABSAN_SUPER_USERNAME" --env TEST_PASSWORD="$TABSAN_SUPER_PASSWORD" \
+            --env PHASE10_GATE=ci-smoke --env PHASE10_TARGET_USERS=10 --env PHASE10_TARGET_RPS=5 \
+            --env PHASE10_RAMP_UP=15s --env PHASE10_HOLD=30s --env PHASE10_RAMP_DOWN=15s \
             --out json=load-test-results.json \
-            tests/load/k6-baseline.js || echo "::warning::Load test thresholds not met — review load-test-results.json"
+            tests/load/k6-auth-current.js || echo "::warning::Load test thresholds not met — review load-test-results.json"
 
       - name: Upload load test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: load-test-results
-          path: load-test-results.json
+          path: |
+            load-test-results.json
+            api.log
 
   lighthouse:
     runs-on: ubuntu-latest
     needs: build-test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # TEMPORARY: also on pull requests while this job is repaired; then pushes to main only.
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 8.0.x
 
@@ -284,15 +327,19 @@ jobs:
 
       - name: Start Web (background)
         run: |
-          dotnet run --project src/Tabsan.EduSphere.Web --configuration Release \
-            --urls "http://localhost:5001" &
+          nohup dotnet run --project src/Tabsan.EduSphere.Web --configuration Release --no-build \
+            --urls "http://localhost:5001" > web.log 2>&1 &
           echo "Waiting for Web to be ready..."
-          timeout 60 bash -c 'until curl -sf http://localhost:5001/; do sleep 2; done'
+          if ! timeout 120 bash -c 'until curl -sf http://localhost:5001/ > /dev/null; do sleep 3; done'; then
+            echo "Web did not start; last lines of its log:"
+            tail -n 80 web.log
+            exit 1
+          fi
         env:
           ASPNETCORE_ENVIRONMENT: Development
 
       - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@v11
+        uses: treosh/lighthouse-ci-action@12.6.2
         with:
           configPath: .lighthouserc.yml
           uploadArtifacts: true
