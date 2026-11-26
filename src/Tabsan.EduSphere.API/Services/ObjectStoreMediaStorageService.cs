@@ -31,7 +31,7 @@ public sealed class ObjectStoreMediaStorageService : IMediaStorageService
         var segment = category.Trim().Replace('\\', '/').Trim('/') is { Length: > 0 } s ? s : "misc";
         var key = $"{prefix}{segment}/{DateTime.UtcNow:yyyy/MM}/{Guid.NewGuid():N}{extension}";
         var type = string.IsNullOrWhiteSpace(contentType) ? "application/octet-stream" : contentType.Trim();
-        var fileName = string.IsNullOrWhiteSpace(downloadFileName) ? null : Path.GetFileName(downloadFileName.Trim());
+        var fileName = string.IsNullOrWhiteSpace(downloadFileName) ? null : Tabsan.EduSphere.Domain.Common.UploadFileName.Of(downloadFileName.Trim());
 
         // Hash while copying to a temporary buffer (object stores want the length up front; the hash goes into metadata).
         await using var buffer = new FileStream(Path.Combine(Path.GetTempPath(), $"edusphere-upload-{Guid.NewGuid():N}"), FileMode.CreateNew,

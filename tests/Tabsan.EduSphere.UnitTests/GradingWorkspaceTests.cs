@@ -184,6 +184,15 @@ public class GradingWorkspaceTests
         Assert.DoesNotContain("<", stored.FileName);
     }
 
+    [Theory]
+    [InlineData(@"C:\Users\ann\Essay final.pdf", "Essay final.pdf")]
+    [InlineData("/home/ann/notes.txt", "notes.txt")]
+    [InlineData(@"..\..\evil.pdf", "evil.pdf")]
+    [InlineData("plain.docx", "plain.docx")]
+    [InlineData(null, "")]
+    public void UploadFileName_KeepsOnlyTheName_WhicheverSlashesTheBrowserSent(string? sent, string expected)
+        => Assert.Equal(expected, Tabsan.EduSphere.Domain.Common.UploadFileName.Of(sent));
+
     // ── Gradebook ───────────────────────────────────────────────────────────
 
     [Fact]

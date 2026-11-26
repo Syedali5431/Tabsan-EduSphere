@@ -186,8 +186,8 @@ public class SubmissionFile : BaseEntity
 
     private static string CleanFileName(string fileName)
     {
-        var name = Path.GetFileName(fileName ?? string.Empty).Trim();
-        foreach (var c in Path.GetInvalidFileNameChars()) name = name.Replace(c, '_');
+        var name = UploadFileName.Of(fileName).Trim();
+        foreach (var c in UploadFileName.InvalidChars) name = name.Replace(c, '_');
         if (string.IsNullOrWhiteSpace(name)) name = "submission";
         return name.Length > 255 ? name[^255..] : name;
     }
@@ -234,7 +234,7 @@ public class SubmissionComment : BaseEntity
     {
         MediaStorageKey = storageKey;
         MediaContentType = contentType;
-        MediaFileName = Path.GetFileName(fileName);
+        MediaFileName = UploadFileName.Of(fileName);
     }
 
     public void Delete()

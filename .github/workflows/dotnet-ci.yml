@@ -127,6 +127,9 @@ jobs:
       MSSQL_SA_PASSWORD: EduSphere!CiSql2026
       EDUSPHERE_TEST_SQL_CONNECTION: "Server=localhost,1433;Database=TabsanEduSphere_IntegrationTests;User Id=sa;Password=EduSphere!CiSql2026;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=true"
       ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=TabsanEduSphere_IntegrationTests;User Id=sa;Password=EduSphere!CiSql2026;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=true"
+      # Each test host watches its settings files; the portal tests start well over 128 hosts, the runner's inotify limit.
+      # Polling watchers use no inotify instances.
+      DOTNET_USE_POLLING_FILE_WATCHER: "true"
 
     steps:
       - name: Checkout
@@ -176,11 +179,8 @@ jobs:
       - name: Generate module health summary
         if: always()
         shell: pwsh
-        run: |
-          ./tools/ci/Generate-TestModuleSummary.ps1 \
-            -ResultsDirectory "TestResults" \
-            -OutputMarkdown "test-module-summary.md" \
-            -OutputJson "test-module-summary.json"
+        # One line: PowerShell does not continue lines with "\" (it passed "\", the root folder, as the results folder).
+        run: ./tools/ci/Generate-TestModuleSummary.ps1 -ResultsDirectory "TestResults" -OutputMarkdown "test-module-summary.md" -OutputJson "test-module-summary.json"
 
       - name: Upload test results
         if: always()
