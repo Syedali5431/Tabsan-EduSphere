@@ -44,7 +44,7 @@ if (-not (Test-Path -Path $ResultsDirectory)) {
     exit 0
 }
 
-$trxFiles = Get-ChildItem -Path $ResultsDirectory -Recurse -Filter *.trx -File
+$trxFiles = @(Get-ChildItem -Path $ResultsDirectory -Recurse -Filter *.trx -File)
 if ($trxFiles.Count -eq 0) {
     "# Test Module Summary`n`nNo TRX files found under '$ResultsDirectory'." | Set-Content -Path $OutputMarkdown -Encoding UTF8
     @{ generatedUtc = (Get-Date).ToUniversalTime().ToString("o"); note = "No TRX files found." } |
@@ -104,10 +104,10 @@ $summary = $rows |
     Group-Object -Property module |
     ForEach-Object {
         $moduleRows = $_.Group
-        $total = $moduleRows.Count
-        $passed = ($moduleRows | Where-Object { $_.outcome -eq "Passed" }).Count
-        $failed = ($moduleRows | Where-Object { $_.outcome -eq "Failed" }).Count
-        $skipped = ($moduleRows | Where-Object { $_.outcome -eq "NotExecuted" -or $_.outcome -eq "Skipped" }).Count
+        $total = @($moduleRows).Count
+        $passed = @($moduleRows | Where-Object { $_.outcome -eq "Passed" }).Count
+        $failed = @($moduleRows | Where-Object { $_.outcome -eq "Failed" }).Count
+        $skipped = @($moduleRows | Where-Object { $_.outcome -eq "NotExecuted" -or $_.outcome -eq "Skipped" }).Count
 
         [pscustomobject]@{
             Module = $_.Name
@@ -122,14 +122,14 @@ $summary = $rows |
 
 $totals = [pscustomobject]@{
     Total = $rows.Count
-    Passed = ($rows | Where-Object { $_.outcome -eq "Passed" }).Count
-    Failed = ($rows | Where-Object { $_.outcome -eq "Failed" }).Count
-    Skipped = ($rows | Where-Object { $_.outcome -eq "NotExecuted" -or $_.outcome -eq "Skipped" }).Count
+    Passed = @($rows | Where-Object { $_.outcome -eq "Passed" }).Count
+    Failed = @($rows | Where-Object { $_.outcome -eq "Failed" }).Count
+    Skipped = @($rows | Where-Object { $_.outcome -eq "NotExecuted" -or $_.outcome -eq "Skipped" }).Count
 }
 
-$failedTests = $rows |
+$failedTests = @($rows |
     Where-Object { $_.outcome -eq "Failed" } |
-    Select-Object -Property module, identity, file
+    Select-Object -Property module, identity, file)
 
 $md = New-Object System.Collections.Generic.List[string]
 $md.Add("# Test Module Summary") | Out-Null
