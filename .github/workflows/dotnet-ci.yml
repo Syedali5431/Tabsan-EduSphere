@@ -215,8 +215,8 @@ jobs:
   load-test:
     runs-on: ubuntu-latest
     needs: build-test
-    # TEMPORARY: also on pull requests while this job is repaired; then pushes to main only (not every PR, to save minutes).
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    # Only on pushes to main (not every PR, to save minutes)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     services:
       mssql:
@@ -336,8 +336,8 @@ jobs:
   lighthouse:
     runs-on: ubuntu-latest
     needs: build-test
-    # TEMPORARY: also on pull requests while this job is repaired; then pushes to main only.
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    # Only on pushes to main (not every PR, to save minutes)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout
