@@ -57,7 +57,7 @@ if ($trxFiles.Count -eq 0) {
 $rows = New-Object System.Collections.Generic.List[object]
 
 foreach ($trx in $trxFiles) {
-    [xml]$xml = Get-Content -Path $trx.FullName
+    [xml]$xml = Get-Content -LiteralPath $trx.FullName
 
     $testIdMap = @{}
     $unitTests = Select-Xml -Xml $xml -XPath "//*[local-name()='UnitTest']"
