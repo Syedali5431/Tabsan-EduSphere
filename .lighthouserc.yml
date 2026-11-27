@@ -6,6 +6,8 @@ ci:
     startServerCommand: ''        # server started separately in CI
     numberOfRuns: 1
     settings:
+      # The page size below is a desktop one; Lighthouse requires the form factor to match the screen emulation.
+      formFactor: desktop
       # Simulate a typical 4G connection (realistic for campus users)
       throttlingMethod: simulate
       screenEmulation:
