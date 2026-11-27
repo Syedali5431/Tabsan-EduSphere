@@ -279,6 +279,26 @@ jobs:
         env:
           ASPNETCORE_ENVIRONMENT: Development
 
+      - name: Check the SuperAdmin can sign in
+        run: |
+          # The smoke run is only meaningful signed in: fail here, with the API's answer and log, if sign-in or a
+          # signed-in call does not work. Tokens are never printed.
+          status=$(curl -s -o login.json -w '%{http_code}' -H 'Content-Type: application/json' \
+            -d "$(jq -n --arg u "$TABSAN_SUPER_USERNAME" --arg p "$TABSAN_SUPER_PASSWORD" '{username: $u, password: $p, deviceInfo: "ci-check"}')" \
+            http://localhost:5000/api/v1/auth/login)
+          echo "Sign-in: HTTP $status"
+          token=$(jq -r '.accessToken // empty' login.json 2>/dev/null)
+          if [ "$status" != "200" ] || [ -z "$token" ]; then
+            jq -c 'del(.accessToken, .refreshToken)' login.json 2>/dev/null || head -c 400 login.json; echo
+            tail -n 80 api.log
+            exit 1
+          fi
+          echo "::add-mask::$token"
+          dashboard=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $token" http://localhost:5000/api/v1/dashboard/composition)
+          echo "Signed-in dashboard: HTTP $dashboard"
+          rm -f login.json
+          if [ "$dashboard" != "200" ]; then tail -n 80 api.log; exit 1; fi
+
       - name: Install k6
         run: |
           curl -fsSL https://dl.k6.io/key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/k6-archive-keyring.gpg
