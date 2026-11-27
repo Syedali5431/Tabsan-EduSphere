@@ -7,27 +7,37 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.102.3" />
-    <PackageReference Include="ITfoxtec.Identity.Saml2" Version="4.21.0" />
+    <PackageReference Include="ITfoxtec.Identity.Saml2" Version="4.21.1" />
     <PackageReference Include="Konscious.Security.Cryptography.Argon2" Version="1.3.1" />
     <PackageReference Include="MailKit" Version="4.16.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.8" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.34">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.34" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.8" />
-    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.22.0" />
-    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.22.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.23.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.23.0" />
     <PackageReference Include="Otp.NET" Version="1.4.1" />
     <PackageReference Include="PDFsharp" Version="6.1.1" />
     <PackageReference Include="QuestPDF" Version="2024.12.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
     <PackageReference Include="Twilio" Version="6.15.0" />
     <!-- Plan M14.2: shared object storage (Azure Blob Storage, Amazon S3 / S3-compatible). -->
     <PackageReference Include="AWSSDK.S3" Version="4.0.104.2" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.30.0" />
+  </ItemGroup>
+
+  <!-- Security pins for transitive packages whose parents have no .NET 8 release that pulls the fix.
+       Remove a pin once its parents ask for the patched version themselves. -->
+  <ItemGroup>
+    <!-- ClosedXML 0.102.x asks for 6.0.0 (CVE-2024-43483, CVE-2024-43484). ClosedXML 0.104+ needs
+         DocumentFormat.OpenXml 3.x, and the API still uses DocumentFormat.OpenXml 2.20.0. -->
+    <PackageReference Include="System.IO.Packaging" Version="8.0.1" />
+    <!-- MimeKit 4.16-4.17 asks for 8.0.1 (CVE-2026-84008, CVE-2026-70162); MimeKit 4.18+ moves to the .NET 10 package. -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.2" />
   </ItemGroup>
 
   <PropertyGroup>
