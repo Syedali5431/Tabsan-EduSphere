@@ -61,7 +61,7 @@ export function setup() {
   const loginRes = http.post(
     `${BASE_URL}${LOGIN_PATH}`,
     JSON.stringify({ username: TEST_USERNAME, password: TEST_PASSWORD, deviceInfo: 'k6-scale-5m' }),
-    { headers: { 'Content-Type': 'application/json' }, tags: { endpoint: 'auth-login-setup' } }
+    { headers: { 'Content-Type': 'application/json' }, tags: { endpoint: 'auth-login-setup' }, responseType: 'text' } // the token is read from this body, which discardResponseBodies would drop
   );
 
   if (loginRes.status !== 200) {
