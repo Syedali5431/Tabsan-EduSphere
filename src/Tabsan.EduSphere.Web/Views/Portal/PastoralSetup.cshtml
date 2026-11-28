@@ -1,0 +1,215 @@
+@model Tabsan.EduSphere.Web.Models.Portal.PastoralSetupPageModel
+@using Tabsan.EduSphere.Domain.Pastoral
+@{
+    ViewData["Title"] = T.Text("Set up pastoral care");
+    var s = Model.Setup;
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
+    return;
+}
+
+<p class="mb-2"><a asp-action="Pastoral">← @T["Pastoral care"]</a></p>
+<h2 class="h3 mb-3">@T["Set up pastoral care"]</h2>
+
+@if (s is null)
+{
+    return;
+}
+
+@if (s.Schools.Count > 0)
+{
+    <form method="get" asp-action="PastoralSetup" class="card border-0 shadow-sm mb-3">
+        <div class="card-body">
+            <label class="form-label small" for="setup-school">@T["School"]</label>
+            <div class="input-group input-group-sm" style="max-width:32rem">
+                <select class="form-select" id="setup-school" name="tenantId">
+                    <option value="">@T["Choose a school"]</option>
+                    @foreach (var school in s.Schools) { <option value="@school.Id" selected="@(school.Id == s.TenantId)">@school.Name</option> }
+                </select>
+                <button type="submit" class="btn btn-outline-secondary">@T["Show"]</button>
+            </div>
+        </div>
+    </form>
+}
+
+@if (s.TenantId is not { } tenant)
+{
+    return;
+}
+
+<section class="card border-0 shadow-sm mb-3" aria-labelledby="setup-team">
+    <div class="card-body">
+        <h3 class="h5" id="setup-team">@T["Wellbeing team"]</h3>
+        <p class="small text-muted">@T["Team members are told about serious concerns, runs of concerns and students who ask to talk, for the campus and year level they look after. Without a team, the school's admins are told."]</p>
+        @if (s.Team.Count == 0)
+        {
+            <p class="text-muted small">@T["Nobody is on the team yet."]</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle text-nowrap" data-team>
+                    <thead>
+                        <tr>
+                            <th scope="col">@T["Name"]</th>
+                            <th scope="col">@T["Role"]</th>
+                            <th scope="col">@T["Looks after"]</th>
+                            <th scope="col">@T["Confidential notes"]</th>
+                            <th scope="col"><span class="visually-hidden">@T["Remove"]</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var m in s.Team)
+                        {
+                            <tr>
+                                <td>@m.Name</td>
+                                <td>@m.Title</td>
+                                <td class="small">@(m.CampusName ?? T.Text("Every campus")) · @(m.SemesterName ?? T.Text("Every year level"))</td>
+                                <td>@(m.SeesConfidential ? T.Text("Sees them") : T.Text("No"))</td>
+                                <td class="text-end">
+                                    <form method="post" asp-action="RemovePastoralTeamMember" asp-route-id="@m.Id">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="tenantId" value="@tenant" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">@T["Remove"]</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        <form method="post" asp-action="AddPastoralTeamMember" class="row g-2 align-items-end border-top pt-3" data-add-team-member>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="tenantId" value="@tenant" />
+            <div class="col-md-3">
+                <label class="form-label small" for="tm-user">@T["Who"]</label>
+                <select class="form-select form-select-sm" id="tm-user" name="userId" required>
+                    <option value="">@T["Choose someone"]</option>
+                    @foreach (var p in s.Staff) { <option value="@p.UserId">@p.Name — @(p.Role == "Teacher" ? T.Text("Teacher") : T.Text(p.Role ?? ""))</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small" for="tm-title">@T["Role"]</label>
+                <input class="form-control form-control-sm" id="tm-title" name="title" required maxlength="@PastoralTeamMember.MaxTitleLength" placeholder="@T["For example: School counsellor"]" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small" for="tm-campus">@T["Campus"]</label>
+                <select class="form-select form-select-sm" id="tm-campus" name="campusId">
+                    <option value="">@T["Every campus"]</option>
+                    @foreach (var c in s.Places.Campuses) { <option value="@c.Id">@c.Name</option> }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small" for="tm-year">@T["Year level"]</label>
+                <select class="form-select form-select-sm" id="tm-year" name="semesterId">
+                    <option value="">@T["Every year level"]</option>
+                    @foreach (var y in s.Places.Semesters) { <option value="@y.Id">@y.Name</option> }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <div class="form-check mb-1">
+                    <input class="form-check-input" type="checkbox" name="seesConfidential" value="true" id="tm-conf" />
+                    <label class="form-check-label small" for="tm-conf">@T["Sees confidential notes"]</label>
+                </div>
+                <button type="submit" class="btn btn-sm btn-primary w-100">@T["Add to the team"]</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card border-0 shadow-sm mb-3" aria-labelledby="setup-settings">
+    <div class="card-body">
+        <h3 class="h5" id="setup-settings">@T["Settings"]</h3>
+        <form method="post" asp-action="SavePastoralSettings" class="row g-3 align-items-end" data-pastoral-settings>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="tenantId" value="@tenant" />
+            <div class="col-12">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="checkInsEnabled" value="true" id="st-checkins" checked="@s.Settings.CheckInsEnabled" aria-describedby="st-checkins-hint" />
+                    <label class="form-check-label" for="st-checkins">@T["Students check in on how they are feeling"]</label>
+                </div>
+                <p class="form-text" id="st-checkins-hint">@T["Students answer from 1 (very low) to 5 (great), can add a note and can ask to talk to someone. Low answers wait on the pastoral page for someone on the team."]</p>
+            </div>
+            <div class="col-md-6">
+                <span class="form-label d-block">@T["Tell the team when a student has"]</span>
+                <div class="input-group input-group-sm" style="max-width:28rem">
+                    <label class="visually-hidden" for="st-count">@T["Number of concerns"]</label>
+                    <input class="form-control" type="number" id="st-count" name="concernAlertCount" min="2" max="20" value="@s.Settings.ConcernAlertCount" required />
+                    <span class="input-group-text">@T["concerns within"]</span>
+                    <label class="visually-hidden" for="st-days">@T["Number of days"]</label>
+                    <input class="form-control" type="number" id="st-days" name="concernAlertDays" min="1" max="90" value="@s.Settings.ConcernAlertDays" required />
+                    <span class="input-group-text">@T["days"]</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <button type="submit" class="btn btn-sm btn-primary">@T["Save the settings"]</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card border-0 shadow-sm mb-3" aria-labelledby="setup-categories">
+    <div class="card-body">
+        <h3 class="h5" id="setup-categories">@T["Categories"]</h3>
+        <p class="small text-muted">@T["The words staff choose from when they write a note. Hide the ones your school does not use."]</p>
+        @foreach (var group in s.Categories.GroupBy(c => c.Kind))
+        {
+            <h4 class="h6 mt-3">@T.Text(PastoralWords.Kind(group.Key))</h4>
+            <ul class="list-unstyled mb-2" data-categories>
+                @foreach (var c in group)
+                {
+                    <li class="d-flex flex-wrap align-items-center gap-2 py-1 border-top">
+                        <span class="badge @PastoralWords.Badge(c.Tone, null)">@T.Text(PastoralWords.Tone(c.Tone))</span>
+                        <span class="@(c.IsActive ? "" : "text-muted text-decoration-line-through")">@c.Name</span>
+                        <form method="post" asp-action="SavePastoralCategory" class="ms-auto">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@c.Id" />
+                            <input type="hidden" name="tenantId" value="@tenant" />
+                            <input type="hidden" name="kind" value="@c.Kind" />
+                            <input type="hidden" name="tone" value="@c.Tone" />
+                            <input type="hidden" name="name" value="@c.Name" />
+                            <input type="hidden" name="isActive" value="@(c.IsActive ? "false" : "true")" />
+                            <button type="submit" class="btn btn-sm btn-link">@(c.IsActive ? T.Text("Hide") : T.Text("Use again"))</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+        <form method="post" asp-action="SavePastoralCategory" class="row g-2 align-items-end border-top pt-3" data-add-category>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="tenantId" value="@tenant" />
+            <input type="hidden" name="isActive" value="true" />
+            <div class="col-md-3">
+                <label class="form-label small" for="cat-kind">@T["Kind of note"]</label>
+                <select class="form-select form-select-sm" id="cat-kind" name="kind">
+                    @foreach (var k in PastoralWords.Kinds) { <option value="@k">@T.Text(PastoralWords.Kind(k))</option> }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small" for="cat-tone">@T["Praise or concern"]</label>
+                <select class="form-select form-select-sm" id="cat-tone" name="tone">
+                    @foreach (var t in PastoralWords.Tones) { <option value="@t">@T.Text(PastoralWords.Tone(t))</option> }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small" for="cat-name">@T["Name"]</label>
+                <input class="form-control form-control-sm" id="cat-name" name="name" required maxlength="@PastoralRecord.MaxCategoryLength" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-sm btn-primary w-100">@T["Add"]</button>
+            </div>
+        </form>
+    </div>
+</section>

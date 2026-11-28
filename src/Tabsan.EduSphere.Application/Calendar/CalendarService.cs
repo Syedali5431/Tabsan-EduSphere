@@ -31,10 +31,13 @@ public sealed partial class CalendarService
     private readonly IModuleEntitlementResolver? _modules;
     private readonly INotificationService? _notifications;
     private readonly ILogger<CalendarService> _logger;
+    private readonly Community.CommunityService? _community;
 
     public CalendarService(ICalendarQueries queries, IEncryptionService encryption, IOptions<CalendarOptions> options,
-        IModuleEntitlementResolver? modules = null, INotificationService? notifications = null, ILogger<CalendarService>? logger = null)
+        IModuleEntitlementResolver? modules = null, INotificationService? notifications = null, ILogger<CalendarService>? logger = null,
+        Community.CommunityService? community = null)
     {
+        _community = community;
         _queries = queries;
         _encryption = encryption;
         _options = options.Value;
@@ -58,7 +61,16 @@ public sealed partial class CalendarService
         var events = await _queries.EventsAsync(userId, role, childId, from, to, await SourcesAsync(ct), now, ct);
         return events is null
             ? (null, null)
-            : (new CalendarEventsResponse(from, to, Order(events)), null);
+            : (new CalendarEventsResponse(from, to, Order(events.Concat(await SchoolEventsAsync(userId, role, childId, from, to, ct)))), null);
+    }
+
+    /// <summary>The school events (news, events and forms) the person is invited to; a parent's for the chosen child.</summary>
+    private async Task<IEnumerable<CalendarEventDto>> SchoolEventsAsync(Guid userId, string role, Guid? childId, DateTime from, DateTime to, CancellationToken ct)
+    {
+        if (_community is null || await _community.MemberAsync(userId, role, ct) is not { } member) return [];
+        return (await _community.CalendarEventsAsync(member, childId, from, to, ct)).Select(e => new CalendarEventDto($"event:{e.Id}", CalendarKinds.Event,
+            e.Title, e.StartsAt, e.AllDay ? (e.EndsAt.Date > e.StartsAt.Date ? e.EndsAt : null) : e.EndsAt, e.AllDay, e.Id, e.CourseOfferingId, null, null, null,
+            e.Location, $"/Portal/SchoolEvents#event-{e.Id}"));
     }
 
     public static IReadOnlyList<CalendarEventDto> Order(IEnumerable<CalendarEventDto> events)
@@ -124,7 +136,8 @@ public sealed partial class CalendarService
         if (user is null || !user.IsActive) return null;
         var from = now.Date.AddDays(-Math.Clamp(_options.FeedPastDays, 0, 365));
         var to = now.Date.AddDays(Math.Clamp(_options.FeedFutureDays, 1, MaxRangeDays - 1) + 1);
-        var events = await _queries.EventsAsync(user.UserId, user.Role, null, from, to, await SourcesAsync(ct), now, ct) ?? [];
+        var events = (await _queries.EventsAsync(user.UserId, user.Role, null, from, to, await SourcesAsync(ct), now, ct) ?? [])
+            .Concat(await SchoolEventsAsync(user.UserId, user.Role, null, from, to, ct)).ToList();
         if (row.Used(now)) await _queries.SaveChangesAsync(ct);
         return CalendarIcs.Build($"EduSphere — {user.DisplayName}", Order(events), _options.PortalBaseUrl, now);
     }

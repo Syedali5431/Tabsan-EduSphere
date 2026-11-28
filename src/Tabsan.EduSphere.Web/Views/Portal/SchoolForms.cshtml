@@ -1,0 +1,99 @@
+@model Tabsan.EduSphere.Web.Models.Portal.FormsPageModel
+@{
+    ViewData["Title"] = T.Text("Forms");
+    string State(string s) => s switch { "Open" => T.Text("Open"), "Closed" => T.Text("Closed"), _ => T.Text("Draft") };
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
+    return;
+}
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h2 class="h3 mb-0 me-auto">@T["Forms"]</h2>
+    @if (Model.CanWrite)
+    {
+        <nav class="btn-group btn-group-sm" aria-label="@T["Forms"]">
+            <a class="btn @(Model.Tab == "fill" ? "btn-secondary" : "btn-outline-secondary")" asp-action="SchoolForms" aria-current="@(Model.Tab == "fill" ? "page" : null)">@T["To fill in"]</a>
+            <a class="btn @(Model.Tab == "manage" ? "btn-secondary" : "btn-outline-secondary")" asp-action="SchoolForms" asp-route-tab="manage" aria-current="@(Model.Tab == "manage" ? "page" : null)">@T["Forms I manage"]</a>
+        </nav>
+        <a class="btn btn-sm btn-primary" asp-action="EditForm" data-new-form>@T["New form"]</a>
+    }
+</div>
+
+@if (Model.Tab == "manage")
+{
+    @if (Model.Managed.Count == 0)
+    {
+        <p class="text-muted">@T["You have not made any forms yet."]</p>
+    }
+    else
+    {
+        <div class="table-responsive card border-0 shadow-sm">
+            <table class="table table-sm align-middle mb-0" data-forms-manage>
+                <thead class="table-light"><tr><th scope="col">@T["Form"]</th><th scope="col">@T["Status"]</th><th scope="col">@T["Due"]</th><th scope="col">@T["For"]</th><th scope="col" class="text-end">@T["Answers"]</th><th scope="col"><span class="visually-hidden">@T["Actions"]</span></th></tr></thead>
+                <tbody>
+                    @foreach (var f in Model.Managed)
+                    {
+                        <tr data-form-row="@f.Status">
+                            <td>@f.Title<div class="small text-muted">@f.AuthorName</div></td>
+                            <td><span class="badge @(f.Status == "Open" ? "bg-success" : "bg-secondary")">@State(f.Status)</span></td>
+                            <td class="text-nowrap">@if (f.DueAt is { } due) { <time datetime="@CommunityFormat.Iso(due)" data-local-time="short">@due.ToString("dd MMM yyyy HH:mm") UTC</time> } else { <span>—</span> }</td>
+                            <td><partial name="_AudienceLabel" model="f.Audience" /></td>
+                            <td class="text-end">@f.Answered</td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-primary" asp-action="FormResponses" asp-route-id="@f.Id">@T["Answers"]</a>
+                                <a class="btn btn-sm btn-outline-secondary" asp-action="EditForm" asp-route-id="@f.Id">@T["Change"]</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+else if (Model.ToFill.Count == 0)
+{
+    <p class="text-muted" data-forms-empty>@T["No forms to fill in."]</p>
+}
+else
+{
+    <div class="list-group shadow-sm" data-forms-to-fill>
+        @foreach (var f in Model.ToFill)
+        {
+            <a class="list-group-item list-group-item-action d-flex flex-wrap gap-2 align-items-center" asp-action="FillForm" asp-route-id="@f.FormId"
+               asp-route-studentProfileId="@f.StudentProfileId" data-form-to-fill="@(f.Answered ? "answered" : "waiting")">
+                <span class="flex-grow-1">
+                    <span class="fw-semibold">@f.Title</span>
+                    @if (f.StudentName is not null) { <span class="text-muted">· @T.Format("for {0}", f.StudentName)</span> }
+                    @if (f.DueAt is { } due) { <span class="d-block small text-muted">@T["Due"] <time datetime="@CommunityFormat.Iso(due)" data-local-time="short">@due.ToString("dd MMM yyyy HH:mm") UTC</time></span> }
+                </span>
+                @if (f.Answered)
+                {
+                    <span class="badge bg-success">@T["Answered"]</span>
+                }
+                else if (!f.Open)
+                {
+                    <span class="badge bg-secondary">@T["Closed"]</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning text-dark">@T["To fill in"]</span>
+                }
+            </a>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

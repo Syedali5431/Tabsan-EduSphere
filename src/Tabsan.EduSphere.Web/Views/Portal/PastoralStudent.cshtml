@@ -1,0 +1,282 @@
+@model Tabsan.EduSphere.Web.Models.Portal.PastoralStudentPageModel
+@{
+    ViewData["Title"] = T.Text("Pastoral care");
+    var s = Model.Student;
+    var active = s?.Plans.Where(p => p.Status == "Active").ToList() ?? [];
+    var ended = s?.Plans.Where(p => p.Status != "Active").ToList() ?? [];
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
+    return;
+}
+
+<p class="mb-2"><a asp-action="Pastoral">← @T["Pastoral care"]</a></p>
+
+@if (s is null)
+{
+    return;
+}
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+    <h2 class="h3 mb-0 me-auto" data-student-name>@s.Student.Name</h2>
+    @if (s.CanWrite)
+    {
+        <a class="btn btn-sm btn-primary" asp-action="PastoralNote" asp-route-studentId="@s.Student.Id">@T["Write a note"]</a>
+    }
+    @if (s.CanPlan)
+    {
+        <a class="btn btn-sm btn-outline-primary" asp-action="PastoralPlan" asp-route-studentId="@s.Student.Id">@T["New support plan"]</a>
+    }
+</div>
+<p class="text-muted small mb-3">
+    @s.Student.RegistrationNumber @(s.Student.ClassName is { } cn ? $"· {cn}" : "") @(s.CampusName is { } campus ? $"· {campus}" : "")
+</p>
+
+<div class="row g-2 mb-3" data-student-counts>
+    @foreach (var (label, value, css) in new[]
+    {
+        (T.Text("Praise"), s.Counts.Positive, "text-success"),
+        (T.Text("Concerns"), s.Counts.Concerns, "text-danger"),
+        (T.Text("Wellbeing notes"), s.Counts.Wellbeing, "text-primary"),
+        (T.Text("Open follow-ups"), s.Counts.OpenFollowUps, "text-warning"),
+        (T.Text("Support plans"), s.Counts.ActivePlans, "text-info")
+    })
+    {
+        <div class="col-6 col-md">
+            <div class="card border-0 shadow-sm h-100"><div class="card-body py-2">
+                <div class="fs-4 fw-semibold @css">@value</div>
+                <div class="small text-muted">@label</div>
+            </div></div>
+        </div>
+    }
+</div>
+<p class="small text-muted">@T["Praise, concerns and wellbeing notes: the last 90 days."]</p>
+
+<section class="mb-4" aria-labelledby="ps-plans">
+    <h3 class="h5" id="ps-plans">@T["Support plans"]</h3>
+    @if (active.Count == 0)
+    {
+        <p class="text-muted small">@T["No support plan is running."]</p>
+    }
+    @foreach (var p in active)
+    {
+        <article class="card border-info mb-2" data-plan>
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <span class="badge bg-info text-dark">@T.Text(PastoralWords.PlanKind(p.Kind))</span>
+                    <h4 class="h6 mb-0 me-auto">@p.Title</h4>
+                    @if (p.Visibility == "Confidential") { <span class="badge bg-dark">@T["Confidential"]</span> }
+                    @if (p.SharedWithStudent) { <span class="badge bg-light text-dark border">@T["Shared with the student"]</span> }
+                    @if (p.SharedWithParents) { <span class="badge bg-light text-dark border">@T["Shared with parents"]</span> }
+                </div>
+                @if (!string.IsNullOrWhiteSpace(p.Needs))
+                {
+                    <p class="small text-muted mb-1" style="white-space:pre-line">@p.Needs</p>
+                }
+                <p class="mb-1 fw-semibold small">@T["What staff should do"]</p>
+                <p class="mb-2" style="white-space:pre-line">@p.Strategies</p>
+                <p class="small text-muted mb-0">
+                    @T["From"] <time datetime="@CommunityFormat.Iso(p.StartsOn)" data-local-time="allday">@PastoralFormat.Date(p.StartsOn)</time>
+                    @if (p.ReviewOn is { } review)
+                    {
+                        <span>· @T["Review on"] <time datetime="@CommunityFormat.Iso(review)" data-local-time="allday">@PastoralFormat.Date(review)</time></span>
+                    }
+                    · @p.OwnerName
+                </p>
+                @if (p.CanManage)
+                {
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="PastoralPlan" asp-route-id="@p.Id" asp-route-studentId="@s.Student.Id">@T["Change"]</a>
+                        <form method="post" asp-action="EndPastoralPlan" asp-route-id="@p.Id">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="studentId" value="@s.Student.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">@T["End the plan"]</button>
+                        </form>
+                    </div>
+                }
+            </div>
+        </article>
+    }
+    @if (ended.Count > 0)
+    {
+        <details class="mt-2">
+            <summary class="small">@T["Ended plans"] (@ended.Count)</summary>
+            <ul class="list-unstyled mt-2">
+                @foreach (var p in ended)
+                {
+                    <li class="border-top py-2 d-flex flex-wrap gap-2 align-items-center">
+                        <span class="badge bg-secondary">@T.Text(PastoralWords.PlanKind(p.Kind))</span>
+                        <span>@p.Title</span>
+                        @if (p.EndedAt is { } at) { <span class="small text-muted">@T["Ended"] <time datetime="@CommunityFormat.Iso(at)" data-local-time="date">@PastoralFormat.Date(at)</time></span> }
+                        @if (p.CanManage)
+                        {
+                            <form method="post" asp-action="EndPastoralPlan" asp-route-id="@p.Id" class="ms-auto">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="studentId" value="@s.Student.Id" />
+                                <input type="hidden" name="restart" value="true" />
+                                <button type="submit" class="btn btn-sm btn-link">@T["Start it again"]</button>
+                            </form>
+                        }
+                    </li>
+                }
+            </ul>
+        </details>
+    }
+</section>
+
+@if (s.CheckIns is { } checkIns)
+{
+    <section class="mb-4" aria-labelledby="ps-checkins">
+        <h3 class="h5" id="ps-checkins">@T["Check-ins"]</h3>
+        @if (checkIns.Count == 0)
+        {
+            <p class="text-muted small">@T["The student has not checked in yet."]</p>
+        }
+        else
+        {
+            <ul class="list-unstyled" data-check-ins>
+                @foreach (var c in checkIns.Take(10))
+                {
+                    <li class="border-top py-2">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="fs-5" aria-hidden="true">@PastoralFormat.MoodFace(c.Mood)</span>
+                            <span>@T.Text(PastoralFormat.MoodWord(c.Mood))</span>
+                            @if (c.WantsToTalk) { <span class="badge bg-danger">@T["Would like to talk"]</span> }
+                            @if (c.NeedsAttention) { <span class="badge bg-warning text-dark">@T["Needs someone"]</span> }
+                            else if (c.AcknowledgedAt is not null) { <span class="badge bg-light text-dark border">@T["Seen to by"] @c.AcknowledgedBy</span> }
+                            <time class="text-muted small ms-auto" datetime="@CommunityFormat.Iso(c.CheckedInAt)" data-local-time="short">@c.CheckedInAt.ToString("u")</time>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(c.Note)) { <p class="small mb-1 mt-1">“@c.Note”</p> }
+                        @if (!string.IsNullOrWhiteSpace(c.AcknowledgeNote)) { <p class="small text-muted mb-1">@c.AcknowledgeNote</p> }
+                        @if (c.NeedsAttention)
+                        {
+                            <form method="post" asp-action="PastoralCheckInSeen" asp-route-id="@c.Id" class="d-flex flex-wrap gap-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="studentId" value="@s.Student.Id" />
+                                <label class="visually-hidden" for="seen-@c.Id">@T["What was done (optional)"]</label>
+                                <input class="form-control form-control-sm" style="max-width:24rem" id="seen-@c.Id" name="note" maxlength="500" placeholder="@T["What was done (optional)"]" />
+                                <button type="submit" class="btn btn-sm btn-outline-success">@T["Seen to"]</button>
+                            </form>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+}
+
+<section aria-labelledby="ps-notes">
+    <h3 class="h5" id="ps-notes">@T["Notes"]</h3>
+    @if (s.Records.Count == 0)
+    {
+        <p class="text-muted small">@T["No notes yet."]</p>
+    }
+    @foreach (var r in s.Records)
+    {
+        <article class="card mb-2 @(r.IsRemoved ? "border-secondary opacity-75" : r.Tone == "Positive" ? "border-success" : r.Tone == "Concern" ? "border-warning" : "")" data-record>
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                    <span class="badge @PastoralWords.Badge(r.Tone, r.Severity)">@T.Text(PastoralWords.Tone(r.Tone))@(r.Tone == "Concern" ? $" · {T.Text(PastoralWords.Severity(r.Severity))}" : "")</span>
+                    <span class="badge bg-light text-dark border">@T.Text(PastoralWords.Kind(r.Kind))</span>
+                    @if (!string.IsNullOrEmpty(r.Category)) { <span class="small fw-semibold">@r.Category</span> }
+                    @if (r.Visibility == "Confidential") { <span class="badge bg-dark">@T["Confidential"]</span> }
+                    @if (r.SharedWithStudent) { <span class="badge bg-light text-dark border">@T["Shared with the student"]</span> }
+                    @if (r.SharedWithParents) { <span class="badge bg-light text-dark border">@T["Shared with parents"]</span> }
+                    <time class="text-muted small ms-auto" datetime="@CommunityFormat.Iso(r.OccurredAt)" data-local-time="short">@r.OccurredAt.ToString("u")</time>
+                </div>
+                <h4 class="h6 mb-1 @(r.IsRemoved ? "text-decoration-line-through" : "")">@r.Summary</h4>
+                @if (!string.IsNullOrWhiteSpace(r.Details)) { <p class="mb-1" style="white-space:pre-line">@r.Details</p> }
+                @if (!string.IsNullOrWhiteSpace(r.ActionTaken)) { <p class="mb-1 small"><span class="fw-semibold">@T["What was done"]:</span> @r.ActionTaken</p> }
+                <p class="small text-muted mb-1">@r.AuthorName @(r.ClassName is { } cls ? $"· {cls}" : "")</p>
+                @if (r.IsRemoved)
+                {
+                    <p class="small mb-0"><span class="badge bg-secondary">@T["Removed"]</span> @r.RemovedReason</p>
+                }
+                @if (r.FollowUp == "Open")
+                {
+                    <p class="small mb-1">
+                        <span class="badge bg-warning text-dark">@T["Follow-up"]</span> @r.FollowUpName
+                        @if (r.FollowUpBy is { } by) { <span>· @T["By"] <time datetime="@CommunityFormat.Iso(by)" data-local-time="allday">@PastoralFormat.Date(by)</time></span> }
+                    </p>
+                }
+                else if (r.FollowUp == "Done")
+                {
+                    <p class="small mb-1"><span class="badge bg-success">@T["Followed up"]</span> @r.FollowUpName</p>
+                }
+                @if (r.Notes.Count > 0)
+                {
+                    <ul class="list-unstyled border-start ps-3 my-2" data-follow-up-notes>
+                        @foreach (var n in r.Notes)
+                        {
+                            <li class="small mb-1"><span class="fw-semibold">@n.AuthorName</span> <time class="text-muted" datetime="@CommunityFormat.Iso(n.At)" data-local-time="short">@n.At.ToString("u")</time><br /><span style="white-space:pre-line">@n.Text</span></li>
+                        }
+                    </ul>
+                }
+                @if (r.CanFollowUp)
+                {
+                    <details class="mt-2">
+                        <summary class="small">@T["Add a follow-up note"]</summary>
+                        <form method="post" asp-action="AddPastoralFollowUpNote" asp-route-id="@r.Id" class="mt-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="studentId" value="@s.Student.Id" />
+                            <label class="visually-hidden" for="fu-@r.Id">@T["Follow-up note"]</label>
+                            <textarea class="form-control form-control-sm mb-2" id="fu-@r.Id" name="text" rows="2" maxlength="2000" required></textarea>
+                            <button type="submit" class="btn btn-sm btn-outline-primary">@T["Add"]</button>
+                        </form>
+                    </details>
+                }
+                @if (r.CanFollowUp || r.CanManage)
+                {
+                    <div class="d-flex flex-wrap gap-2 mt-2">
+                        @if (r.CanFollowUp && r.FollowUp == "Open")
+                        {
+                            <form method="post" asp-action="PastoralFollowUp" asp-route-id="@r.Id">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="studentId" value="@s.Student.Id" />
+                                <input type="hidden" name="done" value="true" />
+                                <button type="submit" class="btn btn-sm btn-outline-success">@T["Follow-up done"]</button>
+                            </form>
+                        }
+                        else if (r.CanFollowUp && r.FollowUp == "Done")
+                        {
+                            <form method="post" asp-action="PastoralFollowUp" asp-route-id="@r.Id">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="studentId" value="@s.Student.Id" />
+                                <input type="hidden" name="done" value="false" />
+                                <button type="submit" class="btn btn-sm btn-link">@T["Open the follow-up again"]</button>
+                            </form>
+                        }
+                        @if (r.CanManage)
+                        {
+                            <a class="btn btn-sm btn-outline-secondary" asp-action="PastoralNote" asp-route-id="@r.Id" asp-route-studentId="@s.Student.Id">@T["Change"]</a>
+                            <details>
+                                <summary class="btn btn-sm btn-outline-danger">@T["Remove"]</summary>
+                                <form method="post" asp-action="RemovePastoralNote" asp-route-id="@r.Id" class="mt-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="studentId" value="@s.Student.Id" />
+                                    <label class="form-label small" for="rm-@r.Id">@T["Why is it removed?"]</label>
+                                    <input class="form-control form-control-sm mb-2" id="rm-@r.Id" name="reason" maxlength="500" required />
+                                    <button type="submit" class="btn btn-sm btn-danger">@T["Remove the note"]</button>
+                                </form>
+                            </details>
+                        }
+                    </div>
+                }
+            </div>
+        </article>
+    }
+</section>
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

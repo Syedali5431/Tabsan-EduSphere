@@ -445,6 +445,11 @@ public static class DatabaseSeeder
         var courseContent    = await Upsert("course_content",    "Course Content",     "Your courses' modules, what each item needs and your progress (Plan M7)", 44);
         var calendar         = await Upsert("calendar",          "Calendar",           "Homework due dates, quizzes, live classes and key dates, with a link for your own calendar app", 45);
         var messages         = await Upsert("messages",          "Messages",           "Private messages between teachers, students, parents and the school office", 46);
+        var news             = await Upsert("news",              "School News",        "News for the whole school, a campus, a year level or a class", 47);
+        var events           = await Upsert("events",            "Events",             "School events with replies, places and guests", 48);
+        var forms            = await Upsert("forms",             "Forms",              "Consent forms, permission slips and surveys to fill in online, with who has answered", 49);
+        var pastoral         = await Upsert("pastoral",          "Pastoral Care",      "Notes about students' behaviour and wellbeing, support plans, check-ins and the wellbeing team", 50);
+        var wellbeing        = await Upsert("wellbeing",         "Wellbeing",          "Check in on how you are feeling, and see notes and support plans your school shared with you", 51);
         var assignments      = await Upsert("assignments",       "Assignments",        "Manage and submit assignments",                  14);
         var attendance       = await Upsert("attendance",        "Attendance",         "Record and view attendance",                     15);
         var enterAttendance  = await Upsert("enter_attendance",  "Enter Attendance",   "Manual attendance entry and CSV import workflow", 15);
@@ -689,6 +694,16 @@ public static class DatabaseSeeder
         EnsureRoleAccess(messages.Id, "Admin",   isAllowed: true);
         EnsureRoleAccess(messages.Id, "Faculty", isAllowed: true);
         EnsureRoleAccess(messages.Id, "Student", isAllowed: true);
+        // News, events and forms: everyone who signs in to the portal reads and answers; teachers and admins also write
+        // (parents use the app).
+        foreach (var menu in new[] { news, events, forms })
+            foreach (var role in new[] { "Admin", "Faculty", "Student", "Finance" })
+                EnsureRoleAccess(menu.Id, role, isAllowed: true);
+        // Pastoral care: teachers and admins (the API limits each to the students they teach or look after); students see
+        // their own wellbeing page (parents use the app).
+        EnsureRoleAccess(pastoral.Id, "Admin",   isAllowed: true);
+        EnsureRoleAccess(pastoral.Id, "Faculty", isAllowed: true);
+        EnsureRoleAccess(wellbeing.Id, "Student", isAllowed: true);
 
         // Assignments: Admin + Faculty + Student
         EnsureRoleAccess(assignments.Id, "Admin",   isAllowed: true);

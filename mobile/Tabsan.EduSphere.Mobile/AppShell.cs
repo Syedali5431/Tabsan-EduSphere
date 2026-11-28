@@ -39,6 +39,7 @@ public sealed class AppShell : Shell
 		}
 		if (state.IsStudent || state.IsParent)
 			tabs.Items.Add(Tab("Results", new ResultsPage(new ResultsViewModel(client, selection), new ReportCardsViewModel(client), selection)));
+		tabs.Items.Add(Tab("School", new SchoolPage(new SchoolViewModel(client), client)));
 		tabs.Items.Add(Tab("Messages", new MessagesPage(new MessagesViewModel(client), client)));
 		tabs.Items.Add(Tab("Notifications", new NotificationsPage(new NotificationsViewModel(client))));
 		tabs.Items.Add(Tab("Settings", new SettingsPage(new SettingsViewModel(client, services.GetRequiredService<IPushTokenProvider>(), settings),

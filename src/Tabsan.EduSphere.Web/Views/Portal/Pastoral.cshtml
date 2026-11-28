@@ -1,0 +1,268 @@
+@model Tabsan.EduSphere.Web.Models.Portal.PastoralPageModel
+@{
+    ViewData["Title"] = T.Text("Pastoral care");
+    var o = Model.Overview;
+    var me = o?.Me;
+    string Period(int days) => days switch
+    {
+        7 => T.Text("Last 7 days"),
+        30 => T.Text("Last 30 days"),
+        90 => T.Text("Last 90 days"),
+        _ => T.Text("Last 12 months")
+    };
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
+    return;
+}
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h2 class="h3 mb-0 me-auto">@T["Pastoral care"]</h2>
+    @if (me?.IsStaff == true)
+    {
+        <a class="btn btn-sm btn-primary" asp-action="PastoralNote" data-write-note>@T["Write a note"]</a>
+    }
+    @if (me?.CanSetUp == true)
+    {
+        <a class="btn btn-sm btn-outline-secondary" asp-action="PastoralSetup">@T["Wellbeing team and settings"]</a>
+    }
+</div>
+
+@if (o is null)
+{
+    return;
+}
+
+<p class="text-muted small mb-3">
+    @(me!.IsTeam || me.CanSetUp
+        ? T.Text("Notes about the students you look after. Confidential notes are shown only to you if you wrote them, and to team members who see confidential notes.")
+        : T.Text("Notes about the students you teach. Write praise and concerns here; the wellbeing team follows up concerns."))
+</p>
+
+<div class="row g-3 mb-3">
+    <div class="col-12">
+        <form method="get" asp-action="Pastoral" class="card border-0 shadow-sm" data-pastoral-filter>
+            <div class="card-body row g-2 align-items-end">
+                @if (o.Filters.Campuses.Count > 1)
+                {
+                    <div class="col-6 col-lg">
+                        <label class="form-label small" for="pf-campus">@T["Campus"]</label>
+                        <select class="form-select form-select-sm" id="pf-campus" name="campusId">
+                            <option value="">@T["All"]</option>
+                            @foreach (var c in o.Filters.Campuses) { <option value="@c.Id" selected="@(c.Id == Model.CampusId)">@c.Name</option> }
+                        </select>
+                    </div>
+                }
+                <div class="col-6 col-lg">
+                    <label class="form-label small" for="pf-year">@T["Year level"]</label>
+                    <select class="form-select form-select-sm" id="pf-year" name="semesterId">
+                        <option value="">@T["All"]</option>
+                        @foreach (var s in o.Filters.Semesters) { <option value="@s.Id" selected="@(s.Id == Model.SemesterId)">@s.Name</option> }
+                    </select>
+                </div>
+                <div class="col-6 col-lg">
+                    <label class="form-label small" for="pf-class">@T["Class"]</label>
+                    <select class="form-select form-select-sm" id="pf-class" name="classId">
+                        <option value="">@T["All"]</option>
+                        @foreach (var c in o.Filters.Classes) { <option value="@c.Id" selected="@(c.Id == Model.CourseOfferingId)">@c.Name</option> }
+                    </select>
+                </div>
+                <div class="col-6 col-lg">
+                    <label class="form-label small" for="pf-days">@T["Period"]</label>
+                    <select class="form-select form-select-sm" id="pf-days" name="days">
+                        @foreach (var d in Tabsan.EduSphere.Web.Models.Portal.PastoralPageModel.DayChoices) { <option value="@d" selected="@(d == Model.Days)">@Period(d)</option> }
+                    </select>
+                </div>
+                <div class="col-12 col-lg-auto">
+                    <button type="submit" class="btn btn-sm btn-secondary px-4">@T["Show"]</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="col-12">
+        <form method="get" asp-action="Pastoral" class="card border-0 shadow-sm" role="search">
+            <div class="card-body">
+                <label class="form-label small" for="pf-q">@T["Find a student"]</label>
+                <div class="input-group input-group-sm" style="max-width:32rem">
+                    <input class="form-control" id="pf-q" name="q" value="@Model.Search" minlength="2" placeholder="@T["Name or registration number"]" />
+                    <button type="submit" class="btn btn-outline-secondary">@T["Find"]</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Search is { Length: >= 2 })
+{
+    <section class="card border-0 shadow-sm mb-3" aria-labelledby="pf-found">
+        <div class="card-body">
+            <h3 class="h6" id="pf-found">@T["Students found"]</h3>
+            @if (Model.Found.Count == 0)
+            {
+                <p class="text-muted small mb-0">@T["No student you teach or look after matches."]</p>
+            }
+            else
+            {
+                <ul class="list-unstyled mb-0" data-found-students>
+                    @foreach (var s in Model.Found)
+                    {
+                        <li><a asp-action="PastoralStudent" asp-route-id="@s.Id">@s.Name</a> <span class="text-muted small">@s.RegistrationNumber @(s.ClassName is { } cn ? $"· {cn}" : "")</span></li>
+                    }
+                </ul>
+            }
+        </div>
+    </section>
+}
+
+@if (o.NeedsAttention.Count > 0)
+{
+    <section class="card border-danger mb-3" aria-labelledby="pf-attention" data-needs-attention>
+        <div class="card-body">
+            <h3 class="h6 text-danger" id="pf-attention">@T["Check-ins waiting for someone"] <span class="badge bg-danger">@o.NeedsAttention.Count</span></h3>
+            <ul class="list-unstyled mb-0">
+                @foreach (var c in o.NeedsAttention)
+                {
+                    <li class="border-top py-2">
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="fs-4" aria-hidden="true">@PastoralFormat.MoodFace(c.Mood)</span>
+                            <a class="fw-semibold" asp-action="PastoralStudent" asp-route-id="@c.StudentProfileId">@c.StudentName</a>
+                            <span class="text-muted small">@c.ClassName</span>
+                            <span class="badge bg-light text-dark border">@T.Text(PastoralFormat.MoodWord(c.Mood))</span>
+                            @if (c.WantsToTalk) { <span class="badge bg-danger">@T["Would like to talk"]</span> }
+                            <time class="text-muted small ms-auto" datetime="@CommunityFormat.Iso(c.CheckedInAt)" data-local-time="short">@c.CheckedInAt.ToString("u")</time>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(c.Note)) { <p class="mb-1 mt-1 small">“@c.Note”</p> }
+                        <form method="post" asp-action="PastoralCheckInSeen" asp-route-id="@c.Id" class="d-flex flex-wrap gap-2 mt-1">
+                            @Html.AntiForgeryToken()
+                            <label class="visually-hidden" for="seen-@c.Id">@T["What was done (optional)"]</label>
+                            <input class="form-control form-control-sm" style="max-width:24rem" id="seen-@c.Id" name="note" maxlength="500" placeholder="@T["What was done (optional)"]" />
+                            <button type="submit" class="btn btn-sm btn-outline-success">@T["Seen to"]</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        </div>
+    </section>
+}
+
+@if (o.MyFollowUps.Count > 0)
+{
+    <section class="card border-0 shadow-sm mb-3" aria-labelledby="pf-mine">
+        <div class="card-body">
+            <h3 class="h6" id="pf-mine">@T["Notes waiting for you to follow up"]</h3>
+            <ul class="list-unstyled mb-0">
+                @foreach (var r in o.MyFollowUps)
+                {
+                    var late = r.FollowUpBy is { } by && by.Date < DateTime.UtcNow.Date;
+                    <li class="border-top py-2 d-flex flex-wrap gap-2 align-items-center">
+                        <a class="fw-semibold" asp-action="PastoralStudent" asp-route-id="@r.StudentProfileId">@r.StudentName</a>
+                        <span>@r.Summary</span>
+                        @if (r.FollowUpBy is { } due)
+                        {
+                            <span class="badge @(late ? "bg-danger" : "bg-light text-dark border") ms-auto">@T["By"] <time datetime="@CommunityFormat.Iso(due)" data-local-time="allday">@PastoralFormat.Date(due)</time></span>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </section>
+}
+
+<div class="row g-2 mb-3" data-pastoral-totals>
+    @foreach (var (label, value, css) in new[]
+    {
+        (T.Text("Praise"), o.Totals.Positive, "text-success"),
+        (T.Text("Concerns"), o.Totals.Concerns, "text-danger"),
+        (T.Text("Wellbeing notes"), o.Totals.Wellbeing, "text-primary"),
+        (T.Text("Other notes"), o.Totals.Other, "text-secondary"),
+        (T.Text("Open follow-ups"), o.Totals.OpenFollowUps, "text-warning"),
+        (T.Text("Support plans"), o.Totals.ActivePlans, "text-info")
+    })
+    {
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="card border-0 shadow-sm h-100"><div class="card-body py-2">
+                <div class="fs-4 fw-semibold @css">@value</div>
+                <div class="small text-muted">@label</div>
+            </div></div>
+        </div>
+    }
+</div>
+
+<section class="card border-0 shadow-sm mb-3" aria-labelledby="pf-students">
+    <div class="card-body">
+        <h3 class="h6" id="pf-students">@T["Students"] <span class="text-muted small fw-normal">(@Period(Model.Days))</span></h3>
+        @if (o.Students.Count == 0)
+        {
+            <p class="text-muted small mb-0">@T["No notes, follow-ups or support plans for these students in this period."]</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0 text-nowrap" data-pastoral-students>
+                    <thead>
+                        <tr>
+                            <th scope="col">@T["Student"]</th>
+                            <th scope="col">@T["Class"]</th>
+                            <th scope="col" class="text-end">@T["Praise"]</th>
+                            <th scope="col" class="text-end">@T["Concerns"]</th>
+                            <th scope="col" class="text-end">@T["Wellbeing"]</th>
+                            <th scope="col" class="text-end">@T["Follow-ups"]</th>
+                            <th scope="col" class="text-end">@T["Plans"]</th>
+                            @if (me.SeesCheckIns) { <th scope="col">@T["Last check-in"]</th> }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in o.Students)
+                        {
+                            <tr>
+                                <td>
+                                    <a asp-action="PastoralStudent" asp-route-id="@row.Student.Id">@row.Student.Name</a>
+                                    @if (row.NeedsAttention) { <span class="badge bg-danger ms-1">@T["Needs someone"]</span> }
+                                </td>
+                                <td class="small text-muted">@row.Student.ClassName</td>
+                                <td class="text-end">@(row.Positive > 0 ? row.Positive : "")</td>
+                                <td class="text-end @(row.Concerns > 0 ? "text-danger fw-semibold" : "")">@(row.Concerns > 0 ? row.Concerns : "")</td>
+                                <td class="text-end">@(row.Wellbeing > 0 ? row.Wellbeing : "")</td>
+                                <td class="text-end">@(row.OpenFollowUps > 0 ? row.OpenFollowUps : "")</td>
+                                <td class="text-end">@(row.ActivePlans > 0 ? row.ActivePlans : "")</td>
+                                @if (me.SeesCheckIns)
+                                {
+                                    <td>@if (row.LastMood is { } mood) { <span title="@T.Text(PastoralFormat.MoodWord(mood))"><span aria-hidden="true">@PastoralFormat.MoodFace(mood)</span> <span class="small">@T.Text(PastoralFormat.MoodWord(mood))</span></span> }</td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
+
+@if (o.Categories.Count > 0)
+{
+    <section class="card border-0 shadow-sm mb-3" aria-labelledby="pf-categories">
+        <div class="card-body">
+            <h3 class="h6" id="pf-categories">@T["Most common"]</h3>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var c in o.Categories)
+                {
+                    <span class="badge @PastoralWords.Badge(c.Tone, null)">@(string.IsNullOrEmpty(c.Category) ? T.Text(PastoralWords.Kind(c.Kind)) : c.Category) · @c.Count</span>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

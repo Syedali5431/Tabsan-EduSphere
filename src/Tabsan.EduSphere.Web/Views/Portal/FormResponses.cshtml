@@ -1,0 +1,129 @@
+@model Tabsan.EduSphere.Web.Models.Portal.FormResponsesPageModel
+@{
+    ViewData["Title"] = T.Text("Form answers");
+    var t = Model.Tracking;
+    string State(string s) => s switch { "Open" => T.Text("Open"), "Closed" => T.Text("Closed"), _ => T.Text("Draft") };
+    string Kind(string k) => k switch { "Parent" => T.Text("Parent"), "Student" => T.Text("Student"), _ => T.Text("Staff") };
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+<p class="mb-2"><a asp-action="SchoolForms" asp-route-tab="manage">← @T["Forms I manage"]</a></p>
+
+@if (t is not null)
+{
+    var f = t.Form;
+    var mixed = t.Rows.Select(r => r.Kind).Distinct().Count() > 1;
+    <div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+        <div class="me-auto">
+            <h2 class="h3 mb-1">@f.Title <span class="badge @(f.Status == "Open" ? "bg-success" : "bg-secondary") align-middle" data-form-status="@f.Status">@State(f.Status)</span></h2>
+            <p class="text-muted mb-0">
+                <partial name="_AudienceLabel" model="f.Audience" />
+                @if (f.DueAt is { } due) { <span>· @T["Due"] <time datetime="@CommunityFormat.Iso(due)" data-local-time="short">@due.ToString("dd MMM yyyy HH:mm") UTC</time></span> }
+            </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-sm btn-outline-secondary" asp-action="EditForm" asp-route-id="@f.Id">@T["Change"]</a>
+            <a class="btn btn-sm btn-outline-secondary" asp-action="FillForm" asp-route-id="@f.Id">@T["Preview"]</a>
+            @if (t.Answered > 0) { <a class="btn btn-sm btn-outline-primary" asp-action="ExportForm" asp-route-id="@f.Id" data-export>@T["Download answers"]</a> }
+            <form method="post" asp-action="OpenForm" class="d-inline">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@f.Id" />
+                <input type="hidden" name="open" value="@(f.Status == "Open" ? "false" : "true")" />
+                <button type="submit" class="btn btn-sm @(f.Status == "Open" ? "btn-outline-danger" : "btn-primary")" data-toggle-form>@(f.Status == "Open" ? T.Text("Close the form") : T.Text("Open for answers"))</button>
+            </form>
+        </div>
+    </div>
+
+    <section class="card border-0 shadow-sm mb-3" aria-labelledby="progress-title">
+        <div class="card-body">
+            <h3 class="h6" id="progress-title">@T["Answers"]</h3>
+            <p class="mb-2" data-answered-count>@T.Format("{0} of {1} answered", t.Answered, t.Expected)</p>
+            <div class="progress mb-2" role="progressbar" aria-label="@T["Answers"]" aria-valuemin="0" aria-valuemax="@t.Expected" aria-valuenow="@t.Answered">
+                <div class="progress-bar bg-success" style="width: @(t.Expected == 0 ? 0 : t.Answered * 100 / t.Expected)%"></div>
+            </div>
+            @if (f.TakesAnswers && t.Answered < t.Expected)
+            {
+                <form method="post" asp-action="RemindForm" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@f.Id" />
+                    <button type="submit" class="btn btn-sm btn-outline-primary" data-remind>@T["Remind everyone who has not answered"]</button>
+                </form>
+            }
+            @if (t.RemindedAt is { } reminded)
+            {
+                <p class="small text-muted mt-2 mb-0">@T["Last reminder"] <time datetime="@CommunityFormat.Iso(reminded)" data-local-time="short">@reminded.ToString("dd MMM yyyy HH:mm") UTC</time></p>
+            }
+        </div>
+    </section>
+
+    @if (t.Summary.Count > 0 && t.Answered > 0)
+    {
+        <section class="card border-0 shadow-sm mb-3" aria-labelledby="summary-title" data-answer-summary>
+            <div class="card-body">
+                <h3 class="h6" id="summary-title">@T["Choices so far"]</h3>
+                @foreach (var s in t.Summary)
+                {
+                    <p class="fw-semibold small mb-1 mt-2">@s.Label</p>
+                    <ul class="list-unstyled small mb-0">
+                        @foreach (var (choice, n) in s.Counts)
+                        {
+                            var label = s.Type == "YesNo" ? (choice == "Yes" ? T.Text("Yes") : T.Text("No")) : choice;
+                            <li class="d-flex align-items-center gap-2" data-choice="@choice">
+                                <span class="answer-bar bg-primary" style="width: @(t.Answered == 0 ? 0 : n * 160 / t.Answered)px" aria-hidden="true"></span>
+                                <span>@label: @n</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </section>
+    }
+
+    @if (t.Rows.Count == 0)
+    {
+        <p class="text-muted">@T["Nobody is in this form's audience yet."]</p>
+    }
+    else
+    {
+        <div class="table-responsive card border-0 shadow-sm">
+            <table class="table table-sm align-middle mb-0" data-tracking>
+                <thead class="table-light">
+                    <tr>
+                        @if (mixed) { <th scope="col">@T["Answered by"]</th> }
+                        <th scope="col">@T["Name"]</th><th scope="col">@T["Class"]</th><th scope="col">@T["Parents"]</th><th scope="col">@T["Answer"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in t.Rows.OrderBy(r => r.Answered))
+                    {
+                        <tr data-tracking-row="@(r.Answered ? "answered" : "waiting")">
+                            @if (mixed) { <td>@Kind(r.Kind)</td> }
+                            <td>@r.Name</td>
+                            <td>@r.ClassName</td>
+                            <td>@if (r.NoParentAccount) { <span class="text-warning small" data-no-parent>@T["No parent account"]</span> } else { @r.Parents }</td>
+                            <td>
+                                @if (r.Answered)
+                                {
+                                    <span class="badge bg-success">@T["Answered"]</span>
+                                    <span class="small text-muted">@r.AnsweredBy · <time datetime="@CommunityFormat.Iso(r.AnsweredAt)" data-local-time="short">@r.AnsweredAt?.ToString("dd MMM HH:mm") UTC</time></span>
+                                }
+                                else { <span class="badge bg-warning text-dark">@T["Not yet"]</span> }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

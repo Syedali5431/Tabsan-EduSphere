@@ -59,6 +59,7 @@
             case 'Assignment': return t('Due');
             case 'Quiz': return t('Quiz closes');
             case 'LiveClass': return t('Live class');
+            case 'Event': return t('Event');
             default: return t('Key date');
         }
     }

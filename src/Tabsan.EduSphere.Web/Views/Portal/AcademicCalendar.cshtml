@@ -17,7 +17,8 @@
         (Kind: CalendarKinds.Assignment, Label: T.Text("Homework")),
         (Kind: CalendarKinds.Quiz, Label: T.Text("Quizzes")),
         (Kind: CalendarKinds.LiveClass, Label: T.Text("Live classes")),
-        (Kind: CalendarKinds.KeyDate, Label: T.Text("Key dates"))
+        (Kind: CalendarKinds.KeyDate, Label: T.Text("Key dates")),
+        (Kind: CalendarKinds.Event, Label: T.Text("Events"))
     };
     string KindClass(string kind) => "calendar-" + kind.ToLowerInvariant();
     string Prefix(CalendarEventDto e) => e.Kind switch
@@ -25,6 +26,7 @@
         CalendarKinds.Assignment => T.Text("Due"),
         CalendarKinds.Quiz => T.Text("Quiz closes"),
         CalendarKinds.LiveClass => T.Text("Live class"),
+        CalendarKinds.Event => T.Text("Event"),
         _ => T.Text("Key date")
     };
     string? StatusLabel(CalendarEventDto e) => e.Status switch

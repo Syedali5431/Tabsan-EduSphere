@@ -188,17 +188,29 @@
  "1. Find the parent": [
   "Views/Portal/ParentLinks.cshtml"
  ],
+ "1. Where to copy from": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "2. Link a student": [
   "Views/Portal/ParentLinks.cshtml"
  ],
  "2. Students": [
   "Views/Portal/Enrollments.cshtml"
  ],
+ "2. What to copy": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "3. Dates and visibility": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "6-digit code": [
   "Views/Login/Index.cshtml"
  ],
  "; for students also": [
   "Views/Portal/UserImport.cshtml"
+ ],
+ "A deleted course": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "A formal university degree certificate will be generated as a PDF.": [
   "Views/Portal/ReportDegreeCertificate.cshtml"
@@ -223,6 +235,9 @@
  ],
  "A parent linked to a School student follows that child's results, attendance, fees and announcements in the EduSphere mobile app. One parent can have several children, and a child can have several parents.": [
   "Views/Portal/ParentLinks.cshtml"
+ ],
+ "A picture already online, starting with https://.": [
+  "Views/Portal/EditNews.cshtml"
  ],
  "A preview is not available for this file. Use Download to open it.": [
   "wwwroot/js/submission-page.js"
@@ -271,6 +286,7 @@
  ],
  "API connection is not configured.": [
   "Views/Portal/AssignmentPolicies.cshtml",
+  "Views/Portal/CourseCopy.cshtml",
   "Views/Portal/LiveClassSettings.cshtml",
   "Views/Portal/LiveClasses.cshtml",
   "Views/Portal/ModuleProgress.cshtml",
@@ -325,6 +341,9 @@
  ],
  "ASPNETCORE_ENVIRONMENT": [
   "Views/Shared/Error.cshtml"
+ ],
+ "About": [
+  "Views/Portal/PastoralNote.cshtml"
  ],
  "Absent": [
   "Views (inline expressions)",
@@ -409,9 +428,12 @@
   "Views/Portal/StudentLifecycle.cshtml"
  ],
  "Actions": [
+  "Views/Portal/News.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/Programs.cshtml",
   "Views/Portal/Results.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
+  "Views/Portal/SchoolForms.cshtml",
   "Views/Portal/TimetableTeacher.cshtml"
  ],
  "Activate": [
@@ -496,6 +518,8 @@
  "Add": [
   "Views/Portal/AssignmentPolicies.cshtml",
   "Views/Portal/LmsManage.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
+  "Views/Portal/PastoralStudent.cshtml",
   "Views/Portal/StudyPlanDetail.cshtml",
   "Views/Portal/_ModuleItemsEditor.cshtml",
   "Views/Shared/Components/ExternalTools/Default.cshtml"
@@ -552,10 +576,14 @@
  "Add a deployment for": [
   "Views/Portal/LtiTools.cshtml"
  ],
+ "Add a follow-up note": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
  "Add a material or relax your filters to view existing content.": [
   "Views/Portal/CourseMaterial.cshtml"
  ],
  "Add a question": [
+  "Views/Portal/EditForm.cshtml",
   "Views/Portal/QuizBuilder.cshtml"
  ],
  "Add a question to this bank": [
@@ -632,6 +660,9 @@
   "Views/Portal/LiveClasses.cshtml",
   "Views/Shared/Components/UpcomingLiveClasses/Default.cshtml"
  ],
+ "Add to the team": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "Add to your own calendar": [
   "Views/Portal/AcademicCalendar.cshtml"
  ],
@@ -650,6 +681,7 @@
  ],
  "Admin": [
   "Sidebar",
+  "Views (inline expressions)",
   "Views/Portal/PortalCapabilityMatrix.cshtml",
   "Views/Portal/SidebarSettings.cshtml",
   "Views/Portal/UserImport.cshtml"
@@ -721,6 +753,7 @@
  "All": [
   "Views (inline expressions)",
   "Views/Portal/Helpdesk.cshtml",
+  "Views/Portal/Pastoral.cshtml",
   "Views/Portal/ReportPayments.cshtml",
   "Views/Portal/Search.cshtml",
   "Views/Portal/StudentLifecycle.cshtml",
@@ -886,6 +919,7 @@
  ],
  "All day": [
   "Views/Portal/AcademicCalendar.cshtml",
+  "Views/Portal/EditEvent.cshtml",
   "wwwroot/js/calendar.js"
  ],
  "All departments": [
@@ -894,6 +928,9 @@
  ],
  "All existing modules target this mode.": [
   "Views/Portal/InstitutionPolicy.cshtml"
+ ],
+ "All forms": [
+  "Views/Portal/FillForm.cshtml"
  ],
  "All institutes": [
   "Views/Shared/_InstitutionFilter.cshtml"
@@ -910,6 +947,9 @@
  ],
  "All my courses": [
   "Views/Portal/Announcements.cshtml"
+ ],
+ "All news": [
+  "Views/Portal/NewsPost.cshtml"
  ],
  "All programs": [
   "Views/Portal/Enrollments.cshtml"
@@ -1041,6 +1081,7 @@
   "Views/Portal/AssignmentOptions.cshtml"
  ],
  "Answer": [
+  "Views/Portal/FormResponses.cshtml",
   "Views/Portal/QuizReview.cshtml",
   "Views/Portal/_QuizQuestionEditor.cshtml"
  ],
@@ -1053,11 +1094,38 @@
  "Answer options": [
   "Views/Portal/_QuizQuestionEditor.cshtml"
  ],
+ "Answered": [
+  "Views/Portal/FillForm.cshtml",
+  "Views/Portal/FormResponses.cshtml",
+  "Views/Portal/SchoolForms.cshtml"
+ ],
+ "Answered by": [
+  "Views/Portal/FormResponses.cshtml"
+ ],
+ "Answers": [
+  "Views/Portal/FormResponses.cshtml",
+  "Views/Portal/SchoolForms.cshtml"
+ ],
+ "Answers are taken until then; a day before, everyone who has not answered is reminded.": [
+  "Views/Portal/EditForm.cshtml"
+ ],
+ "Answers have come in, so the questions can no longer change.": [
+  "Views/Portal/EditForm.cshtml"
+ ],
  "Any course": [
   "Views/Portal/Outcomes.cshtml"
  ],
  "Any program": [
   "Views/Portal/Outcomes.cshtml"
+ ],
+ "Anything you would like to add?": [
+  "Views/Portal/Wellbeing.cshtml"
+ ],
+ "Appears": [
+  "Views/Portal/News.cshtml"
+ ],
+ "Appears from (your time)": [
+  "Views/Portal/EditNews.cshtml"
  ],
  "Application Detail": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
@@ -1154,6 +1222,9 @@
  "Ask me anything about your studies!": [
   "Views/Portal/AiChat.cshtml"
  ],
+ "Ask people whether they are coming": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
  "Assessed": [
   "Views/Portal/OutcomeAttainment.cshtml"
  ],
@@ -1211,6 +1282,7 @@
   "Views/Portal/Analytics.cshtml",
   "Views/Portal/AssignmentPolicies.cshtml",
   "Views/Portal/Assignments.cshtml",
+  "Views/Portal/CourseCopy.cshtml",
   "Views/Shared/_Layout.cshtml"
  ],
  "Assignments — {0}": [
@@ -1409,6 +1481,9 @@
   "Views/Portal/PeerReview.cshtml",
   "Views/Portal/SimilarityReport.cshtml"
  ],
+ "Back to course content": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Back to live classes": [
   "Views/Portal/LiveSessionAttendance.cshtml"
  ],
@@ -1445,6 +1520,12 @@
  "Before": [
   "Views/Portal/AuditLogs.cshtml"
  ],
+ "Behaviour": [
+  "Views (inline expressions)"
+ ],
+ "Behaviour plan": [
+  "Views (inline expressions)"
+ ],
  "Below mastery": [
   "Views/Portal/OutcomeMastery.cshtml"
  ],
@@ -1475,6 +1556,9 @@
  ],
  "Body (HTML allowed)": [
   "Views/Portal/LmsManage.cshtml"
+ ],
+ "Bring in modules, pages, assignments, quizzes and files from another course you teach, or from a template, instead of building the course again.": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Browse Course Materials": [
   "Views/Portal/CourseMaterialStudent.cshtml"
@@ -1515,6 +1599,12 @@
  ],
  "Button label": [
   "Views/Portal/SsoSettings.cshtml"
+ ],
+ "By": [
+  "Views/Portal/CourseCopy.cshtml",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
  ],
  "CGPA:": [
   "Views/Portal/DegreeAudit.cshtml",
@@ -1592,6 +1682,8 @@
   "Views/Portal/Fyp.cshtml",
   "Views/Portal/GenerateCertificates.cshtml",
   "Views/Portal/GradingConfig.cshtml",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/Programs.cshtml",
   "Views/Portal/Quizzes.cshtml",
@@ -1605,7 +1697,8 @@
   "Views/Portal/TimetableStudent.cshtml",
   "Views/Portal/TimetableTeacher.cshtml",
   "Views/Portal/UserImport.cshtml",
-  "Views/Portal/UserSettings.cshtml"
+  "Views/Portal/UserSettings.cshtml",
+  "Views/Portal/_AudiencePicker.cshtml"
  ],
  "Campus Assignments": [
   "Views/Portal/UserImport.cshtml"
@@ -1660,6 +1753,9 @@
  "Cancel editing": [
   "Views/Portal/LiveClasses.cshtml"
  ],
+ "Cancel the event": [
+  "Views/Portal/EventReplies.cshtml"
+ ],
  "Cancel this class? Students will be told.": [
   "Views/Portal/LiveClasses.cshtml"
  ],
@@ -1668,6 +1764,8 @@
  ],
  "Cancelled": [
   "Views/Portal/AcademicCalendar.cshtml",
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
   "wwwroot/js/calendar.js"
  ],
  "Cannot reach the API at {0}. Make sure the API is running.": [
@@ -1688,9 +1786,13 @@
  "Catalogue URL": [
   "Views/Portal/LibraryConfig.cshtml"
  ],
+ "Categories": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "Category": [
   "Views/Portal/Helpdesk.cshtml",
-  "Views/Portal/HelpdeskCreate.cshtml"
+  "Views/Portal/HelpdeskCreate.cshtml",
+  "Views/Portal/PastoralNote.cshtml"
  ],
  "Certificate": [
   "Views/Portal/GraduationApplications.cshtml",
@@ -1718,13 +1820,39 @@
   "Views/Portal/GenerateCertificates.cshtml"
  ],
  "Change": [
+  "Views/Portal/FormResponses.cshtml",
+  "Views/Portal/News.cshtml",
+  "Views/Portal/NewsPost.cshtml",
+  "Views/Portal/PastoralStudent.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
+  "Views/Portal/SchoolForms.cshtml",
   "Views/Shared/_LanguageSwitcher.cshtml"
  ],
  "Change Password": [
   "Views/Portal/UserSettings.cshtml"
  ],
+ "Change a note": [
+  "Controllers",
+  "Views/Portal/PastoralNote.cshtml"
+ ],
+ "Change event": [
+  "Controllers",
+  "Views/Portal/EditEvent.cshtml"
+ ],
+ "Change form": [
+  "Controllers",
+  "Views/Portal/EditForm.cshtml"
+ ],
  "Change month": [
   "Views/Portal/AcademicCalendar.cshtml"
+ ],
+ "Change news": [
+  "Controllers",
+  "Views/Portal/EditNews.cshtml"
+ ],
+ "Change support plan": [
+  "Controllers",
+  "Views/Portal/PastoralPlan.cshtml"
  ],
  "Change your password": [
   "Views/Portal/ForceChangePassword.cshtml",
@@ -1745,11 +1873,20 @@
  "Check every handed-in attempt": [
   "Views/Portal/AssignmentOptions.cshtml"
  ],
+ "Check in": [
+  "Views/Portal/Wellbeing.cshtml"
+ ],
  "Check similarity": [
   "Views/Portal/SimilaritySettings.cshtml"
  ],
  "Check submissions": [
   "Views/Portal/SimilaritySettings.cshtml"
+ ],
+ "Check-ins": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Check-ins waiting for someone": [
+  "Views/Portal/Pastoral.cshtml"
  ],
  "Checker": [
   "Views/Portal/SimilaritySettings.cshtml"
@@ -1766,11 +1903,26 @@
  "Children of {0}": [
   "Views/Portal/ParentLinks.cshtml"
  ],
+ "Choices so far": [
+  "Views/Portal/FormResponses.cshtml"
+ ],
+ "Choices, one per line": [
+  "Views/Portal/EditForm.cshtml"
+ ],
  "Choose a bank to see and edit its questions.": [
   "Views/Portal/QuestionBanks.cshtml"
  ],
+ "Choose a class": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
+ "Choose a class or find a student first.": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
  "Choose a course to see its modules.": [
   "Views/Portal/CourseLms.cshtml"
+ ],
+ "Choose a course…": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Choose a department and {0}, tick the courses and the students, then enroll them all at once.": [
   "Views/Portal/Enrollments.cshtml"
@@ -1805,6 +1957,9 @@
  "Choose a program…": [
   "Views/Portal/OutcomeAttainment.cshtml"
  ],
+ "Choose a school": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "Choose a student or group and a due date.": [
   "Controllers"
  ],
@@ -1816,6 +1971,16 @@
  ],
  "Choose content from {0}": [
   "Views/Shared/Components/ExternalTools/Default.cshtml"
+ ],
+ "Choose items": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Choose someone": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Choose something to copy.": [
+  "Controllers",
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Choose the Excel file to import.": [
   "Controllers"
@@ -1829,6 +1994,9 @@
  "Choose the {0} to see its courses and students.": [
   "Views/Portal/Enrollments.cshtml"
  ],
+ "Choose when the event starts.": [
+  "Controllers"
+ ],
  "Choose your own group.": [
   "Views (inline expressions)"
  ],
@@ -1840,7 +2008,10 @@
   "Views/Portal/TakeQuizAttempt.cshtml"
  ],
  "Class": [
-  "Views (inline expressions)"
+  "Views (inline expressions)",
+  "Views/Portal/FormResponses.cshtml",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/_AudiencePicker.cshtml"
  ],
  "Class 1 to 10": [
   "Views/Portal/Dashboard.cshtml"
@@ -1906,18 +2077,30 @@
  ],
  "Close": [
   "Views/Portal/AcademicCalendar.cshtml",
+  "Views/Portal/CourseCopy.cshtml",
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/FormResponses.cshtml",
   "Views/Portal/HelpdeskDetail.cshtml",
+  "Views/Portal/LmsManage.cshtml",
   "Views/Portal/MessageThread.cshtml",
   "Views/Portal/Messages.cshtml",
   "Views/Portal/NewMessage.cshtml",
+  "Views/Portal/News.cshtml",
+  "Views/Portal/NewsPost.cshtml",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
+  "Views/Portal/PastoralStudent.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/Prerequisites.cshtml",
   "Views/Portal/QuestionBanks.cshtml",
   "Views/Portal/QuizBuilder.cshtml",
   "Views/Portal/QuizGrading.cshtml",
   "Views/Portal/QuizStatistics.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
+  "Views/Portal/SchoolForms.cshtml",
   "Views/Portal/SsoSettings.cshtml",
-  "Views/Portal/UserImport.cshtml"
+  "Views/Portal/UserImport.cshtml",
+  "Views/Portal/Wellbeing.cshtml"
  ],
  "Close AI assistant": [
   "Views/Shared/ChatPanel.cshtml",
@@ -1926,14 +2109,22 @@
  "Close navigation": [
   "Views/Shared/_Layout.cshtml"
  ],
+ "Close the form": [
+  "Views/Portal/FormResponses.cshtml"
+ ],
  "Closed": [
   "Views/Portal/AssignmentSubmission.cshtml",
   "Views/Portal/Discussion.cshtml",
   "Views/Portal/DiscussionThread.cshtml",
-  "Views/Portal/DiscussionThreadDetail.cshtml"
+  "Views/Portal/DiscussionThreadDetail.cshtml",
+  "Views/Portal/FormResponses.cshtml",
+  "Views/Portal/SchoolForms.cshtml"
  ],
  "Closes": [
   "Views/Portal/QuizBuilder.cshtml"
+ ],
+ "Closes {0} · {1} questions": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Closes:": [
   "Views/Portal/TakeQuiz.cshtml"
@@ -1964,6 +2155,12 @@
  ],
  "College mode": [
   "Views/Portal/Dashboard.cshtml"
+ ],
+ "Coming": [
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "Coming up": [
+  "Views/Portal/SchoolEvents.cshtml"
  ],
  "Comment": [
   "Views/Portal/AssignmentSubmission.cshtml",
@@ -2021,6 +2218,23 @@
   "Views/Portal/ReportTranscript.cshtml",
   "Views/Portal/ResultCalculation.cshtml"
  ],
+ "Concern": [
+  "Views (inline expressions)"
+ ],
+ "Concerns": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Confidential": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Confidential notes": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Confidential: only me and the wellbeing team members who see confidential notes": [
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralPlan.cshtml"
+ ],
  "Configure API": [
   "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/AcademicDeadlines.cshtml",
@@ -2043,7 +2257,11 @@
   "Views/Portal/MessageThread.cshtml",
   "Views/Portal/Messages.cshtml",
   "Views/Portal/NewMessage.cshtml",
+  "Views/Portal/News.cshtml",
   "Views/Portal/Notifications.cshtml",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
+  "Views/Portal/PastoralStudent.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/Programs.cshtml",
   "Views/Portal/QuestionBanks.cshtml",
@@ -2052,11 +2270,14 @@
   "Views/Portal/Results.cshtml",
   "Views/Portal/RubricManage.cshtml",
   "Views/Portal/RubricView.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
+  "Views/Portal/SchoolForms.cshtml",
   "Views/Portal/Search.cshtml",
   "Views/Portal/StudentLifecycle.cshtml",
   "Views/Portal/Students.cshtml",
   "Views/Portal/TenantManagement.cshtml",
-  "Views/Portal/ViewQuizzes.cshtml"
+  "Views/Portal/ViewQuizzes.cshtml",
+  "Views/Portal/Wellbeing.cshtml"
  ],
  "Configure API connection on Dashboard first.": [
   "Controllers"
@@ -2106,6 +2327,9 @@
  "Connection settings": [
   "Views/Portal/Dashboard.cshtml"
  ],
+ "Contact with family": [
+  "Views (inline expressions)"
+ ],
  "Content added": [
   "Controllers (page titles)"
  ],
@@ -2136,15 +2360,31 @@
  "Copied.": [
   "Views/Portal/AcademicCalendar.cshtml"
  ],
+ "Copies into this course": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Copy": [
   "Views/Portal/AcademicCalendar.cshtml",
   "Views/Portal/SsoSettings.cshtml"
+ ],
+ "Copy content from another course": [
+  "Views/Portal/LmsManage.cshtml"
+ ],
+ "Copy course content": [
+  "Controllers",
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Copy into this course": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Copy questions from a bank": [
   "Views/Portal/QuizBuilder.cshtml"
  ],
  "Copy selected into this quiz": [
   "Views/Portal/QuizBuilder.cshtml"
+ ],
+ "Copying into": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Copyleaks": [
   "Views/Portal/SimilaritySettings.cshtml"
@@ -2328,6 +2568,9 @@
  "Course operations": [
   "Views/Portal/Courses.cshtml"
  ],
+ "Course or template": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Course outcomes": [
   "wwwroot/js/outcome-align.js"
  ],
@@ -2336,6 +2579,9 @@
  ],
  "Course removed from plan.": [
   "Controllers"
+ ],
+ "Course settings": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Courses": [
   "Sidebar",
@@ -2566,6 +2812,7 @@
  "Date": [
   "Views/Portal/AcademicDeadlines.cshtml",
   "Views/Portal/Attendance.cshtml",
+  "Views/Portal/EditForm.cshtml",
   "Views/Portal/GraduationApplicationDetail.cshtml"
  ],
  "Date for {0}": [
@@ -2582,6 +2829,12 @@
  ],
  "Dates for particular students and groups": [
   "Views/Portal/AssignmentOptions.cshtml"
+ ],
+ "Dates moved": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Dates moved by {0} days.": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Day": [
   "Views/Portal/TimetableAdmin.cshtml",
@@ -2907,7 +3160,9 @@
  "Description": [
   "Views/Portal/AcademicDeadlines.cshtml",
   "Views/Portal/Assignments.cshtml",
+  "Views/Portal/CourseCopy.cshtml",
   "Views/Portal/CourseMaterial.cshtml",
+  "Views/Portal/EditEvent.cshtml",
   "Views/Portal/Fyp.cshtml",
   "Views/Portal/LtiTools.cshtml",
   "Views/Portal/Outcomes.cshtml",
@@ -2922,6 +3177,7 @@
  ],
  "Details": [
   "Views/Portal/HelpdeskCreate.cshtml",
+  "Views/Portal/PastoralNote.cshtml",
   "Views/Portal/Results.cshtml"
  ],
  "Development": [
@@ -2968,6 +3224,9 @@
  ],
  "Discussions": [
   "Views/Portal/MyGroups.cshtml"
+ ],
+ "Discussions aren't copied, because they belong to the class that held them. Start a new discussion in the new course.": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Display name": [
   "Views/Portal/ReportSettings.cshtml"
@@ -3037,6 +3296,9 @@
  "Download a simple text template file and edit it as needed.": [
   "Views/Portal/AccreditationTemplates.cshtml"
  ],
+ "Download answers": [
+  "Views/Portal/FormResponses.cshtml"
+ ],
  "Download file": [
   "Views/Portal/CourseMaterial.cshtml"
  ],
@@ -3049,7 +3311,11 @@
  "Draft": [
   "Views (inline expressions)",
   "Views/Portal/Assignments.cshtml",
-  "Views/Portal/LmsManage.cshtml"
+  "Views/Portal/FormResponses.cshtml",
+  "Views/Portal/LmsManage.cshtml",
+  "Views/Portal/News.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
+  "Views/Portal/SchoolForms.cshtml"
  ],
  "Draw random questions": [
   "Views/Portal/QuizBuilder.cshtml"
@@ -3065,11 +3331,17 @@
  ],
  "Due": [
   "Views/Portal/AcademicCalendar.cshtml",
+  "Views/Portal/FillForm.cshtml",
+  "Views/Portal/FormResponses.cshtml",
   "Views/Portal/ReportPayments.cshtml",
+  "Views/Portal/SchoolForms.cshtml",
   "wwwroot/js/calendar.js"
  ],
  "Due (UTC)": [
   "Views/Portal/AssignmentOptions.cshtml"
+ ],
+ "Due (your time)": [
+  "Views/Portal/EditForm.cshtml"
  ],
  "Due Date": [
   "Views/Portal/Assignments.cshtml",
@@ -3079,8 +3351,12 @@
  "Due Date (UTC)": [
   "Views/Portal/Assignments.cshtml"
  ],
+ "Due dates, availability windows, peer review dates and module unlock dates all move together.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Due {0}": [
-  "Views/Portal/AssignmentOptions.cshtml"
+  "Views/Portal/AssignmentOptions.cshtml",
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Due {0} · out of {1}": [
   "Views/Portal/AssignmentOptions.cshtml"
@@ -3203,6 +3479,15 @@
  "Embed URL (e.g. YouTube)": [
   "Views/Portal/LmsManage.cshtml"
  ],
+ "Empty: no limit. Guests take places too.": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
+ "Empty: now.": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
+ "Empty: when the event starts.": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
  "Enable": [
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
@@ -3218,6 +3503,16 @@
  "End": [
   "Views/Portal/TimetableAdmin.cshtml"
  ],
+ "End the plan": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Ended": [
+  "Views/Portal/News.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Ended plans": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
  "Endorse": [
   "Views/Portal/StudyPlanDetail.cshtml"
  ],
@@ -3229,6 +3524,9 @@
  ],
  "Endpoint: {0} (HTTP Basic: key and secret; xAPI 1.0.3).": [
   "Views/Portal/XapiSettings.cshtml"
+ ],
+ "Ends (your time)": [
+  "Views/Portal/EditEvent.cshtml"
  ],
  "English": [
   "Views/Portal/LanguageSettings.cshtml"
@@ -3362,8 +3660,40 @@
  "Errors": [
   "Views/Portal/UserImport.cshtml"
  ],
+ "Event": [
+  "Views/Portal/AcademicCalendar.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
+  "wwwroot/js/calendar.js"
+ ],
+ "Event not found.": [
+  "Controllers"
+ ],
+ "Event replies": [
+  "Controllers",
+  "Views/Portal/EventReplies.cshtml"
+ ],
+ "Events": [
+  "Controllers",
+  "Sidebar",
+  "Views/Portal/AcademicCalendar.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "Events I manage": [
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
  "Every assignment of the same course": [
   "Views/Portal/SimilaritySettings.cshtml"
+ ],
+ "Every campus": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Every campus I can choose": [
+  "Views/Portal/_AudiencePicker.cshtml"
+ ],
+ "Every class": [
+  "Views/Portal/_AudiencePicker.cshtml"
  ],
  "Every course of the institution": [
   "Views/Portal/SimilaritySettings.cshtml"
@@ -3371,8 +3701,30 @@
  "Every student in this list is already enrolled in the ticked courses (or does not match the search). Untick": [
   "Views/Portal/Enrollments.cshtml"
  ],
+ "Every teacher in the school": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Every year level": [
+  "Views/Portal/PastoralSetup.cshtml",
+  "Views/Portal/_AudiencePicker.cshtml"
+ ],
+ "Everyone": [
+  "Views/Portal/_AudienceLabel.cshtml"
+ ],
+ "Everyone has answered; nobody needed a reminder.": [
+  "Controllers"
+ ],
  "Everyone has the assignment's dates.": [
   "Views/Portal/AssignmentOptions.cshtml"
+ ],
+ "Everyone in the list": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
+ "Everyone it is for is told when the event is published, and again if it is cancelled. Events also appear in their calendar.": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
+ "Everyone it is for is told when the post appears: in the app, by push and by e-mail where they have switched those on.": [
+  "Views/Portal/EditNews.cshtml"
  ],
  "Evidence ({0})": [
   "Views/Portal/MyOutcomes.cshtml"
@@ -3382,6 +3734,10 @@
  ],
  "Exact answer": [
   "Views/Portal/_QuizQuestionEditor.cshtml"
+ ],
+ "Exam": [
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
  ],
  "Exam Type": [
   "Views/Portal/Results.cshtml"
@@ -3398,6 +3754,10 @@
   "Views/Portal/ReportResults.cshtml",
   "Views/Portal/ReportSemesterResults.cshtml",
   "Views/Portal/ReportTranscript.cshtml"
+ ],
+ "Excursion": [
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
  ],
  "Excused": [
   "Views/Portal/Attendance.cshtml"
@@ -3491,7 +3851,11 @@
  "External tool - Tabsan EduSphere": [
   "Views/Lti/Error.cshtml"
  ],
+ "External tool links, with their gradebook columns.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "External tools": [
+  "Views/Portal/CourseCopy.cshtml",
   "Views/Shared/Components/ExternalTools/Default.cshtml"
  ],
  "External tools are managed by Admins and Super Admins.": [
@@ -3611,8 +3975,14 @@
  "Files": [
   "Views/Portal/AssignmentSubmission.cshtml"
  ],
+ "Files and links": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Fill %": [
   "Views/Portal/ReportEnrollment.cshtml"
+ ],
+ "Fill in the form for this event": [
+  "Views/Portal/SchoolEvents.cshtml"
  ],
  "Filter": [
   "Views/Portal/GradingWorkspace.cshtml",
@@ -3678,8 +4048,16 @@
  "Financial Related": [
   "Sidebar"
  ],
+ "Find": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralNote.cshtml"
+ ],
  "Find [variables] in the question": [
   "Views/Portal/_QuizQuestionEditor.cshtml"
+ ],
+ "Find a student": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralNote.cshtml"
  ],
  "Find active files and links published by your faculty.": [
   "Views/Portal/CourseMaterialStudent.cshtml"
@@ -3705,6 +4083,22 @@
  "Fix the rows below in your CSV and re-upload the same template.": [
   "Views/Portal/UserImport.cshtml"
  ],
+ "Follow-up": [
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Follow-up done": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Follow-up note": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Follow-ups": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
+ "Followed up": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
  "Font Family": [
   "Views/Portal/DashboardSettings.cshtml"
  ],
@@ -3715,7 +4109,20 @@
   "Views/Portal/DashboardSettings.cshtml"
  ],
  "For": [
-  "Views/Portal/AssignmentOptions.cshtml"
+  "Views/Portal/AssignmentOptions.cshtml",
+  "Views/Portal/News.cshtml",
+  "Views/Portal/PastoralPlan.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
+  "Views/Portal/SchoolForms.cshtml"
+ ],
+ "For example a consent form for an excursion: make it on the Forms page first.": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
+ "For example: Extra time in tests": [
+  "Views/Portal/PastoralPlan.cshtml"
+ ],
+ "For example: School counsellor": [
+  "Views/Portal/PastoralSetup.cshtml"
  ],
  "For local debugging, enable the": [
   "Views/Shared/Error.cshtml"
@@ -3726,14 +4133,44 @@
  "For tools that support LTI Dynamic Registration: paste the registration URL from the tool's set-up instructions. The tool reads EduSphere's details and registers itself; it is added switched off for you to review.": [
   "Views/Portal/LtiTools.cshtml"
  ],
+ "For you as its author": [
+  "Views/Portal/NewsPost.cshtml"
+ ],
+ "For {0}": [
+  "Views/Portal/FillForm.cshtml"
+ ],
  "Force Change Password": [
   "Views/Portal/ForceChangePassword.cshtml"
+ ],
+ "Form": [
+  "Views/Portal/SchoolForms.cshtml"
+ ],
+ "Form answers": [
+  "Controllers",
+  "Views/Portal/FormResponses.cshtml"
+ ],
+ "Form not found.": [
+  "Controllers"
+ ],
+ "Form to fill in": [
+  "Views/Portal/EditEvent.cshtml"
  ],
  "Formal university degree with seal, signatures, gold accents": [
   "Views/Portal/ReportDegreeCertificate.cshtml"
  ],
  "Format:": [
   "Views/Portal/ReportDegreeCertificate.cshtml"
+ ],
+ "Forms": [
+  "Controllers",
+  "Sidebar",
+  "Views/Portal/FillForm.cshtml",
+  "Views/Portal/SchoolForms.cshtml"
+ ],
+ "Forms I manage": [
+  "Views/Portal/EditForm.cshtml",
+  "Views/Portal/FormResponses.cshtml",
+  "Views/Portal/SchoolForms.cshtml"
  ],
  "Formula": [
   "Views/Portal/_QuizQuestionEditor.cshtml"
@@ -3742,13 +4179,18 @@
   "Views/Portal/TimetableAdmin.cshtml"
  ],
  "From": [
-  "Views/Portal/GradingConfig.cshtml"
+  "Views/Portal/CourseCopy.cshtml",
+  "Views/Portal/GradingConfig.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
  ],
  "From (UTC)": [
   "Views/Portal/AuditLogs.cshtml"
  ],
  "From the timetable": [
   "Views/Portal/LiveClasses.cshtml"
+ ],
+ "From your teachers": [
+  "Views/Portal/Wellbeing.cshtml"
  ],
  "Frontend-only redesign active": [
   "Views/Portal/Dashboard.cshtml"
@@ -3784,6 +4226,9 @@
  ],
  "General": [
   "Sidebar",
+  "Views (inline expressions)",
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
   "Views/Shared/_Layout.cshtml"
  ],
  "General / Not specific": [
@@ -3854,6 +4299,13 @@
  ],
  "Go to my groups": [
   "Views/Portal/AssignmentSubmission.cshtml"
+ ],
+ "Going": [
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "Good": [
+  "Views (inline expressions)"
  ],
  "Grade": [
   "Views/Portal/AssignmentSubmission.cshtml",
@@ -3989,6 +4441,9 @@
   "Models/Portal/ParentLinkPageModels.cs",
   "Views/Portal/ParentLinks.cshtml"
  ],
+ "Great": [
+  "Views (inline expressions)"
+ ],
  "Group name": [
   "Views/Portal/AssignmentPolicies.cshtml"
  ],
@@ -4029,12 +4484,25 @@
  "Guest session": [
   "Views/Shared/_Layout.cshtml"
  ],
+ "Guests": [
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "Guests each person may bring": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
  "Guidance state": [
   "Views/Portal/Results.cshtml"
  ],
  "Handed in": [
   "Views/Portal/AcademicCalendar.cshtml",
   "wwwroot/js/calendar.js"
+ ],
+ "Health plan": [
+  "Views (inline expressions)"
+ ],
+ "Help text": [
+  "Views/Portal/EditForm.cshtml"
  ],
  "Helpdesk": [
   "Sidebar",
@@ -4047,6 +4515,9 @@
   "Views/Portal/_ModuleItemsEditor.cshtml",
   "Views/Shared/Components/ExternalTools/Default.cshtml"
  ],
+ "Hidden from students": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Hidden from students.": [
   "Controllers"
  ],
@@ -4054,7 +4525,8 @@
   "Views/Portal/InstitutionPolicy.cshtml"
  ],
  "Hide": [
-  "Views (inline expressions)"
+  "Views (inline expressions)",
+  "Views/Portal/PastoralSetup.cshtml"
  ],
  "Hide every posted grade from students again?": [
   "Views/Portal/GradingWorkspace.cshtml"
@@ -4065,11 +4537,18 @@
  "Hide students already in every ticked course": [
   "Views/Portal/Enrollments.cshtml"
  ],
+ "Holiday": [
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
  "Homework": [
   "Views/Portal/AcademicCalendar.cshtml"
  ],
  "How alignment works": [
   "Views/Portal/Outcomes.cshtml"
+ ],
+ "How are you feeling today?": [
+  "Views/Portal/Wellbeing.cshtml"
  ],
  "How far each student has worked through the course modules.": [
   "Views/Portal/ModuleProgress.cshtml"
@@ -4079,6 +4558,12 @@
  ],
  "How many students of a program attained each program learning outcome — for accreditation reviews (PEC, HEC, NCAAA, ABET-style).": [
   "Views/Portal/OutcomeAttainment.cshtml"
+ ],
+ "How serious?": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
+ "I would like to talk to someone": [
+  "Views/Portal/Wellbeing.cshtml"
  ],
  "ISO Compliance": [
   "Sidebar"
@@ -4211,6 +4696,9 @@
  "Individual work": [
   "Views/Portal/AssignmentOptions.cshtml"
  ],
+ "Information (no answer)": [
+  "Views/Portal/EditForm.cshtml"
+ ],
  "Initial Department Assignments": [
   "Views/Portal/AdminUsers.cshtml"
  ],
@@ -4281,6 +4769,7 @@
   "Controllers"
  ],
  "Instructions": [
+  "Views/Portal/EditForm.cshtml",
   "Views/Portal/Quizzes.cshtml"
  ],
  "Integrations (student information systems, reporting tools, scripts) call the EduSphere REST API with a token. A token acts as you, with your role and access; give each integration its own token and revoke it when it is no longer used.": [
@@ -4319,6 +4808,9 @@
  "Invalid username or password.": [
   "Controllers"
  ],
+ "Is it praise or a concern?": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
  "Issue": [
   "Views/Portal/UserImport.cshtml"
  ],
@@ -4334,6 +4826,9 @@
  ],
  "It can result in displaying sensitive information from exceptions to end users.": [
   "Views/Shared/Error.cshtml"
+ ],
+ "It could not be copied.": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Item": [
   "Views/Portal/_ModuleItemsEditor.cshtml"
@@ -4379,6 +4874,19 @@
  "Key dates": [
   "Views/Portal/AcademicCalendar.cshtml"
  ],
+ "Kind": [
+  "Views/Portal/EditForm.cshtml"
+ ],
+ "Kind of event": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
+ "Kind of note": [
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Kind of plan": [
+  "Views/Portal/PastoralPlan.cshtml"
+ ],
  "LMS Manage": [
   "Sidebar"
  ],
@@ -4406,6 +4914,18 @@
  "Largest group": [
   "Views/Portal/AssignmentPolicies.cshtml"
  ],
+ "Last 12 months": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
+ "Last 30 days": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
+ "Last 7 days": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
+ "Last 90 days": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
  "Last Date": [
   "Views/Portal/ViewQuizzes.cshtml"
  ],
@@ -4422,11 +4942,17 @@
  "Last changed {0}": [
   "Views/Portal/SsoSettings.cshtml"
  ],
+ "Last check-in": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
  "Last enrollment run": [
   "Views/Portal/Enrollments.cshtml"
  ],
  "Last read by a calendar app: {0}.": [
   "Views/Portal/AcademicCalendar.cshtml"
+ ],
+ "Last reminder": [
+  "Views/Portal/FormResponses.cshtml"
  ],
  "Last score": [
   "Views/Portal/ScormReport.cshtml"
@@ -4442,6 +4968,9 @@
  ],
  "Late and missing policy saved.": [
   "Controllers"
+ ],
+ "Late and missing work policy": [
+  "Views (inline expressions)"
  ],
  "Late deduction −": [
   "wwwroot/js/grading-workspace.js"
@@ -4487,6 +5016,9 @@
  "Learning Record Store (xAPI)": [
   "Views/Portal/XapiSettings.cshtml"
  ],
+ "Learning adjustments": [
+  "Views (inline expressions)"
+ ],
  "Learning outcomes are managed by Faculty, Admin and Super Admin.": [
   "Controllers"
  ],
@@ -4496,8 +5028,17 @@
  "Learning resources": [
   "Views/Portal/CourseMaterialStudent.cshtml"
  ],
+ "Learning support": [
+  "Views (inline expressions)"
+ ],
+ "Leave an empty line between paragraphs.": [
+  "Views/Portal/EditNews.cshtml"
+ ],
  "Leave blank to keep existing token": [
   "Views/Portal/LibraryConfig.cshtml"
+ ],
+ "Leave empty to publish straight away.": [
+  "Views/Portal/EditNews.cshtml"
  ],
  "Leave empty to use the item's name": [
   "Views/Portal/_ModuleItemsEditor.cshtml"
@@ -4599,6 +5140,9 @@
  "List the items in the CORRECT order — students get them shuffled.": [
   "wwwroot/js/quiz-editor.js"
  ],
+ "Live": [
+  "Views/Portal/News.cshtml"
+ ],
  "Live Class Settings": [
   "Sidebar",
   "Views/Portal/LiveClassSettings.cshtml",
@@ -4699,9 +5243,18 @@
  "Logo": [
   "Views/Portal/DashboardSettings.cshtml"
  ],
+ "Long answer": [
+  "Views/Portal/EditForm.cshtml"
+ ],
+ "Looks after": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "Lookups": [
   "Sidebar",
   "Views/Shared/_Layout.cshtml"
+ ],
+ "Low": [
+  "Views (inline expressions)"
  ],
  "Low Attendance (<75%)": [
   "Views/Portal/Attendance.cshtml"
@@ -4820,6 +5373,9 @@
  "Mark which statement is correct.": [
   "wwwroot/js/quiz-editor.js"
  ],
+ "Marked as seen to.": [
+  "Controllers"
+ ],
  "Marked {0}, late deduction −{1}.": [
   "Views/Portal/AssignmentSubmission.cshtml"
  ],
@@ -4919,6 +5475,14 @@
  "Maximum file size: 64 KB": [
   "Views/Portal/LicenseUpdate.cshtml"
  ],
+ "Maybe": [
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "Meeting": [
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
  "Meeting link (optional)": [
   "Views/Portal/LiveClasses.cshtml"
  ],
@@ -4993,6 +5557,9 @@
  "Minimum score to pass this course.": [
   "Views/Portal/GradingConfig.cshtml"
  ],
+ "Minor": [
+  "Views (inline expressions)"
+ ],
  "Minutes": [
   "Views/Portal/LiveClasses.cshtml",
   "Views/Portal/LiveSessionAttendance.cshtml"
@@ -5011,6 +5578,9 @@
  ],
  "Mode quick guide": [
   "Views/Portal/Dashboard.cshtml"
+ ],
+ "Moderate": [
+  "Views (inline expressions)"
  ],
  "Moderated grading (other graders give provisional grades; {0} choose the final grade)": [
   "Views/Portal/_AssignmentSettingsForm.cshtml"
@@ -5066,6 +5636,9 @@
  "Module item": [
   "Controllers (page titles)"
  ],
+ "Module items": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Module navigation": [
   "Views/Shared/Components/ModuleNav/Default.cshtml"
  ],
@@ -5081,6 +5654,9 @@
  "Module updated.": [
   "Controllers"
  ],
+ "Modules": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Monday": [
   "Views/Portal/TimetableAdmin.cshtml"
  ],
@@ -5091,12 +5667,18 @@
  "Months": [
   "Views/Portal/Courses.cshtml"
  ],
+ "Most common": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
  "Mother": [
   "Models/Portal/ParentLinkPageModels.cs",
   "Views/Portal/ParentLinks.cshtml"
  ],
  "Move down": [
   "Views/Portal/TakeQuizAttempt.cshtml"
+ ],
+ "Move every date by (days)": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Move to inbox": [
   "Views/Portal/MessageThread.cshtml"
@@ -5152,8 +5734,11 @@
   "Views/Portal/CampusManagement.cshtml",
   "Views/Portal/Departments.cshtml",
   "Views/Portal/Enrollments.cshtml",
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/FormResponses.cshtml",
   "Views/Portal/LtiTools.cshtml",
   "Views/Portal/ModuleComposition.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
   "Views/Portal/Programs.cshtml",
   "Views/Portal/ReportSettings.cshtml",
   "Views/Portal/SidebarSettings.cshtml",
@@ -5167,6 +5752,10 @@
  ],
  "Name or email": [
   "Views/Portal/UserSettings.cshtml"
+ ],
+ "Name or registration number": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralNote.cshtml"
  ],
  "Name, course or child": [
   "Views/Portal/NewMessage.cshtml"
@@ -5183,10 +5772,18 @@
  "Needs marking": [
   "Views/Portal/QuizGrading.cshtml"
  ],
+ "Needs someone": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Neither": [
+  "Views (inline expressions)"
+ ],
  "Never": [
   "Views/Portal/ApiTokens.cshtml"
  ],
  "New": [
+  "Views/Portal/News.cshtml",
   "Views/Portal/Notifications.cshtml",
   "Views/Shared/ChatPanel.cshtml"
  ],
@@ -5217,6 +5814,16 @@
  "New conversation ready.": [
   "wwwroot/js/site.js"
  ],
+ "New event": [
+  "Controllers",
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "New form": [
+  "Controllers",
+  "Views/Portal/EditForm.cshtml",
+  "Views/Portal/SchoolForms.cshtml"
+ ],
  "New group name": [
   "Views/Portal/AssignmentPolicies.cshtml"
  ],
@@ -5233,11 +5840,22 @@
  "New password is required.": [
   "Controllers"
  ],
+ "New support plan": [
+  "Controllers",
+  "Views/Portal/PastoralPlan.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
  "New tab": [
   "Views/Shared/Components/ExternalTools/Default.cshtml"
  ],
  "New token": [
   "Views/Portal/ApiTokens.cshtml"
+ ],
+ "News": [
+  "Views/Portal/News.cshtml"
+ ],
+ "News post not found.": [
+  "Controllers"
  ],
  "Next": [
   "Views/Portal/AuditLogs.cshtml",
@@ -5268,6 +5886,10 @@
  "No": [
   "Views (inline expressions)",
   "Views/Portal/Buildings.cshtml",
+  "Views/Portal/CourseCopy.cshtml",
+  "Views/Portal/FillForm.cshtml",
+  "Views/Portal/FormResponses.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
   "Views/Portal/Rooms.cshtml"
  ],
  "No FYP projects found.": [
@@ -5343,6 +5965,9 @@
   "Views/Portal/AssignmentSubmission.cshtml",
   "wwwroot/js/grading-workspace.js"
  ],
+ "No content has been copied into this course yet.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "No content has been published for this course yet.": [
   "Views/Portal/CourseLms.cshtml"
  ],
@@ -5397,6 +6022,9 @@
  "No enrollments yet": [
   "Views/Portal/Enrollments.cshtml"
  ],
+ "No events coming up.": [
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
  "No evidence": [
   "Views/Portal/OutcomeAttainment.cshtml"
  ],
@@ -5411,6 +6039,9 @@
  ],
  "No finished attempts yet.": [
   "Views/Portal/QuizStatistics.cshtml"
+ ],
+ "No forms to fill in.": [
+  "Views/Portal/SchoolForms.cshtml"
  ],
  "No generated certificates.": [
   "Views/Portal/GenerateCertificates.cshtml"
@@ -5466,6 +6097,15 @@
  "No new setup needed — just verify with your existing authenticator app.": [
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
+ "No news yet.": [
+  "Views/Portal/News.cshtml"
+ ],
+ "No notes yet.": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "No notes, follow-ups or support plans for these students in this period.": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
  "No notifications yet.": [
   "Views/Portal/Notifications.cshtml"
  ],
@@ -5483,6 +6123,9 @@
  ],
  "No outcomes yet. Add one below or import them from Excel.": [
   "Views/Portal/Outcomes.cshtml"
+ ],
+ "No parent account": [
+  "Views/Portal/FormResponses.cshtml"
  ],
  "No parent account matches this search.": [
   "Views/Portal/ParentLinks.cshtml"
@@ -5530,6 +6173,7 @@
  "No replies yet.": [
   "Views/Portal/DiscussionThread.cshtml",
   "Views/Portal/DiscussionThreadDetail.cshtml",
+  "Views/Portal/EventReplies.cshtml",
   "Views/Portal/HelpdeskDetail.cshtml"
  ],
  "No report definitions found.": [
@@ -5586,6 +6230,9 @@
  "No student data available.": [
   "Views/Portal/Analytics.cshtml"
  ],
+ "No student you teach or look after matches.": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
  "No students available in the current scope. Change tenant/campus filters or verify student seed data.": [
   "Views/Portal/Payments.cshtml"
  ],
@@ -5616,6 +6263,9 @@
  ],
  "No submissions yet.": [
   "wwwroot/js/grading-workspace.js"
+ ],
+ "No support plan is running.": [
+  "Views/Portal/PastoralStudent.cshtml"
  ],
  "No tenants found.": [
   "Views/Portal/TenantManagement.cshtml"
@@ -5662,11 +6312,20 @@
  "No work was handed in by the due date, so this is the missing-work grade.": [
   "Views/Portal/AssignmentSubmission.cshtml"
  ],
+ "Nobody": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
  "Nobody found. You can write to the people your role connects you with: your teachers, your students and their parents, or the school office.": [
   "Views/Portal/NewMessage.cshtml"
  ],
  "Nobody is enrolled in this course yet.": [
   "Views/Portal/Enrollments.cshtml"
+ ],
+ "Nobody is in this form's audience yet.": [
+  "Views/Portal/FormResponses.cshtml"
+ ],
+ "Nobody is on the team yet.": [
+  "Views/Portal/PastoralSetup.cshtml"
  ],
  "Non-Semester-Based": [
   "Views/Portal/ResultCalculation.cshtml"
@@ -5674,7 +6333,9 @@
  "None": [
   "Views (inline expressions)",
   "Views/Portal/DegreeRules.cshtml",
-  "Views/Portal/GraduationEligibility.cshtml"
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/GraduationEligibility.cshtml",
+  "Views/Portal/PastoralNote.cshtml"
  ],
  "None of your courses assess learning outcomes yet.": [
   "Views/Portal/MyOutcomes.cshtml"
@@ -5743,6 +6404,9 @@
   "Views/Portal/CourseMaterialStudent.cshtml",
   "Views/Portal/Courses.cshtml",
   "Views/Portal/Departments.cshtml",
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/EditForm.cshtml",
+  "Views/Portal/EditNews.cshtml",
   "Views/Portal/Enrollments.cshtml",
   "Views/Portal/Fyp.cshtml",
   "Views/Portal/Gradebook.cshtml",
@@ -5752,7 +6416,13 @@
   "Views/Portal/MessageThread.cshtml",
   "Views/Portal/Messages.cshtml",
   "Views/Portal/NewMessage.cshtml",
+  "Views/Portal/News.cshtml",
   "Views/Portal/Notifications.cshtml",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralPlan.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
+  "Views/Portal/PastoralStudent.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/Programs.cshtml",
   "Views/Portal/QuestionBanks.cshtml",
@@ -5761,17 +6431,27 @@
   "Views/Portal/Results.cshtml",
   "Views/Portal/RubricManage.cshtml",
   "Views/Portal/RubricView.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
+  "Views/Portal/SchoolForms.cshtml",
   "Views/Portal/Search.cshtml",
   "Views/Portal/StudentLifecycle.cshtml",
   "Views/Portal/Students.cshtml",
   "Views/Portal/TenantManagement.cshtml",
-  "Views/Portal/ViewQuizzes.cshtml"
+  "Views/Portal/ViewQuizzes.cshtml",
+  "Views/Portal/Wellbeing.cshtml"
  ],
  "Not connected. Open the Dashboard and configure the API connection first.": [
   "Views/Portal/UserSettings.cshtml"
  ],
+ "Not copied": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Not enrolled": [
   "Views (inline expressions)"
+ ],
+ "Not going": [
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
  ],
  "Not graded": [
   "Views/Shared/Components/ExternalTools/Default.cshtml",
@@ -5790,6 +6470,9 @@
   "Views/Portal/AcademicCalendar.cshtml",
   "wwwroot/js/calendar.js"
  ],
+ "Not replied": [
+  "Views/Portal/EventReplies.cshtml"
+ ],
  "Not specified": [
   "Views/Portal/ParentLinks.cshtml"
  ],
@@ -5800,13 +6483,18 @@
  "Not tied to a course": [
   "Views/Portal/QuestionBanks.cshtml"
  ],
+ "Not yet": [
+  "Views/Portal/FormResponses.cshtml"
+ ],
  "Not yet translated into {0}": [
   "Views/Portal/LanguageSettings.cshtml"
  ],
  "Note": [
   "Views/Portal/AssignmentOptions.cshtml",
+  "Views/Portal/EventReplies.cshtml",
   "Views/Portal/GraduationApplicationDetail.cshtml",
-  "Views/Portal/QuizBuilder.cshtml"
+  "Views/Portal/QuizBuilder.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
  ],
  "Note (e.g. learning support plan)": [
   "Views/Portal/QuizBuilder.cshtml"
@@ -5817,14 +6505,30 @@
  "Note (optional)": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
  ],
+ "Note not found.": [
+  "Controllers"
+ ],
  "Notes": [
+  "Views/Portal/PastoralStudent.cshtml",
   "Views/Portal/Payments.cshtml"
  ],
  "Notes / Text Submission": [
   "Views/Portal/Assignments.cshtml"
  ],
+ "Notes about the students you look after. Confidential notes are shown only to you if you wrote them, and to team members who see confidential notes.": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
+ "Notes about the students you teach. Write praise and concerns here; the wellbeing team follows up concerns.": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
+ "Notes waiting for you to follow up": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
  "Notes:": [
   "Views/Portal/StudyPlanDetail.cshtml"
+ ],
+ "Nothing has been shared with you yet.": [
+  "Views/Portal/Wellbeing.cshtml"
  ],
  "Nothing in the calendar this month.": [
   "Views/Portal/AcademicCalendar.cshtml",
@@ -5865,10 +6569,17 @@
  ],
  "Number": [
   "Views/Portal/AssignmentPolicies.cshtml",
+  "Views/Portal/EditForm.cshtml",
   "Views/Portal/Rooms.cshtml"
  ],
  "Number of Semesters": [
   "Views/Portal/Courses.cshtml"
+ ],
+ "Number of concerns": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Number of days": [
+  "Views/Portal/PastoralSetup.cshtml"
  ],
  "OIDC authorization URL": [
   "Views/Portal/LtiTools.cshtml"
@@ -5891,6 +6602,9 @@
  "Offline — answers will be saved when the connection returns.": [
   "wwwroot/js/take-quiz.js"
  ],
+ "Okay": [
+  "Views (inline expressions)"
+ ],
  "Old Password": [
   "Views/Portal/ForceChangePassword.cshtml"
  ],
@@ -5907,11 +6621,17 @@
  "Once you move to the next question your answer is final and cannot be changed.": [
   "Views/Portal/TakeQuizAttempt.cshtml"
  ],
+ "One choice": [
+  "Views/Portal/EditForm.cshtml"
+ ],
  "One course": [
   "Views/Portal/LtiTools.cshtml"
  ],
  "One department": [
   "Views/Portal/LtiTools.cshtml"
+ ],
+ "One or two sentences for the news list.": [
+  "Views/Portal/EditNews.cshtml"
  ],
  "Only .txt or .csv template files are supported.": [
   "Controllers"
@@ -6003,6 +6723,9 @@
  "Only SuperAdmin can update institution grading sections.": [
   "Controllers"
  ],
+ "Only admins set up pastoral care.": [
+  "Controllers"
+ ],
  "Only image/document/ppt files are allowed (.jpg, .jpeg, .png, .pdf, .doc, .docx, .ppt, .pptx).": [
   "Controllers"
  ],
@@ -6014,6 +6737,9 @@
  ],
  "Only students take SCORM packages; teachers use Preview.": [
   "Controllers/PortalController.Scorm.cs"
+ ],
+ "Only teachers and admins write for the school.": [
+  "Controllers"
  ],
  "Only when I post them": [
   "Views/Portal/_AssignmentSettingsForm.cshtml"
@@ -6029,7 +6755,9 @@
   "Views/Portal/Assignments.cshtml",
   "Views/Portal/CourseLms.cshtml",
   "Views/Portal/Enrollments.cshtml",
+  "Views/Portal/FormResponses.cshtml",
   "Views/Portal/QuizGrading.cshtml",
+  "Views/Portal/SchoolForms.cshtml",
   "Views/Shared/Components/ExternalTools/Default.cshtml"
  ],
  "Open AI assistant": [
@@ -6055,6 +6783,17 @@
  ],
  "Open User Import": [
   "Views/Portal/ParentLinks.cshtml"
+ ],
+ "Open course content": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Open follow-ups": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Open for answers": [
+  "Views/Portal/EditForm.cshtml",
+  "Views/Portal/FormResponses.cshtml"
  ],
  "Open grading workspace": [
   "Views/Portal/Assignments.cshtml"
@@ -6082,6 +6821,9 @@
  ],
  "Open report": [
   "wwwroot/js/grading-workspace.js"
+ ],
+ "Open the follow-up again": [
+  "Views/Portal/PastoralStudent.cshtml"
  ],
  "Open the grading workspace to view each student's work, annotate it, score the rubric and post grades.": [
   "Views/Portal/Assignments.cshtml"
@@ -6148,6 +6890,9 @@
  "Optional. Use only claims or attributes the identity provider controls (people cannot edit them).": [
   "Views/Portal/SsoSettings.cshtml"
  ],
+ "Optional: the post leaves the news list then.": [
+  "Views/Portal/EditNews.cshtml"
+ ],
  "Options": [
   "Views/Portal/AssignmentOptions.cshtml",
   "Views/Portal/Assignments.cshtml"
@@ -6174,9 +6919,24 @@
  "Other calendars, +, From URL, then paste the link.": [
   "Views/Portal/AcademicCalendar.cshtml"
  ],
+ "Other courses": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Other notes": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
+ "Other teachers can start their courses from this course's content. They copy from it on this page, in their own courses.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Otherwise everything arrives hidden from students, so you can check it first.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Outcome": [
   "Views/Portal/Enrollments.cshtml",
   "Views/Portal/Outcomes.cshtml"
+ ],
+ "Outcome links": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Outcome turned off; its evidence is kept.": [
   "Controllers"
@@ -6247,7 +7007,9 @@
  ],
  "Parent": [
   "Sidebar",
-  "Views (inline expressions)"
+  "Views (inline expressions)",
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/FormResponses.cshtml"
  ],
  "Parent Links": [
   "Sidebar",
@@ -6270,7 +7032,16 @@
   "Views/Portal/NewMessage.cshtml"
  ],
  "Parents": [
-  "Views (inline expressions)"
+  "Views (inline expressions)",
+  "Views/Portal/FormResponses.cshtml",
+  "Views/Portal/_AudienceLabel.cshtml",
+  "Views/Portal/_AudiencePicker.cshtml"
+ ],
+ "Parents answer once for each child the form is for; students and staff once each.": [
+  "Views/Portal/EditForm.cshtml"
+ ],
+ "Parents see what is for their children's campus, year level and class, in the app.": [
+  "Views/Portal/_AudiencePicker.cshtml"
  ],
  "Parents use the EduSphere mobile app": [
   "Views/Portal/Start.cshtml"
@@ -6325,6 +7096,19 @@
  "Paste the secret": [
   "Views (inline expressions)"
  ],
+ "Pastoral Care": [
+  "Sidebar"
+ ],
+ "Pastoral care": [
+  "Controllers",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Pastoral care and wellbeing": [
+  "Views (inline expressions)"
+ ],
  "Pause": [
   "Views/Portal/ParentLinks.cshtml"
  ],
@@ -6376,6 +7160,9 @@
  "Pending Result Modification Requests ({0})": [
   "Views/Portal/Results.cshtml"
  ],
+ "People": [
+  "Views/Portal/_AudiencePicker.cshtml"
+ ],
  "Per": [
   "Views/Portal/AssignmentPolicies.cshtml"
  ],
@@ -6385,11 +7172,16 @@
   "Views/Portal/Gradebook.cshtml",
   "Views/Portal/GradingConfig.cshtml"
  ],
+ "Performance": [
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
  "Performance — {0}": [
   "Views/Portal/Analytics.cshtml"
  ],
  "Period": [
-  "Views/Portal/ModuleComposition.cshtml"
+  "Views/Portal/ModuleComposition.cshtml",
+  "Views/Portal/Pastoral.cshtml"
  ],
  "Permanent": [
   "Views/Portal/LicenseUpdate.cshtml"
@@ -6412,13 +7204,30 @@
  "Pick {0} from": [
   "Views/Portal/QuizBuilder.cshtml"
  ],
+ "Picture link": [
+  "Views/Portal/EditNews.cshtml"
+ ],
+ "Pin to the top of the news": [
+  "Views/Portal/EditNews.cshtml"
+ ],
  "Pinned": [
   "Views/Portal/Discussion.cshtml",
   "Views/Portal/DiscussionThread.cshtml",
-  "Views/Portal/DiscussionThreadDetail.cshtml"
+  "Views/Portal/DiscussionThreadDetail.cshtml",
+  "Views/Portal/News.cshtml",
+  "Views/Portal/NewsPost.cshtml"
  ],
  "Pipe-separated GUIDs: id|id2": [
   "Views/Portal/UserImport.cshtml"
+ ],
+ "Place": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
+ "Places": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
+ "Places taken": [
+  "Views/Portal/EventReplies.cshtml"
  ],
  "Plan endorsed.": [
   "Controllers"
@@ -6430,6 +7239,7 @@
   "Views/Portal/StudyPlanDetail.cshtml"
  ],
  "Plans": [
+  "Views/Portal/Pastoral.cshtml",
   "Views/Portal/StudyPlan.cshtml"
  ],
  "Please choose a non-empty CSV file.": [
@@ -6489,7 +7299,8 @@
  ],
  "Post": [
   "Views/Portal/Announcements.cshtml",
-  "Views/Portal/Discussion.cshtml"
+  "Views/Portal/Discussion.cshtml",
+  "Views/Portal/EditNews.cshtml"
  ],
  "Post Announcement": [
   "Views/Portal/Announcements.cshtml"
@@ -6511,6 +7322,21 @@
  ],
  "Posted grades and finished quiz attempts then count as evidence. Course outcomes mapped to program outcomes feed the program attainment report.": [
   "Views/Portal/Outcomes.cshtml"
+ ],
+ "Posts I manage": [
+  "Views/Portal/EditNews.cshtml",
+  "Views/Portal/News.cshtml"
+ ],
+ "Praise": [
+  "Views (inline expressions)",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Praise or concern": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Praise, concerns and wellbeing notes: the last 90 days.": [
+  "Views/Portal/PastoralStudent.cshtml"
  ],
  "Preparing a preview… refresh in a moment, or download the file.": [
   "wwwroot/js/grading-workspace.js"
@@ -6539,6 +7365,7 @@
   "Views/Portal/Dashboard.cshtml"
  ],
  "Preview": [
+  "Views/Portal/FormResponses.cshtml",
   "Views/Portal/Gradebook.cshtml"
  ],
  "Preview — nothing is recorded": [
@@ -6756,6 +7583,8 @@
  ],
  "Publish": [
   "Views/Portal/Assignments.cshtml",
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/EditNews.cshtml",
   "Views/Portal/LmsManage.cshtml",
   "Views/Portal/Quizzes.cshtml",
   "Views/Portal/TimetableAdmin.cshtml"
@@ -6770,13 +7599,17 @@
  "Publish all results?": [
   "Views/Portal/Gradebook.cshtml"
  ],
+ "Publish what is published in the course you copy from": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Published": [
   "Views (inline expressions)",
   "Views/Portal/Gradebook.cshtml",
   "Views/Portal/LmsManage.cshtml",
   "Views/Portal/ReportResults.cshtml",
   "Views/Portal/ReportTranscript.cshtml",
-  "Views/Portal/Results.cshtml"
+  "Views/Portal/Results.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
  ],
  "Published Timetables": [
   "Views/Portal/TimetableStudent.cshtml"
@@ -6801,6 +7634,7 @@
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
  "Question": [
+  "Views/Portal/EditForm.cshtml",
   "Views/Portal/_QuizQuestionEditor.cshtml"
  ],
  "Question added to the bank.": [
@@ -6816,6 +7650,7 @@
   "Controllers"
  ],
  "Question banks": [
+  "Views/Portal/CourseCopy.cshtml",
   "Views/Portal/QuestionBanks.cshtml",
   "Views/Portal/QuizBuilder.cshtml",
   "Views/Portal/Quizzes.cshtml"
@@ -6840,6 +7675,8 @@
   "Views/Portal/TakeQuizAttempt.cshtml"
  ],
  "Questions": [
+  "Views/Portal/CourseCopy.cshtml",
+  "Views/Portal/EditForm.cshtml",
   "Views/Portal/QuizBuilder.cshtml"
  ],
  "Questions & settings": [
@@ -6906,6 +7743,7 @@
  "Quizzes": [
   "Sidebar",
   "Views/Portal/AcademicCalendar.cshtml",
+  "Views/Portal/CourseCopy.cshtml",
   "Views/Portal/Quizzes.cshtml",
   "Views/Shared/_Layout.cshtml"
  ],
@@ -6945,6 +7783,12 @@
  "Read and write": [
   "Views/Portal/ApiTokens.cshtml"
  ],
+ "Read by": [
+  "Views/Portal/News.cshtml"
+ ],
+ "Read by {0} of the {1} people it is for.": [
+  "Views/Portal/NewsPost.cshtml"
+ ],
  "Read only": [
   "Views/Portal/ApiTokens.cshtml"
  ],
@@ -6965,6 +7809,9 @@
   "Views/Portal/Enrollments.cshtml",
   "Views/Portal/Results.cshtml",
   "Views/Portal/StudyPlanRecommendations.cshtml"
+ ],
+ "Reason (sent to everyone it is for)": [
+  "Views/Portal/EventReplies.cshtml"
  ],
  "Reason / Remarks": [
   "Views/Portal/Fyp.cshtml"
@@ -7132,17 +7979,26 @@
   "Views/Portal/Attendance.cshtml",
   "Views/Portal/Results.cshtml"
  ],
+ "Remind everyone who has not answered": [
+  "Views/Portal/FormResponses.cshtml"
+ ],
  "Reminder": [
   "Views/Portal/AcademicDeadlines.cshtml"
  ],
  "Reminder Days Before": [
   "Views/Portal/AcademicDeadlines.cshtml"
  ],
+ "Reminder sent to {0} people.": [
+  "Controllers"
+ ],
  "Remove": [
   "Views/Portal/AssignmentOptions.cshtml",
   "Views/Portal/AssignmentPolicies.cshtml",
+  "Views/Portal/EditForm.cshtml",
   "Views/Portal/LmsManage.cshtml",
   "Views/Portal/ParentLinks.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
+  "Views/Portal/PastoralStudent.cshtml",
   "Views/Portal/Prerequisites.cshtml",
   "Views/Portal/QuestionBanks.cshtml",
   "Views/Portal/QuizBuilder.cshtml",
@@ -7158,6 +8014,9 @@
  ],
  "Remove pair": [
   "wwwroot/js/quiz-editor.js"
+ ],
+ "Remove the note": [
+  "Views/Portal/PastoralStudent.cshtml"
  ],
  "Remove this course from the plan?": [
   "Views/Portal/StudyPlanDetail.cshtml"
@@ -7183,15 +8042,32 @@
  "Remove variable": [
   "wwwroot/js/quiz-editor.js"
  ],
+ "Removed": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
  "Rename": [
   "Views/Portal/Programs.cshtml"
  ],
  "Reopen": [
   "Views/Portal/HelpdeskDetail.cshtml"
  ],
+ "Replies": [
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "Replies are closed.": [
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "Replies close": [
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "Replies close (your time)": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
  "Reply": [
   "Views/Portal/DiscussionThread.cshtml",
   "Views/Portal/DiscussionThreadDetail.cshtml",
+  "Views/Portal/EventReplies.cshtml",
   "Views/Portal/MessageThread.cshtml"
  ],
  "Reply deleted.": [
@@ -7278,6 +8154,9 @@
  ],
  "Require single sign-on? Users in this scope will no longer be able to sign in with a password.": [
   "Views/Portal/SsoSettings.cshtml"
+ ],
+ "Required": [
+  "Views/Portal/EditForm.cshtml"
  ],
  "Required Courses": [
   "Views/Portal/DegreeRules.cshtml"
@@ -7403,6 +8282,10 @@
  "Review active enrollments and drop courses when needed.": [
   "Views/Portal/Enrollments.cshtml"
  ],
+ "Review on": [
+  "Views/Portal/PastoralPlan.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
  "Review {0} classmate submission(s){1}.": [
   "Views/Portal/AssignmentSubmission.cshtml"
  ],
@@ -7444,6 +8327,8 @@
  ],
  "Role": [
   "Views/Portal/AuditLogs.cshtml",
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
   "Views/Portal/UserImport.cshtml",
   "Views/Portal/UserSettings.cshtml"
  ],
@@ -7593,6 +8478,9 @@
  "Rubric ·": [
   "wwwroot/js/grading-workspace.js"
  ],
+ "Rubrics": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "SAML ACS URL (HTTP-POST)": [
   "Views/Portal/SsoSettings.cshtml"
  ],
@@ -7619,6 +8507,9 @@
  ],
  "SCORM packages are managed by Faculty, Admin and Super Admin.": [
   "Controllers/PortalController.Scorm.cs"
+ ],
+ "SCORM packages aren't copied, because their files stay with the course. Upload the package again in the new course.": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "SR#": [
   "Views/Portal/TimetableAdmin.cshtml",
@@ -7707,8 +8598,14 @@
  "Save accommodation": [
   "Views/Portal/QuizBuilder.cshtml"
  ],
+ "Save as draft": [
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/EditForm.cshtml",
+  "Views/Portal/EditNews.cshtml"
+ ],
  "Save changes": [
-  "Views (inline expressions)"
+  "Views (inline expressions)",
+  "Views/Portal/FillForm.cshtml"
  ],
  "Save dates": [
   "Views/Portal/QuizBuilder.cshtml"
@@ -7738,8 +8635,23 @@
   "Views/Portal/QuizBuilder.cshtml",
   "Views/Portal/_AssignmentSettingsForm.cshtml"
  ],
+ "Save template": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Save the note": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
+ "Save the plan": [
+  "Views/Portal/PastoralPlan.cshtml"
+ ],
+ "Save the settings": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "Save {0}": [
   "Views/Portal/GradingConfig.cshtml"
+ ],
+ "Saved as a draft.": [
+  "Controllers"
  ],
  "Saved as your provisional grade": [
   "wwwroot/js/grading-workspace.js"
@@ -7783,11 +8695,15 @@
  "Schedule weeks": [
   "Views/Portal/LiveClasses.cshtml"
  ],
+ "Scheduled": [
+  "Views/Portal/News.cshtml"
+ ],
  "School": [
   "Views/Portal/AdminUsers.cshtml",
   "Views/Portal/Departments.cshtml",
   "Views/Portal/GradingConfig.cshtml",
   "Views/Portal/InstitutionPolicy.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
   "Views/Portal/PortalCapabilityMatrix.cshtml",
   "Views/Portal/ResultCalculation.cshtml",
   "Views/Portal/StudentLifecycle.cshtml",
@@ -7796,8 +8712,19 @@
  "School / College / University": [
   "Views/Portal/Dashboard.cshtml"
  ],
+ "School News": [
+  "Sidebar"
+ ],
  "School mode": [
   "Views/Portal/Dashboard.cshtml"
+ ],
+ "School news": [
+  "Controllers",
+  "Views/Portal/News.cshtml",
+  "Views/Portal/NewsPost.cshtml"
+ ],
+ "School news, events and forms": [
+  "Views (inline expressions)"
  ],
  "School office": [
   "Views (inline expressions)"
@@ -7888,6 +8815,29 @@
  ],
  "See": [
   "Views/Portal/Analytics.cshtml"
+ ],
+ "See replies": [
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "See the answers": [
+  "Views/Portal/FillForm.cshtml"
+ ],
+ "See the event": [
+  "Views/Portal/FillForm.cshtml"
+ ],
+ "Seen to": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Seen to by": [
+  "Views/Portal/PastoralStudent.cshtml",
+  "Views/Portal/Wellbeing.cshtml"
+ ],
+ "Sees confidential notes": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Sees them": [
+  "Views/Portal/PastoralSetup.cshtml"
  ],
  "Segoe UI": [
   "Views/Portal/DashboardSettings.cshtml"
@@ -7982,6 +8932,7 @@
   "Controllers"
  ],
  "Select a valid course offering to manage LMS content.": [
+  "Views/Portal/CourseCopy.cshtml",
   "Views/Portal/LmsManage.cshtml"
  ],
  "Select a valid course offering to open discussion threads.": [
@@ -8208,6 +9159,9 @@
  "Send a test": [
   "Views/Portal/Notifications.cshtml"
  ],
+ "Send answers": [
+  "Views/Portal/FillForm.cshtml"
+ ],
  "Send it as: Authorization: Bearer <token> — base address {0}/api/v1/": [
   "Views/Portal/ApiTokens.cshtml"
  ],
@@ -8228,6 +9182,12 @@
  ],
  "Separate SuperAdmin sections for School, College, and University grading policy.": [
   "Views/Portal/GradingConfig.cshtml"
+ ],
+ "Serious": [
+  "Views (inline expressions)"
+ ],
+ "Serious: the wellbeing team is told at once.": [
+  "Views/Portal/PastoralNote.cshtml"
  ],
  "Service": [
   "Views/Portal/LiveClassSettings.cshtml"
@@ -8250,8 +9210,13 @@
  "Set the marks from the rubric total (scaled to": [
   "wwwroot/js/grading-workspace.js"
  ],
+ "Set up pastoral care": [
+  "Controllers",
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "Settings": [
   "Views/Portal/GradingWorkspace.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
   "Views/Shared/_Layout.cshtml"
  ],
  "Settings Related": [
@@ -8275,17 +9240,43 @@
  "Setup in progress.": [
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
+ "Several choices": [
+  "Views/Portal/EditForm.cshtml"
+ ],
+ "Share as a template": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Share with other teachers": [
   "Views/Portal/QuestionBanks.cshtml"
+ ],
+ "Share with the parents (in the app)": [
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralPlan.cshtml"
+ ],
+ "Share with the student": [
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralPlan.cshtml"
  ],
  "Shared": [
   "Views/Portal/QuestionBanks.cshtml"
  ],
+ "Shared as a template": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Shared secret / client secret": [
   "Views/Portal/LiveClassSettings.cshtml"
  ],
+ "Shared with parents": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Shared with the student": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
  "Shares: {0}": [
   "Views/Portal/LtiTools.cshtml"
+ ],
+ "Short answer": [
+  "Views/Portal/EditForm.cshtml"
  ],
  "Short description": [
   "Views/Portal/ReportSettings.cshtml"
@@ -8301,6 +9292,9 @@
   "Views/Portal/ModuleProgress.cshtml",
   "Views/Portal/MyGroups.cshtml",
   "Views/Portal/OutcomeMastery.cshtml",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
   "Views/Portal/QuestionBanks.cshtml"
  ],
  "Show all {0} department students": [
@@ -8314,6 +9308,9 @@
  ],
  "Show inactive assignments": [
   "Views/Portal/Assignments.cshtml"
+ ],
+ "Show its content": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Show password": [
   "Views/Login/Index.cshtml"
@@ -8381,6 +9378,9 @@
  ],
  "Sign-in was cancelled or failed at the identity provider.": [
   "Controllers"
+ ],
+ "Signature (typed name)": [
+  "Views/Portal/EditForm.cshtml"
  ],
  "Signing": [
   "Views (inline expressions)"
@@ -8470,11 +9470,19 @@
  "Split by": [
   "Views/Portal/AssignmentPolicies.cshtml"
  ],
+ "Sports": [
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
  "Sr.": [
   "Views/Portal/ViewQuizzes.cshtml"
  ],
  "Staff": [
-  "Views (inline expressions)"
+  "Views (inline expressions)",
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/FormResponses.cshtml",
+  "Views/Portal/_AudienceLabel.cshtml",
+  "Views/Portal/_AudiencePicker.cshtml"
  ],
  "Stage": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
@@ -8501,6 +9509,9 @@
  "Start by choosing the department whose students you want to enroll.": [
   "Views/Portal/Enrollments.cshtml"
  ],
+ "Start it again": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
  "Start over": [
   "Views/Login/Index.cshtml"
  ],
@@ -8525,8 +9536,17 @@
  "Starting soon": [
   "Views (inline expressions)"
  ],
+ "Starts": [
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
  "Starts (UTC)": [
   "Views/Portal/LiveClasses.cshtml"
+ ],
+ "Starts (your time)": [
+  "Views/Portal/EditEvent.cshtml"
+ ],
+ "Starts on": [
+  "Views/Portal/PastoralPlan.cshtml"
  ],
  "Statistics": [
   "Views/Portal/QuizBuilder.cshtml",
@@ -8553,6 +9573,7 @@
   "Views/Portal/Helpdesk.cshtml",
   "Views/Portal/LicenseUpdate.cshtml",
   "Views/Portal/LtiTools.cshtml",
+  "Views/Portal/News.cshtml",
   "Views/Portal/ParentLinks.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/Programs.cshtml",
@@ -8562,6 +9583,8 @@
   "Views/Portal/ReportFypStatus.cshtml",
   "Views/Portal/ReportPayments.cshtml",
   "Views/Portal/ReportQuizzes.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
+  "Views/Portal/SchoolForms.cshtml",
   "Views/Portal/Students.cshtml",
   "Views/Portal/TakeQuiz.cshtml",
   "Views/Portal/TenantManagement.cshtml",
@@ -8570,6 +9593,9 @@
  ],
  "Status updated for \"{0}\".": [
   "Controllers"
+ ],
+ "Stop sharing": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Stored encrypted and never shown again.": [
   "Views/Portal/SsoSettings.cshtml"
@@ -8589,6 +9615,8 @@
   "Views/Portal/Analytics.cshtml",
   "Views/Portal/Attendance.cshtml",
   "Views/Portal/DegreeAudit.cshtml",
+  "Views/Portal/EventReplies.cshtml",
+  "Views/Portal/FormResponses.cshtml",
   "Views/Portal/Fyp.cshtml",
   "Views/Portal/GenerateCertificates.cshtml",
   "Views/Portal/Gradebook.cshtml",
@@ -8597,6 +9625,7 @@
   "Views/Portal/ModuleProgress.cshtml",
   "Views/Portal/OutcomeMastery.cshtml",
   "Views/Portal/ParentLinks.cshtml",
+  "Views/Portal/Pastoral.cshtml",
   "Views/Portal/Payments.cshtml",
   "Views/Portal/PortalCapabilityMatrix.cshtml",
   "Views/Portal/QuizBuilder.cshtml",
@@ -8689,6 +9718,9 @@
  "Student names are now visible to graders.": [
   "Controllers"
  ],
+ "Student not found.": [
+  "Controllers"
+ ],
  "Student profile not found.": [
   "Controllers"
  ],
@@ -8730,8 +9762,15 @@
   "Sidebar",
   "Views (inline expressions)",
   "Views/Portal/Analytics.cshtml",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralNote.cshtml",
   "Views/Portal/Students.cshtml",
+  "Views/Portal/_AudienceLabel.cshtml",
+  "Views/Portal/_AudiencePicker.cshtml",
   "Views/Shared/_Layout.cshtml"
+ ],
+ "Students answer from 1 (very low) to 5 (great), can add a note and can ask to talk to someone. Low answers wait on the pastoral page for someone on the team.": [
+  "Views/Portal/PastoralSetup.cshtml"
  ],
  "Students below the attendance threshold": [
   "Views/Portal/ReportLowAttendance.cshtml"
@@ -8742,11 +9781,20 @@
  "Students can see this tool again.": [
   "Controllers"
  ],
+ "Students check in on how they are feeling": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "Students could not be searched.": [
   "Controllers/PortalController.ParentLinks.cs"
  ],
+ "Students found": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
  "Students must work through items in order": [
   "Views/Portal/_ModuleItemsEditor.cshtml"
+ ],
+ "Students of a class": [
+  "Views/Portal/PastoralNote.cshtml"
  ],
  "Students only see their own score, and only when the assignment allows it — never other students' work.": [
   "Views/Portal/SimilaritySettings.cshtml"
@@ -8910,8 +9958,14 @@
  "Submitted:": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
  ],
+ "Suggested from the two terms' start dates. Use 0 to keep the dates, or a negative number to move them earlier.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Suggested prompts": [
   "Views/Shared/ChatPanel.cshtml"
+ ],
+ "Summary": [
+  "Views/Portal/EditNews.cshtml"
  ],
  "Sunday": [
   "Views/Portal/TimetableAdmin.cshtml"
@@ -8936,6 +9990,16 @@
  ],
  "Support Tickets": [
   "Views/Portal/Helpdesk.cshtml"
+ ],
+ "Support plan not found.": [
+  "Controllers"
+ ],
+ "Support plans": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Support plans are written by the wellbeing team and admins.": [
+  "Controllers"
  ],
  "Swapping to": [
   "Views/Shared/Error.cshtml"
@@ -8995,9 +10059,21 @@
  "Take Action": [
   "Views/Portal/GraduationApplicationDetail.cshtml"
  ],
+ "Take down": [
+  "Views/Portal/NewsPost.cshtml"
+ ],
  "Taken": [
   "Views/Portal/AcademicCalendar.cshtml",
   "wwwroot/js/calendar.js"
+ ],
+ "Taken down": [
+  "Views/Portal/News.cshtml"
+ ],
+ "Taken down at (your time)": [
+  "Views/Portal/EditNews.cshtml"
+ ],
+ "Taken down automatically on": [
+  "Views/Portal/NewsPost.cshtml"
  ],
  "Taking quizzes is available to students.": [
   "Controllers"
@@ -9014,6 +10090,8 @@
  "Teacher": [
   "Views (inline expressions)",
   "Views/Portal/Enrollments.cshtml",
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralSetup.cshtml",
   "Views/Portal/TimetableAdmin.cshtml",
   "Views/Portal/TimetableStudent.cshtml"
  ],
@@ -9034,8 +10112,23 @@
  "Teachers": [
   "Views (inline expressions)"
  ],
+ "Teachers of this course's department": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Teachers write to one of their own classes; admins of one campus write for their campus.": [
+  "Views/Portal/_AudiencePicker.cshtml"
+ ],
+ "Team members are told about serious concerns, runs of concerns and students who ask to talk, for the campus and year level they look after. Without a team, the school's admins are told.": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "Teams: required · Zoom: “me”": [
   "Views/Portal/LiveClassSettings.cshtml"
+ ],
+ "Tell the team when a student has": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Template": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Template CSV includes 2 example rows for format guidance; those example rows are skipped during import. Import report links are one-time use and expire after 2 hours.": [
   "Views/Portal/Results.cshtml"
@@ -9048,6 +10141,12 @@
  ],
  "Template file is too large. Maximum size is 1 MB.": [
   "Controllers"
+ ],
+ "Template name": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Templates": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Temporary Password": [
   "Views/Portal/AdminUsers.cshtml"
@@ -9136,6 +10235,15 @@
  "Text (optional)": [
   "Views/Portal/AssignmentSubmission.cshtml"
  ],
+ "Thank you for checking in.": [
+  "Controllers"
+ ],
+ "Thank you. Someone from the wellbeing team will find you soon.": [
+  "Controllers"
+ ],
+ "Thank you. Your answers are saved.": [
+  "Controllers"
+ ],
  "That did not work.": [
   "Controllers"
  ],
@@ -9171,6 +10279,9 @@
  "The annotated PDF is not available.": [
   "Controllers"
  ],
+ "The answers could not be downloaded.": [
+  "Controllers"
+ ],
  "The attendance could not be loaded.": [
   "Controllers"
  ],
@@ -9189,10 +10300,19 @@
  "The calendar link could not be turned off.": [
   "Controllers"
  ],
+ "The categories are saved.": [
+  "Controllers"
+ ],
+ "The category could not be saved.": [
+  "Controllers"
+ ],
  "The certificate includes the university seal, student name, degree title, CGPA, and official signatures.": [
   "Views/Portal/ReportDegreeCertificate.cshtml"
  ],
  "The change could not be saved.": [
+  "Controllers"
+ ],
+ "The check-in could not be changed.": [
   "Controllers"
  ],
  "The class could not be opened.": [
@@ -9200,6 +10320,15 @@
  ],
  "The comment was not saved.": [
   "wwwroot/js/grading-workspace.js"
+ ],
+ "The content could not be copied.": [
+  "Controllers"
+ ],
+ "The content was copied. Everything copied is hidden from students until you publish it.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "The content was copied. What was published in the original is published here too.": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "The conversation could not be changed.": [
   "Controllers"
@@ -9213,6 +10342,21 @@
  "The conversation is back in your inbox.": [
   "Controllers"
  ],
+ "The course is no longer shared as a template.": [
+  "Controllers"
+ ],
+ "The course is shared as a template.": [
+  "Controllers"
+ ],
+ "The course's content could not be loaded.": [
+  "Controllers"
+ ],
+ "The course's own banks. Shared and department banks are used where they are.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "The courses to copy from could not be loaded.": [
+  "Controllers"
+ ],
  "The credentials could not be created.": [
   "Controllers/PortalController.Scorm.cs"
  ],
@@ -9223,6 +10367,21 @@
   "Controllers"
  ],
  "The deployment could not be changed.": [
+  "Controllers"
+ ],
+ "The event could not be cancelled.": [
+  "Controllers"
+ ],
+ "The event could not be saved.": [
+  "Controllers"
+ ],
+ "The event is cancelled. Everyone it was for has been told.": [
+  "Controllers"
+ ],
+ "The event is published.": [
+  "Controllers"
+ ],
+ "The events could not be loaded.": [
   "Controllers"
  ],
  "The export failed.": [
@@ -9239,6 +10398,30 @@
  ],
  "The file is validated server-side before activation.": [
   "Views/Portal/LicenseUpdate.cshtml"
+ ],
+ "The follow-up is done.": [
+  "Controllers"
+ ],
+ "The follow-up is open again.": [
+  "Controllers"
+ ],
+ "The follow-up note could not be added.": [
+  "Controllers"
+ ],
+ "The form could not be changed.": [
+  "Controllers"
+ ],
+ "The form could not be saved.": [
+  "Controllers"
+ ],
+ "The form is closed.": [
+  "Controllers"
+ ],
+ "The form is open for answers.": [
+  "Controllers"
+ ],
+ "The forms could not be loaded.": [
+  "Controllers"
  ],
  "The full privacy policy is available at": [
   "Views/Home/Privacy.cshtml"
@@ -9264,6 +10447,9 @@
  "The key could not be rotated.": [
   "Controllers"
  ],
+ "The late and missing work policy.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "The link could not be changed.": [
   "Controllers/PortalController.ParentLinks.cs"
  ],
@@ -9287,6 +10473,30 @@
  ],
  "The microphone is not available. Attach a file instead.": [
   "wwwroot/js/comment-recorder.js"
+ ],
+ "The news could not be loaded.": [
+  "Controllers"
+ ],
+ "The note could not be changed.": [
+  "Controllers"
+ ],
+ "The note could not be removed.": [
+  "Controllers"
+ ],
+ "The note could not be saved.": [
+  "Controllers"
+ ],
+ "The note is removed. The wellbeing team can still see it, with your reason.": [
+  "Controllers"
+ ],
+ "The note is saved for each student you chose.": [
+  "Controllers"
+ ],
+ "The note is saved.": [
+  "Controllers"
+ ],
+ "The note is saved. Some students were left out: you do not teach or look after them.": [
+  "Controllers"
  ],
  "The outcome could not be changed.": [
   "Controllers"
@@ -9315,11 +10525,32 @@
  "The parent's links could not be loaded.": [
   "Controllers/PortalController.ParentLinks.cs"
  ],
+ "The pastoral overview could not be loaded.": [
+  "Controllers"
+ ],
+ "The plan's owner is reminded on this day.": [
+  "Views/Portal/PastoralPlan.cshtml"
+ ],
  "The platform address is not set. Put the portal's public address in": [
   "Views/Portal/LtiTools.cshtml"
  ],
  "The portal is available in English, Urdu and Arabic. Everyone can switch language from the top bar; their choice is remembered.": [
   "Views/Portal/LanguageSettings.cshtml"
+ ],
+ "The post could not be changed.": [
+  "Controllers"
+ ],
+ "The post could not be saved.": [
+  "Controllers"
+ ],
+ "The post is published.": [
+  "Controllers"
+ ],
+ "The post is scheduled.": [
+  "Controllers"
+ ],
+ "The post is taken down.": [
+  "Controllers"
  ],
  "The preview could not be made (": [
   "wwwroot/js/grading-workspace.js"
@@ -9327,6 +10558,9 @@
  "The quiz could not be loaded.": [
   "Views/Portal/QuizBuilder.cshtml",
   "Views/Portal/QuizGrading.cshtml"
+ ],
+ "The reminder could not be sent.": [
+  "Controllers"
  ],
  "The report could not be loaded.": [
   "Controllers/PortalController.Scorm.cs"
@@ -9343,6 +10577,9 @@
  "The same assignment": [
   "Views/Portal/SimilaritySettings.cshtml"
  ],
+ "The same note is written for each student you choose.": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
  "The score is the share of the work found elsewhere. Teachers see it in the grading workspace with a report of the matching passages.": [
   "Views/Portal/SimilaritySettings.cshtml"
  ],
@@ -9358,6 +10595,15 @@
  "The service-provider metadata contains EduSphere's certificate for signed requests and encrypted assertions. Download it again after turning these on.": [
   "Views/Portal/SsoSettings.cshtml"
  ],
+ "The set-up could not be loaded.": [
+  "Controllers"
+ ],
+ "The settings are saved.": [
+  "Controllers"
+ ],
+ "The settings could not be saved.": [
+  "Controllers"
+ ],
  "The settings were not saved.": [
   "Controllers"
  ],
@@ -9367,10 +10613,49 @@
  "The student could not be linked.": [
   "Controllers/PortalController.ParentLinks.cs"
  ],
+ "The student has not checked in yet.": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "The student's page could not be loaded.": [
+  "Controllers"
+ ],
+ "The student's teachers see this on the student's pastoral page.": [
+  "Views/Portal/PastoralPlan.cshtml"
+ ],
+ "The student's teachers, the wellbeing team and the school's admins read every note that is not confidential.": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
  "The submission was not accepted.": [
   "Controllers"
  ],
+ "The support plan could not be changed.": [
+  "Controllers"
+ ],
+ "The support plan could not be saved.": [
+  "Controllers"
+ ],
+ "The support plan has ended.": [
+  "Controllers"
+ ],
+ "The support plan is running again.": [
+  "Controllers"
+ ],
+ "The support plan is saved.": [
+  "Controllers"
+ ],
+ "The support plan is saved. The student's teachers have been told.": [
+  "Controllers"
+ ],
+ "The team could not be changed.": [
+  "Controllers"
+ ],
  "The template could not be downloaded.": [
+  "Controllers"
+ ],
+ "The template could not be removed.": [
+  "Controllers"
+ ],
+ "The template could not be saved.": [
   "Controllers"
  ],
  "The test failed.": [
@@ -9409,6 +10694,9 @@
  "The tool's sign-in request was refused.": [
   "Controllers"
  ],
+ "The words staff choose from when they write a note. Hide the ones your school does not use.": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "The work": [
   "Views/Portal/PeerReview.cshtml"
  ],
@@ -9429,11 +10717,26 @@
  "There is no group with room. Ask your teacher.": [
   "Views/Portal/MyGroups.cshtml"
  ],
+ "There is no other course you can copy from yet. Courses of your departments, and templates your school shares, appear here.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "There is nothing before this.": [
   "wwwroot/js/scorm-page.js"
  ],
  "These controls affect": [
   "Views/Portal/SidebarSettings.cshtml"
+ ],
+ "They are no longer on the wellbeing team.": [
+  "Controllers"
+ ],
+ "They are on the wellbeing team, and have been told.": [
+  "Controllers"
+ ],
+ "They are told, and reminded when the date comes.": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
+ "They could not be added to the team.": [
+  "Controllers"
  ],
  "This account is inactive, so the parent cannot sign in until it is activated again.": [
   "Views/Portal/ParentLinks.cshtml"
@@ -9478,6 +10781,9 @@
  "This course could not be loaded.": [
   "Views (inline expressions)"
  ],
+ "This course has no content to copy yet.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "This course has no groups.": [
   "Views (inline expressions)"
  ],
@@ -9502,11 +10808,17 @@
  "This device receives EduSphere notifications.": [
   "wwwroot/js/pwa.js"
  ],
+ "This event does not ask for replies.": [
+  "Views/Portal/EventReplies.cshtml"
+ ],
  "This file cannot be shown here. Use Download to open it.": [
   "wwwroot/js/submission-viewer.js"
  ],
  "This file was uploaded before the grading workspace existed.": [
   "wwwroot/js/grading-workspace.js"
+ ],
+ "This form is closed.": [
+  "Views/Portal/FillForm.cshtml"
  ],
  "This institution uses the installation default until you save its own settings.": [
   "Views (inline expressions)",
@@ -9583,6 +10895,9 @@
  ],
  "This submission was rejected.": [
   "Views (inline expressions)"
+ ],
+ "This term's files and links. Stored files are shared, not duplicated.": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "This thread is closed/resolved.": [
   "Views/Portal/DiscussionThread.cshtml",
@@ -9700,10 +11015,15 @@
   "Views/Portal/CourseMaterial.cshtml",
   "Views/Portal/Courses.cshtml",
   "Views/Portal/DegreeAudit.cshtml",
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/EditForm.cshtml",
+  "Views/Portal/EditNews.cshtml",
   "Views/Portal/Fyp.cshtml",
   "Views/Portal/LiveClasses.cshtml",
   "Views/Portal/LmsManage.cshtml",
+  "Views/Portal/News.cshtml",
   "Views/Portal/Outcomes.cshtml",
+  "Views/Portal/PastoralPlan.cshtml",
   "Views/Portal/QuestionBanks.cshtml",
   "Views/Portal/Quizzes.cshtml",
   "Views/Portal/ReportAttendance.cshtml",
@@ -9734,6 +11054,9 @@
  ],
  "To do: {0}": [
   "Views/Portal/ModuleItem.cshtml"
+ ],
+ "To fill in": [
+  "Views/Portal/SchoolForms.cshtml"
  ],
  "To grade": [
   "wwwroot/js/grading-workspace.js"
@@ -9909,6 +11232,9 @@
  ],
  "Type name, registration, department, or program": [
   "Views/Portal/GenerateCertificates.cshtml"
+ ],
+ "Type your full name to sign.": [
+  "Views/Portal/FillForm.cshtml"
  ],
  "Type your message…": [
   "Views/Portal/AiChat.cshtml"
@@ -10107,6 +11433,9 @@
  "Use a question bank": [
   "Views/Portal/QuizBuilder.cshtml"
  ],
+ "Use again": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "Use an authenticator app such as Google Authenticator or Authy to add a second login check.": [
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
@@ -10222,6 +11551,9 @@
  "Verify the first TOTP code": [
   "Views/Portal/TwoFactorSettings.cshtml"
  ],
+ "Very low": [
+  "Views (inline expressions)"
+ ],
  "Video added.": [
   "Controllers"
  ],
@@ -10232,6 +11564,7 @@
   "Views/Portal/LmsManage.cshtml"
  ],
  "Videos": [
+  "Views/Portal/CourseCopy.cshtml",
   "Views/Portal/CourseLms.cshtml",
   "Views/Portal/LmsManage.cshtml"
  ],
@@ -10296,6 +11629,9 @@
  "Week #": [
   "Views/Portal/LmsManage.cshtml"
  ],
+ "Week {0} · {1} items": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Week {0} — {1}": [
   "Views/Portal/CourseLms.cshtml",
   "Views/Portal/LmsManage.cshtml"
@@ -10313,8 +11649,40 @@
  "Welcome": [
   "Views/Home/Index.cshtml"
  ],
+ "Wellbeing": [
+  "Controllers",
+  "Sidebar",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/Wellbeing.cshtml"
+ ],
+ "Wellbeing notes": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Wellbeing plan": [
+  "Views (inline expressions)"
+ ],
+ "Wellbeing team": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Wellbeing team and settings": [
+  "Views/Portal/Pastoral.cshtml"
+ ],
  "What each service needs": [
   "Views/Portal/LiveClassSettings.cshtml"
+ ],
+ "What happened, in a few words": [
+  "Views/Portal/PastoralNote.cshtml"
+ ],
+ "What it opens no longer exists.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "What staff should do": [
+  "Views/Portal/PastoralPlan.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "What the student needs, and why": [
+  "Views/Portal/PastoralPlan.cshtml"
  ],
  "What the tool learns about people": [
   "Views/Portal/LtiTools.cshtml"
@@ -10322,14 +11690,33 @@
  "What this page supports": [
   "Views/Portal/Dashboard.cshtml"
  ],
+ "What was copied": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "What was done": [
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "What was done (optional)": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
  "What your graded work shows you have mastered in each course.": [
   "Views/Portal/MyOutcomes.cshtml"
  ],
  "When": [
+  "Views/Portal/CourseCopy.cshtml",
+  "Views/Portal/EditNews.cshtml",
   "Views/Portal/XapiSettings.cshtml"
+ ],
+ "When (your time)": [
+  "Views/Portal/PastoralNote.cshtml"
  ],
  "When students can hand in": [
   "Views/Portal/AssignmentOptions.cshtml"
+ ],
+ "When the form opens, everyone it is for is asked to fill it in.": [
+  "Views/Portal/EditForm.cshtml"
  ],
  "Where {0} can be used": [
   "Views/Portal/LtiTools.cshtml"
@@ -10341,14 +11728,46 @@
   "Views/Portal/LiveClassSettings.cshtml",
   "Views/Portal/SimilaritySettings.cshtml"
  ],
+ "Who": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Who it is for": [
+  "Views/Portal/_AudiencePicker.cshtml"
+ ],
  "Who joined the live class": [
   "Views/Portal/LiveSessionAttendance.cshtml"
+ ],
+ "Who may read it": [
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralPlan.cshtml"
+ ],
+ "Who may use it": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "Who should follow it up?": [
+  "Views/Portal/PastoralNote.cshtml"
  ],
  "Whole course": [
   "Views/Portal/Discussion.cshtml"
  ],
  "Whole installation": [
   "Views/Portal/LtiTools.cshtml"
+ ],
+ "Whole school": [
+  "Views/Portal/_AudienceLabel.cshtml",
+  "Views/Portal/_AudiencePicker.cshtml"
+ ],
+ "Why is it removed?": [
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "With rubrics, submission and grading settings. Students' work and grades stay behind.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "With their pages, videos and links. What a module's items open comes along, even if you untick it below.": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
+ "With their questions, and the course's own question banks they draw from.": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "Word limit (optional)": [
   "Views/Portal/_QuizQuestionEditor.cshtml"
@@ -10365,8 +11784,23 @@
  "Workspace status": [
   "Views/Portal/Dashboard.cshtml"
  ],
+ "Would like to talk": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
  "Write a comment": [
   "wwwroot/js/grading-workspace.js"
+ ],
+ "Write a note": [
+  "Controllers",
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralStudent.cshtml"
+ ],
+ "Write news": [
+  "Controllers",
+  "Views/Portal/EditNews.cshtml",
+  "Views/Portal/News.cshtml"
  ],
  "Write something or record a message.": [
   "wwwroot/js/grading-workspace.js",
@@ -10378,6 +11812,13 @@
  "Year": [
   "Views/Portal/ReportPayments.cshtml"
  ],
+ "Year level": [
+  "Views/Portal/Pastoral.cshtml",
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
+ "Year level or term": [
+  "Views/Portal/_AudiencePicker.cshtml"
+ ],
  "Year-based academic structure, percentage grading, and year-to-year progression.": [
   "Views/Portal/InstitutionPolicy.cshtml"
  ],
@@ -10387,10 +11828,16 @@
  "Yes": [
   "Views (inline expressions)",
   "Views/Portal/Buildings.cshtml",
+  "Views/Portal/FillForm.cshtml",
+  "Views/Portal/FormResponses.cshtml",
   "Views/Portal/Rooms.cshtml"
  ],
+ "Yes or no": [
+  "Views/Portal/EditForm.cshtml"
+ ],
  "You": [
-  "Views/Portal/MessageThread.cshtml"
+  "Views/Portal/MessageThread.cshtml",
+  "Views/Portal/PastoralNote.cshtml"
  ],
  "You are not allowed to approve this application at its current stage.": [
   "Controllers"
@@ -10416,11 +11863,17 @@
  "You can apply only if you are an active university student in your final semester and your FYP is completed.": [
   "Views/Portal/GraduationApply.cshtml"
  ],
+ "You can change the answers until the form closes.": [
+  "Views/Portal/FillForm.cshtml"
+ ],
  "You can only manage links of students in your assigned departments.": [
   "Controllers/PortalController.ParentLinks.cs"
  ],
  "You can view enrollments but not change them.": [
   "Views (inline expressions)"
+ ],
+ "You copied this course here on {0}. Copying it again adds a second copy of everything you choose.": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "You have": [
   "wwwroot/js/take-quiz.js"
@@ -10428,6 +11881,15 @@
  "You have no course offerings.": [
   "Views (inline expressions)",
   "Views/Portal/OutcomeMastery.cshtml"
+ ],
+ "You have not made any events yet.": [
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "You have not made any forms yet.": [
+  "Views/Portal/SchoolForms.cshtml"
+ ],
+ "You have not written any news yet.": [
+  "Views/Portal/News.cshtml"
  ],
  "You have reached the end of this package.": [
   "Views/ScormPlay/Ended.cshtml",
@@ -10449,6 +11911,9 @@
  "You left the group.": [
   "Controllers"
  ],
+ "You manage this form.": [
+  "Views/Portal/FillForm.cshtml"
+ ],
  "You signed in with single sign-on. Your account also requires the code from your authenticator app.": [
   "Views/Login/Index.cshtml"
  ],
@@ -10466,6 +11931,12 @@
  ],
  "Your answer to this question will be final. Continue?": [
   "wwwroot/js/take-quiz.js"
+ ],
+ "Your answers are seen by your school's wellbeing team, not by other students or your parents.": [
+  "Views/Portal/Wellbeing.cshtml"
+ ],
+ "Your answers could not be saved.": [
+  "Controllers"
  ],
  "Your authenticator app is already registered. Enter a code to re-enable.": [
   "Views/Portal/TwoFactorSettings.cshtml"
@@ -10485,6 +11956,9 @@
  "Your calendar link is turned off. Calendars subscribed to it stop updating.": [
   "Controllers"
  ],
+ "Your check-in could not be saved.": [
+  "Controllers"
+ ],
  "Your children's results, attendance, homework, timetable, fees and announcements are in the EduSphere app. Install it on your phone, type the server address your school gave you, and sign in with this username and password.": [
   "Views/Portal/Start.cshtml"
  ],
@@ -10494,6 +11968,9 @@
  "Your course's online classes. Joining opens shortly before the start.": [
   "Views (inline expressions)"
  ],
+ "Your courses": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "Your details were updated.": [
   "Controllers"
  ],
@@ -10502,6 +11979,9 @@
  ],
  "Your file": [
   "Views/Portal/TakeQuizAttempt.cshtml"
+ ],
+ "Your follow-up note is added.": [
+  "Controllers"
  ],
  "Your groups for group assignments and group discussions.": [
   "Views/Portal/MyGroups.cshtml"
@@ -10514,6 +11994,9 @@
  ],
  "Your institution requires single sign-on. Use your organization's sign-in button below.": [
   "Controllers"
+ ],
+ "Your last check-in:": [
+  "Views/Portal/Wellbeing.cshtml"
  ],
  "Your outcomes could not be loaded.": [
   "Controllers"
@@ -10546,6 +12029,15 @@
   "Controllers",
   "Views (inline expressions)"
  ],
+ "Your reply": [
+  "Views/Portal/SchoolEvents.cshtml"
+ ],
+ "Your reply could not be saved.": [
+  "Controllers"
+ ],
+ "Your reply is saved.": [
+  "Controllers"
+ ],
  "Your review": [
   "Views/Portal/PeerReview.cshtml"
  ],
@@ -10561,8 +12053,14 @@
  "Your submission": [
   "Views/Portal/AssignmentSubmission.cshtml"
  ],
+ "Your support plans": [
+  "Views/Portal/Wellbeing.cshtml"
+ ],
  "Your teacher assigns these groups.": [
   "Views (inline expressions)"
+ ],
+ "Your wellbeing page could not be loaded.": [
+  "Controllers"
  ],
  "Your work has been submitted.": [
   "Controllers"
@@ -10628,8 +12126,14 @@
  "compares the top 27% of attempts with the bottom 27%: above 0.3 is good, near 0 means the question doesn't separate strong and weak students, and a negative value usually means the question or its key needs checking.": [
   "Views/Portal/QuizStatistics.cshtml"
  ],
+ "concerns within": [
+  "Views/Portal/PastoralSetup.cshtml"
+ ],
  "day late": [
   "Views/Portal/AssignmentPolicies.cshtml"
+ ],
+ "days": [
+  "Views/Portal/PastoralSetup.cshtml"
  ],
  "e.g. +61412345678": [
   "Views/Portal/UserImport.cshtml"
@@ -10736,6 +12240,9 @@
  "faculty-admin-import-template.csv": [
   "Views/Portal/UserImport.cshtml"
  ],
+ "for {0}": [
+  "Views/Portal/SchoolForms.cshtml"
+ ],
  "generated {0}": [
   "Views/Portal/ReportGpa.cshtml"
  ],
@@ -10782,7 +12289,14 @@
   "Views/Portal/UserImport.cshtml"
  ],
  "optional": [
-  "Views/Portal/Rooms.cshtml"
+  "Views/Portal/EditEvent.cshtml",
+  "Views/Portal/EditForm.cshtml",
+  "Views/Portal/EditNews.cshtml",
+  "Views/Portal/PastoralNote.cshtml",
+  "Views/Portal/PastoralPlan.cshtml",
+  "Views/Portal/Rooms.cshtml",
+  "Views/Portal/SchoolEvents.cshtml",
+  "Views/Portal/Wellbeing.cshtml"
  ],
  "or": [
   "Views/Login/Index.cshtml"
@@ -10895,6 +12409,9 @@
  "{0} created, {1} updated, {2} mapped to program outcomes.": [
   "Views/Portal/Outcomes.cshtml"
  ],
+ "{0} days": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "{0} days before": [
   "Views/Portal/AcademicDeadlines.cshtml"
  ],
@@ -10903,6 +12420,9 @@
  ],
  "{0} files · {1} MB": [
   "Views/Shared/Components/ScormPackages/Default.cshtml"
+ ],
+ "{0} going · {1} maybe · {2} not going": [
+  "Views/Portal/SchoolEvents.cshtml"
  ],
  "{0} graded · {1} posted": [
   "Views/Portal/GradingWorkspace.cshtml"
@@ -10922,6 +12442,9 @@
  "{0} new": [
   "Views/Portal/Messages.cshtml"
  ],
+ "{0} not copied": [
+  "Views/Portal/CourseCopy.cshtml"
+ ],
  "{0} not enrolled": [
   "Views/Portal/Enrollments.cshtml"
  ],
@@ -10930,8 +12453,18 @@
   "Views/Portal/OutcomeMastery.cshtml",
   "Views/Portal/Outcomes.cshtml"
  ],
+ "{0} of {1} answered": [
+  "Views/Portal/FormResponses.cshtml"
+ ],
+ "{0} of {1} chosen": [
+  "Views/Portal/CourseCopy.cshtml",
+  "wwwroot/js/course-copy.js"
+ ],
  "{0} of {1} done": [
   "Views/Portal/AssignmentOptions.cshtml"
+ ],
+ "{0} of {1} places taken": [
+  "Views/Portal/SchoolEvents.cshtml"
  ],
  "{0} of {1} students started · {2} finished": [
   "Views/Portal/ScormReport.cshtml"
@@ -10944,6 +12477,9 @@
  ],
  "{0} offerings": [
   "Views/Portal/Announcements.cshtml"
+ ],
+ "{0} outcome links use another course's own outcomes. Align the work with this course's outcomes.": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "{0} parts — students move between them with the contents list beside the player.": [
   "Views/Shared/Components/ScormPackages/Default.cshtml"
@@ -10962,6 +12498,9 @@
  ],
  "{0} question(s) · {1} marks": [
   "Views/Portal/TakeQuizAttempt.cshtml"
+ ],
+ "{0} questions": [
+  "Views/Portal/CourseCopy.cshtml"
  ],
  "{0} record(s) — generated {1}": [
   "Views/Portal/ReportResults.cshtml"

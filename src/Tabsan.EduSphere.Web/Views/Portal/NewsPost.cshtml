@@ -1,0 +1,72 @@
+@model Tabsan.EduSphere.Web.Models.Portal.NewsPostPageModel
+@{
+    ViewData["Title"] = T.Text("School news");
+    var p = Model.Post;
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+<p class="mb-2"><a asp-action="News">← @T["All news"]</a></p>
+
+@if (p is not null)
+{
+    <article class="card border-0 shadow-sm" data-news-post="@p.Status">
+        @if (p.ImageUrl is not null)
+        {
+            <img src="@p.ImageUrl" alt="" class="card-img-top news-hero" referrerpolicy="no-referrer" />
+        }
+        <div class="card-body">
+            <h2 class="h3 mb-1">@p.Title @if (p.IsPinned) { <span class="badge bg-info text-dark align-middle">@T["Pinned"]</span> }</h2>
+            <p class="small text-muted mb-3">@p.AuthorName · <time datetime="@CommunityFormat.Iso(p.PublishAt)" data-local-time="short">@p.PublishAt.ToString("dd MMM yyyy HH:mm") UTC</time> · <partial name="_AudienceLabel" model="p.Audience" /></p>
+            @if (p.Summary is not null) { <p class="lead">@p.Summary</p> }
+            <div class="news-body">
+                @foreach (var para in p.Body.Split("\n\n", StringSplitOptions.RemoveEmptyEntries))
+                {
+                    <p>
+                        @{ var lines = para.Split('\n'); }
+                        @for (var i = 0; i < lines.Length; i++)
+                        {
+                            @lines[i]
+                            if (i < lines.Length - 1) { <br /> }
+                        }
+                    </p>
+                }
+            </div>
+        </div>
+    </article>
+
+    @if (p.CanManage)
+    {
+        <section class="card border-0 shadow-sm mt-3" aria-labelledby="news-manage-title" data-news-manage-card>
+            <div class="card-body">
+                <h3 class="h6" id="news-manage-title">@T["For you as its author"]</h3>
+                <p class="mb-2" data-news-seen>@T.Format("Read by {0} of the {1} people it is for.", p.SeenBy ?? 0, p.AudienceSize ?? 0)</p>
+                @if (p.ExpiresAt is { } ends)
+                {
+                    <p class="small text-muted">@T["Taken down automatically on"] <time datetime="@CommunityFormat.Iso(ends)" data-local-time="short">@ends.ToString("dd MMM yyyy HH:mm") UTC</time></p>
+                }
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-sm btn-outline-primary" asp-action="EditNews" asp-route-id="@p.Id">@T["Change"]</a>
+                    @if (p.Status != "Withdrawn")
+                    {
+                        <form method="post" asp-action="WithdrawNews" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@p.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger" data-withdraw-news>@T["Take down"]</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+}
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

@@ -11,6 +11,8 @@ public static class CalendarKinds
     public const string Quiz = "Quiz";
     public const string LiveClass = "LiveClass";
     public const string KeyDate = "KeyDate";
+    /// <summary>A school event (news, events and forms) whose audience includes the person.</summary>
+    public const string Event = "Event";
 }
 
 /// <summary>An entry's state for the person looking at it.</summary>
@@ -201,7 +203,8 @@ public static class CalendarIcs
             if (e.AllDay)
             {
                 Line($"DTSTART;VALUE=DATE:{e.StartsAt:yyyyMMdd}");
-                Line($"DTEND;VALUE=DATE:{e.StartsAt.Date.AddDays(1):yyyyMMdd}");
+                var lastDay = e.EndsAt is { } last && last.Date > e.StartsAt.Date ? last.Date : e.StartsAt.Date;
+                Line($"DTEND;VALUE=DATE:{lastDay.AddDays(1):yyyyMMdd}");
             }
             else
             {

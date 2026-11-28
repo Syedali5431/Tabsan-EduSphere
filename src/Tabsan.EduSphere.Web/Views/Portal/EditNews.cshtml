@@ -1,0 +1,80 @@
+@model Tabsan.EduSphere.Web.Models.Portal.EditNewsPageModel
+@using Tabsan.EduSphere.Domain.Community
+@{
+    ViewData["Title"] = Model.Id is null ? T.Text("Write news") : T.Text("Change news");
+    var i = Model.Input;
+}
+
+<p class="mb-2"><a asp-action="News" asp-route-tab="manage">← @T["Posts I manage"]</a></p>
+<h2 class="h3 mb-3">@(Model.Id is null ? T.Text("Write news") : T.Text("Change news"))</h2>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="border border-danger rounded p-2 mb-3 text-danger" role="alert" data-form-error>@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."]</div>
+    return;
+}
+
+<form method="post" asp-action="SaveNews" class="card border-0 shadow-sm" data-community-form>
+    @Html.AntiForgeryToken()
+    @if (Model.Id is { } id) { <input type="hidden" name="id" value="@id" /> }
+    <div class="card-body">
+        <div class="mb-3">
+            <label class="form-label" for="news-title">@T["Title"]</label>
+            <input class="form-control" id="news-title" name="Title" value="@i.Title" required maxlength="@CommunityItem.MaxTitleLength" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="news-summary">@T["Summary"] <span class="text-muted small">(@T["optional"])</span></label>
+            <textarea class="form-control" id="news-summary" name="Summary" rows="2" maxlength="@NewsPost.MaxSummaryLength" aria-describedby="news-summary-hint">@i.Summary</textarea>
+            <p class="form-text" id="news-summary-hint">@T["One or two sentences for the news list."]</p>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="news-body">@T["Post"]</label>
+            <textarea class="form-control" id="news-body" name="Body" rows="10" required maxlength="@NewsPost.MaxBodyLength" aria-describedby="news-body-hint">@i.Body</textarea>
+            <p class="form-text" id="news-body-hint">@T["Leave an empty line between paragraphs."]</p>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="news-image">@T["Picture link"] <span class="text-muted small">(@T["optional"])</span></label>
+            <input class="form-control" id="news-image" name="ImageUrl" type="url" value="@i.ImageUrl" placeholder="https://" aria-describedby="news-image-hint" />
+            <p class="form-text" id="news-image-hint">@T["A picture already online, starting with https://."]</p>
+        </div>
+
+        <partial name="_AudiencePicker" model="new AudiencePickerModel(Model.Options, i.Audience, Model.Id is null)" />
+
+        <fieldset class="border rounded p-3 mb-3">
+            <legend class="float-none w-auto px-1 mb-0 fs-6 fw-semibold">@T["When"]</legend>
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <label class="form-label small" for="news-publish">@T["Appears from (your time)"]</label>
+                    <input class="form-control" id="news-publish" type="datetime-local" data-utc-for="PublishAt" aria-describedby="news-publish-hint" />
+                    <input type="hidden" name="PublishAt" value="@i.PublishAt" />
+                    <p class="form-text" id="news-publish-hint">@T["Leave empty to publish straight away."]</p>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small" for="news-expires">@T["Taken down at (your time)"]</label>
+                    <input class="form-control" id="news-expires" type="datetime-local" data-utc-for="ExpiresAt" aria-describedby="news-expires-hint" />
+                    <input type="hidden" name="ExpiresAt" value="@i.ExpiresAt" />
+                    <p class="form-text" id="news-expires-hint">@T["Optional: the post leaves the news list then."]</p>
+                </div>
+            </div>
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" name="Pinned" value="true" id="news-pinned" checked="@i.Pinned" />
+                <label class="form-check-label" for="news-pinned">@T["Pin to the top of the news"]</label>
+            </div>
+        </fieldset>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" name="submit" value="publish" class="btn btn-primary" data-publish>@T["Publish"]</button>
+            <button type="submit" name="submit" value="draft" class="btn btn-outline-secondary">@T["Save as draft"]</button>
+        </div>
+        <p class="small text-muted mt-2 mb-0">@T["Everyone it is for is told when the post appears: in the app, by push and by e-mail where they have switched those on."]</p>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

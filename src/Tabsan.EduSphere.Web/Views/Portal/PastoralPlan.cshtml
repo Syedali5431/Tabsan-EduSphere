@@ -1,0 +1,87 @@
+@model Tabsan.EduSphere.Web.Models.Portal.PastoralPlanPageModel
+@using Tabsan.EduSphere.Domain.Pastoral
+@{
+    ViewData["Title"] = Model.Id is null ? T.Text("New support plan") : T.Text("Change support plan");
+    var i = Model.Input;
+}
+
+@if (Model.Student is { } s)
+{
+    <p class="mb-2"><a asp-action="PastoralStudent" asp-route-id="@s.Student.Id">← @s.Student.Name</a></p>
+}
+<h2 class="h3 mb-3">@(Model.Id is null ? T.Text("New support plan") : T.Text("Change support plan"))</h2>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="border border-danger rounded p-2 mb-3 text-danger" role="alert" data-form-error>@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."]</div>
+    return;
+}
+
+<form method="post" asp-action="SavePastoralPlan" class="card border-0 shadow-sm" data-pastoral-note-form>
+    @Html.AntiForgeryToken()
+    @if (Model.Id is { } id) { <input type="hidden" name="id" value="@id" /> }
+    <input type="hidden" name="StudentProfileId" value="@i.StudentProfileId" />
+    <div class="card-body">
+        @if (Model.Student is { } student)
+        {
+            <p class="mb-3"><span class="text-muted">@T["For"]</span> <span class="fw-semibold">@student.Student.Name</span> <span class="text-muted small">@student.Student.ClassName</span></p>
+        }
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label" for="pp-kind">@T["Kind of plan"]</label>
+                <select class="form-select" id="pp-kind" name="Kind">
+                    @foreach (var k in PastoralWords.PlanKinds) { <option value="@k" selected="@(k == i.Kind)">@T.Text(PastoralWords.PlanKind(k))</option> }
+                </select>
+            </div>
+            <div class="col-md-8">
+                <label class="form-label" for="pp-title">@T["Title"]</label>
+                <input class="form-control" id="pp-title" name="Title" value="@i.Title" required maxlength="@SupportPlan.MaxTitleLength" placeholder="@T["For example: Extra time in tests"]" />
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="pp-needs">@T["What the student needs, and why"] <span class="text-muted small">(@T["optional"])</span></label>
+            <textarea class="form-control" id="pp-needs" name="Needs" rows="3" maxlength="@SupportPlan.MaxTextLength">@i.Needs</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="pp-strategies">@T["What staff should do"]</label>
+            <textarea class="form-control" id="pp-strategies" name="Strategies" rows="5" required maxlength="@SupportPlan.MaxTextLength" aria-describedby="pp-strategies-hint">@i.Strategies</textarea>
+            <p class="form-text" id="pp-strategies-hint">@T["The student's teachers see this on the student's pastoral page."]</p>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label" for="pp-start">@T["Starts on"]</label>
+                <input class="form-control" id="pp-start" type="date" name="StartsOn" value="@i.StartsOn" required />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="pp-review">@T["Review on"] <span class="text-muted small">(@T["optional"])</span></label>
+                <input class="form-control" id="pp-review" type="date" name="ReviewOn" value="@i.ReviewOn" aria-describedby="pp-review-hint" />
+                <p class="form-text" id="pp-review-hint">@T["The plan's owner is reminded on this day."]</p>
+            </div>
+        </div>
+        <fieldset class="border rounded p-3 mb-3">
+            <legend class="float-none w-auto px-1 mb-0 fs-6 fw-semibold">@T["Who may read it"]</legend>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Confidential" value="true" id="pp-conf" checked="@i.Confidential" data-note-confidential />
+                <label class="form-check-label" for="pp-conf">@T["Confidential: only me and the wellbeing team members who see confidential notes"]</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="ShareWithStudent" value="true" id="pp-student" checked="@i.ShareWithStudent" data-note-share />
+                <label class="form-check-label" for="pp-student">@T["Share with the student"]</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="ShareWithParents" value="true" id="pp-parents" checked="@i.ShareWithParents" data-note-share />
+                <label class="form-check-label" for="pp-parents">@T["Share with the parents (in the app)"]</label>
+            </div>
+        </fieldset>
+        <button type="submit" class="btn btn-primary">@T["Save the plan"]</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/pastoral.js" asp-append-version="true" defer></script>
+}

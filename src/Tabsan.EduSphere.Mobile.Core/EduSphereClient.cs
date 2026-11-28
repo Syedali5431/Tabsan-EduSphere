@@ -389,6 +389,46 @@ public sealed class EduSphereClient
     public async Task<int> GetUnreadConversationsAsync(CancellationToken ct = default)
         => (await GetAsync<UnreadMessages>("api/v1/messages/unread", ct))?.Conversations ?? 0;
 
+    // ── school news, events and forms ──
+
+    /// <summary>News for the person (a parent: for any of their children), pinned first, then newest.</summary>
+    public async Task<List<NewsItem>> GetNewsAsync(CancellationToken ct = default)
+        => await GetAsync<List<NewsItem>>("api/v1/community/news", ct) ?? [];
+
+    /// <summary>A news post (the server marks it read).</summary>
+    public Task<NewsPostDetail?> GetNewsPostAsync(Guid id, CancellationToken ct = default)
+        => GetAsync<NewsPostDetail>($"api/v1/community/news/{id}", ct);
+
+    /// <summary>Events from yesterday to four months ahead, with the person's reply.</summary>
+    public async Task<List<SchoolEventItem>> GetSchoolEventsAsync(CancellationToken ct = default)
+        => await GetAsync<List<SchoolEventItem>>("api/v1/community/events", ct) ?? [];
+
+    /// <summary>"Going", "NotGoing" or "Maybe", with guests; the event as it now stands.</summary>
+    public Task<SchoolEventItem?> ReplyToEventAsync(Guid id, string answer, int guests, string? note = null, CancellationToken ct = default)
+        => SendAsync<SchoolEventItem>(HttpMethod.Post, $"api/v1/community/events/{id}/reply", new { answer, guests, note }, false, ct);
+
+    /// <summary>Open forms for the person (a parent: one per child each form is for).</summary>
+    public async Task<List<FormToFillItem>> GetFormsToFillAsync(CancellationToken ct = default)
+        => await GetAsync<List<FormToFillItem>>("api/v1/community/forms", ct) ?? [];
+
+    public Task<FormDetail?> GetFormAsync(Guid id, Guid? studentProfileId = null, CancellationToken ct = default)
+        => GetAsync<FormDetail>($"api/v1/community/forms/{id}" + (studentProfileId is { } s ? $"?studentProfileId={s}" : ""), ct);
+
+    /// <summary>Sends the answers (a parent's for one child); the form with the saved answers.</summary>
+    public Task<FormDetail?> SubmitFormAsync(Guid id, Guid? studentProfileId, IReadOnlyDictionary<Guid, string?> answers, CancellationToken ct = default)
+        => SendAsync<FormDetail>(HttpMethod.Post, $"api/v1/community/forms/{id}/responses", new { studentProfileId, answers }, false, ct);
+
+    /// <summary>Students: their check-ins and the notes and plans the school shared with them.</summary>
+    public Task<MyWellbeing?> GetMyWellbeingAsync(CancellationToken ct = default) => GetAsync<MyWellbeing>("api/v1/pastoral/mine", ct);
+
+    /// <summary>A student says how they are (1 very low … 5 great); a second answer within six hours changes the first.</summary>
+    public Task<CheckInItem?> CheckInAsync(int mood, string? note, bool wantsToTalk, CancellationToken ct = default)
+        => SendAsync<CheckInItem>(HttpMethod.Post, "api/v1/pastoral/check-ins", new { mood, note, wantsToTalk }, false, ct);
+
+    /// <summary>Parents: for each child, the notes and plans the school shared with the family.</summary>
+    public async Task<List<FamilyWellbeing>> GetFamilyWellbeingAsync(CancellationToken ct = default)
+        => await GetAsync<List<FamilyWellbeing>>("api/v1/pastoral/family", ct) ?? [];
+
     /// <summary>Day-by-day attendance, newest first (own, or a linked child's for parents), optionally of one course.</summary>
     public async Task<List<AttendanceDay>> GetAttendanceDaysAsync(Guid? childProfileId = null, Guid? offeringId = null, CancellationToken ct = default)
     {

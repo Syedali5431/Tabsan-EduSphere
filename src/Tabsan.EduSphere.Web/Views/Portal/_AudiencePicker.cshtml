@@ -1,0 +1,47 @@
+@model Tabsan.EduSphere.Web.Models.Portal.AudiencePickerModel
+@{
+    var o = Model.Options;
+    var v = Model.Value;
+    var roles = Model.IsNew && v.Roles.Count == 0 ? new List<string> { "Students", "Parents", "Staff" } : v.Roles;
+}
+<fieldset class="border rounded p-3 mb-3" data-audience-picker>
+    <legend class="float-none w-auto px-1 mb-0 fs-6 fw-semibold">@T["Who it is for"]</legend>
+    @if (o is not null && !o.WholeSchool)
+    {
+        <p class="small text-muted mb-2">@T["Teachers write to one of their own classes; admins of one campus write for their campus."]</p>
+    }
+    <div class="row g-2">
+        <div class="col-md-4">
+            <label class="form-label small" for="aud-campus">@T["Campus"]</label>
+            <select class="form-select" id="aud-campus" name="Audience.CampusId" data-audience-campus>
+                @if (o?.WholeSchool != false) { <option value="">@T["Whole school"]</option> }
+                else { <option value="">@T["Every campus I can choose"]</option> }
+                @foreach (var c in o?.Campuses ?? []) { <option value="@c.Id" selected="@(c.Id == v.CampusId)">@c.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small" for="aud-semester">@T["Year level or term"]</label>
+            <select class="form-select" id="aud-semester" name="Audience.SemesterId">
+                <option value="">@T["Every year level"]</option>
+                @foreach (var s in o?.Semesters ?? []) { <option value="@s.Id" selected="@(s.Id == v.SemesterId)">@s.Name</option> }
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label small" for="aud-class">@T["Class"]</label>
+            <select class="form-select" id="aud-class" name="Audience.CourseOfferingId" data-audience-class>
+                <option value="">@T["Every class"]</option>
+                @foreach (var c in o?.Classes ?? []) { <option value="@c.Id" data-campus="@c.CampusId" selected="@(c.Id == v.CourseOfferingId)">@c.Name</option> }
+            </select>
+        </div>
+    </div>
+    <div class="d-flex flex-wrap gap-3 mt-3" role="group" aria-label="@T["People"]">
+        @foreach (var (value, label) in new[] { ("Students", T.Text("Students")), ("Parents", T.Text("Parents")), ("Staff", T.Text("Staff")) })
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Audience.Roles" value="@value" id="aud-role-@value" checked="@roles.Contains(value)" />
+                <label class="form-check-label" for="aud-role-@value">@label</label>
+            </div>
+        }
+    </div>
+    <p class="small text-muted mt-2 mb-0">@T["Parents see what is for their children's campus, year level and class, in the app."]</p>
+</fieldset>

@@ -221,6 +221,8 @@ public sealed partial class MobileService : IMobileService
                 NotificationType.LiveClass => "home",
                 NotificationType.DueReminder => "calendar",
                 NotificationType.Message => "messages",
+                NotificationType.SchoolNews => "school",
+                NotificationType.Pastoral => "wellbeing",
                 _ => "notifications"
             }
         });
