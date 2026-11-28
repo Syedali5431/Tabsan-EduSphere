@@ -1,0 +1,164 @@
+@model Tabsan.EduSphere.Web.Models.Portal.EventsPageModel
+@{
+    ViewData["Title"] = T.Text("Events");
+
+    string Kind(string c) => c switch
+    {
+        "Sports" => T.Text("Sports"),
+        "Excursion" => T.Text("Excursion"),
+        "Meeting" => T.Text("Meeting"),
+        "Performance" => T.Text("Performance"),
+        "Holiday" => T.Text("Holiday"),
+        "Exam" => T.Text("Exam"),
+        _ => T.Text("General")
+    };
+    string Answer(string? a) => a switch
+    {
+        "Going" => T.Text("Going"),
+        "NotGoing" => T.Text("Not going"),
+        "Maybe" => T.Text("Maybe"),
+        _ => ""
+    };
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
+    return;
+}
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h2 class="h3 mb-0 me-auto">@T["Events"]</h2>
+    @if (Model.CanWrite)
+    {
+        <nav class="btn-group btn-group-sm" aria-label="@T["Events"]">
+            <a class="btn @(Model.Tab == "upcoming" ? "btn-secondary" : "btn-outline-secondary")" asp-action="SchoolEvents" aria-current="@(Model.Tab == "upcoming" ? "page" : null)">@T["Coming up"]</a>
+            <a class="btn @(Model.Tab == "manage" ? "btn-secondary" : "btn-outline-secondary")" asp-action="SchoolEvents" asp-route-tab="manage" aria-current="@(Model.Tab == "manage" ? "page" : null)">@T["Events I manage"]</a>
+        </nav>
+        <a class="btn btn-sm btn-primary" asp-action="EditEvent" data-new-event>@T["New event"]</a>
+    }
+</div>
+
+@if (Model.Events.Count == 0)
+{
+    <p class="text-muted" data-events-empty>@(Model.Tab == "manage" ? T.Text("You have not made any events yet.") : T.Text("No events coming up."))</p>
+}
+else if (Model.Tab == "manage")
+{
+    <div class="table-responsive card border-0 shadow-sm">
+        <table class="table table-sm align-middle mb-0" data-events-manage>
+            <thead class="table-light">
+                <tr><th scope="col">@T["Event"]</th><th scope="col">@T["Starts"]</th><th scope="col">@T["Status"]</th><th scope="col">@T["For"]</th><th scope="col" class="text-end">@T["Coming"]</th><th scope="col"><span class="visually-hidden">@T["Actions"]</span></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model.Events)
+                {
+                    <tr data-event-row="@e.Status">
+                        <td>@e.Title<div class="small text-muted">@Kind(e.Category)</div></td>
+                        <td class="text-nowrap"><time datetime="@CommunityFormat.Iso(e.StartsAt)" data-local-time="@(e.AllDay ? "allday" : "short")">@e.StartsAt.ToString("dd MMM yyyy HH:mm") UTC</time></td>
+                        <td><span class="badge @(e.Status == "Published" ? "bg-success" : e.Status == "Cancelled" ? "bg-danger" : "bg-secondary")">@(e.Status == "Published" ? T.Text("Published") : e.Status == "Cancelled" ? T.Text("Cancelled") : T.Text("Draft"))</span></td>
+                        <td><partial name="_AudienceLabel" model="e.Audience" /></td>
+                        <td class="text-end">@(e.Counts is { } c ? c.Places.ToString() : "—")</td>
+                        <td class="text-end text-nowrap">
+                            @if (e.Status != "Cancelled") { <a class="btn btn-sm btn-outline-secondary" asp-action="EditEvent" asp-route-id="@e.Id">@T["Change"]</a> }
+                            <a class="btn btn-sm btn-outline-primary" asp-action="EventReplies" asp-route-id="@e.Id">@T["Replies"]</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <div class="d-grid gap-3" data-events>
+        @foreach (var e in Model.Events)
+        {
+            <article class="card border-0 shadow-sm" id="event-@e.Id" data-event="@e.Title">
+                <div class="card-body d-flex gap-3">
+                    <div class="event-date text-center flex-shrink-0" aria-hidden="true">
+                        <time datetime="@CommunityFormat.Iso(e.StartsAt)" data-local-time="@(e.AllDay ? "allday-day" : "day")" class="d-block fw-bold fs-4">@e.StartsAt.Day</time>
+                        <time datetime="@CommunityFormat.Iso(e.StartsAt)" data-local-time="@(e.AllDay ? "allday-month" : "month")" class="d-block small text-uppercase">@e.StartsAt.ToString("MMM")</time>
+                    </div>
+                    <div class="flex-grow-1 min-w-0">
+                        <h3 class="h5 mb-1">
+                            @e.Title
+                            <span class="badge bg-light text-dark border ms-1">@Kind(e.Category)</span>
+                            @if (e.Status == "Cancelled") { <span class="badge bg-danger ms-1" data-event-cancelled>@T["Cancelled"]</span> }
+                        </h3>
+                        <p class="small mb-1">
+                            <time datetime="@CommunityFormat.Iso(e.StartsAt)" data-local-time="@(e.AllDay ? "allday" : "short")">@e.StartsAt.ToString("dd MMM yyyy HH:mm") UTC</time>
+                            @if (!e.AllDay) { <span>–</span> <time datetime="@CommunityFormat.Iso(e.EndsAt)" data-local-time="time">@e.EndsAt.ToString("HH:mm")</time> }
+                            else if (e.EndsAt.Date > e.StartsAt.Date) { <span>–</span> <time datetime="@CommunityFormat.Iso(e.EndsAt)" data-local-time="allday">@e.EndsAt.ToString("dd MMM yyyy")</time> }
+                            @if (e.Location is not null) { <span>· @e.Location</span> }
+                        </p>
+                        @if (e.Status == "Cancelled" && e.CancelReason is not null) { <p class="small text-danger mb-1">@e.CancelReason</p> }
+                        @if (e.Description is not null) { <p class="mb-2">@e.Description</p> }
+                        <p class="mb-2"><partial name="_AudienceLabel" model="e.Audience" /></p>
+                        @if (e.FormId is { } form && e.Status != "Cancelled")
+                        {
+                            <p class="mb-2"><a asp-action="FillForm" asp-route-id="@form" data-event-form>@T["Fill in the form for this event"]</a></p>
+                        }
+                        @if (e.RepliesOpen && e.Status != "Cancelled")
+                        {
+                            <div class="border rounded p-2 bg-light" data-event-replies>
+                                @if (e.Counts is { } c)
+                                {
+                                    <p class="small mb-2">@T.Format("{0} going · {1} maybe · {2} not going", c.Going, c.Maybe, c.NotGoing)
+                                        @if (e.Capacity is { } cap) { <span>· @T.Format("{0} of {1} places taken", c.Places, cap)</span> }</p>
+                                }
+                                @if (e.MyAnswer is not null) { <p class="small fw-semibold mb-2" data-my-answer="@e.MyAnswer">@T["Your reply"]: @Answer(e.MyAnswer)@(e.MyGuests > 0 ? $" (+{e.MyGuests})" : "")</p> }
+                                @if (e.CanReply)
+                                {
+                                    <form method="post" asp-action="ReplyEvent" class="row g-2 align-items-end" data-reply-form>
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@e.Id" />
+                                        @if (e.MaxGuests > 0)
+                                        {
+                                            <div class="col-auto">
+                                                <label class="form-label small mb-0" for="guests-@e.Id">@T["Guests"]</label>
+                                                <select class="form-select form-select-sm" id="guests-@e.Id" name="guests">
+                                                    @for (var g = 0; g <= e.MaxGuests; g++) { <option value="@g" selected="@(g == e.MyGuests)">@g</option> }
+                                                </select>
+                                            </div>
+                                        }
+                                        <div class="col-md">
+                                            <label class="form-label small mb-0" for="note-@e.Id">@T["Note"] <span class="text-muted">(@T["optional"])</span></label>
+                                            <input class="form-control form-control-sm" id="note-@e.Id" name="note" value="@e.MyNote" maxlength="500" />
+                                        </div>
+                                        <div class="col-auto d-flex gap-1">
+                                            <button type="submit" name="answer" value="Going" class="btn btn-sm btn-success">@T["Going"]</button>
+                                            <button type="submit" name="answer" value="Maybe" class="btn btn-sm btn-outline-secondary">@T["Maybe"]</button>
+                                            <button type="submit" name="answer" value="NotGoing" class="btn btn-sm btn-outline-danger">@T["Not going"]</button>
+                                        </div>
+                                    </form>
+                                    @if (e.RepliesCloseAt is { } closes)
+                                    {
+                                        <p class="small text-muted mt-1 mb-0">@T["Replies close"] <time datetime="@CommunityFormat.Iso(closes)" data-local-time="short">@closes.ToString("dd MMM yyyy HH:mm") UTC</time></p>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="small text-muted mb-0">@T["Replies are closed."]</p>
+                                }
+                            </div>
+                        }
+                        @if (e.CanManage) { <p class="mt-2 mb-0"><a class="small" asp-action="EventReplies" asp-route-id="@e.Id">@T["See replies"]</a></p> }
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

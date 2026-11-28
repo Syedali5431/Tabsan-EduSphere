@@ -223,12 +223,110 @@ public class AuthSecurityUxTests
         return Convert.ToHexString(bytes);
     }
 
+    // ── Demo installations: one shared sign-in that opens the chosen role's account ──────────────
+
+    private static DemoLoginOptions DemoOptions(bool enabled = true) => new()
+    {
+        Enabled = enabled,
+        Username = "demo",
+        Accounts =
+        [
+            new DemoLoginAccount { Role = "Admin", Username = "demo.admin" },
+            new DemoLoginAccount { Role = "Faculty", Username = "tmsgul.maths" },
+            new DemoLoginAccount { Role = "Student", Username = "tmsgul.c9s1" },
+            new DemoLoginAccount { Role = "Parent", Username = "demo.parent" }
+        ]
+    };
+
+    private static (AuthService Sut, User Demo, User Admin, User Teacher) CreateDemoSut(DemoLoginOptions demo)
+    {
+        var demoUser = new User("demo", "HASH", roleId: 2);
+        var admin = new User("demo.admin", "OTHER-HASH", roleId: 2);
+        SetRole(admin, "Admin");
+        var teacher = new User("tmsgul.maths", "OTHER-HASH", roleId: 3);
+        SetRole(teacher, "Faculty");
+        var sut = CreateSut(new AuthSecurityOptions { SessionRisk = new SessionRiskSettings { Enabled = false } },
+            user: demoUser, otherUsers: [admin, teacher], demo: demo);
+        return (sut, demoUser, admin, teacher);
+    }
+
+    [Fact]
+    public async Task DemoLogin_WithRole_OpensThatRolesAccount()
+    {
+        var (sut, _, _, teacher) = CreateDemoSut(DemoOptions());
+
+        var result = await sut.LoginAsync(new LoginRequest("demo", "pass", DemoRole: "faculty"), "10.0.0.5");
+
+        result.IsSuccess.Should().BeTrue();
+        result.Response!.UserId.Should().Be(teacher.Id);
+        result.Response.Username.Should().Be("tmsgul.maths");
+        result.Response.Role.Should().Be("Faculty");
+        result.Response.MustChangePassword.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DemoLogin_WithoutRole_OpensTheFirstAccount()
+    {
+        var (sut, _, admin, _) = CreateDemoSut(DemoOptions());
+
+        var result = await sut.LoginAsync(new LoginRequest("DEMO", "pass"), "10.0.0.5");
+
+        result.IsSuccess.Should().BeTrue();
+        result.Response!.UserId.Should().Be(admin.Id);
+    }
+
+    [Fact]
+    public async Task DemoLogin_UnknownRoleOrMissingAccount_Fails()
+    {
+        var (sut, _, _, _) = CreateDemoSut(DemoOptions());
+
+        (await sut.LoginAsync(new LoginRequest("demo", "pass", DemoRole: "SuperAdmin"), "10.0.0.5"))
+            .FailureReason.Should().Be(LoginFailureReason.InvalidCredentials);
+        // Configured, but its account (demo.parent) does not exist.
+        (await sut.LoginAsync(new LoginRequest("demo", "pass", DemoRole: "Parent"), "10.0.0.5"))
+            .FailureReason.Should().Be(LoginFailureReason.InvalidCredentials);
+    }
+
+    [Fact]
+    public async Task DemoLogin_WrongPassword_OpensNothing()
+    {
+        var (sut, demoUser, _, _) = CreateDemoSut(DemoOptions());
+
+        var result = await sut.LoginAsync(new LoginRequest("demo", "wrong", DemoRole: "Faculty"), "10.0.0.5");
+
+        result.IsSuccess.Should().BeFalse();
+        result.FailureReason.Should().Be(LoginFailureReason.InvalidCredentials);
+        demoUser.FailedLoginAttempts.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task DemoLogin_WhenDisabled_SignsInAsTheDemoAccountItself()
+    {
+        var (sut, demoUser, _, _) = CreateDemoSut(DemoOptions(enabled: false));
+
+        var result = await sut.LoginAsync(new LoginRequest("demo", "pass", DemoRole: "Faculty"), "10.0.0.5");
+
+        result.IsSuccess.Should().BeTrue();
+        result.Response!.UserId.Should().Be(demoUser.Id);
+    }
+
+    [Fact]
+    public void DemoLoginOptions_OnlyTheDemoUsernameWhileEnabled()
+    {
+        DemoOptions().IsDemoUsername(" Demo ").Should().BeTrue();
+        DemoOptions().IsDemoUsername("demo.admin").Should().BeFalse();
+        DemoOptions(enabled: false).IsDemoUsername("demo").Should().BeFalse();
+        new DemoLoginOptions { Enabled = true }.IsDemoUsername("demo").Should().BeFalse(); // no accounts configured
+    }
+
     private static AuthService CreateSut(
         AuthSecurityOptions options,
         User? user = null,
         IUserSessionRepository? sessionRepo = null,
         ITotpService? totpService = null,
-        ITwoFactorStateStore? twoFactorState = null)
+        ITwoFactorStateStore? twoFactorState = null,
+        IEnumerable<User>? otherUsers = null,
+        DemoLoginOptions? demo = null)
     {
         user ??= new User("student1", "HASH", roleId: 1);
         sessionRepo ??= new StubSessionRepository();
@@ -236,7 +334,7 @@ public class AuthSecurityUxTests
         twoFactorState ??= new StubTwoFactorStateStore(null);
 
         return new AuthService(
-            new StubUserRepository(user),
+            new StubUserRepository(user, otherUsers),
             sessionRepo,
             new StubTokenService(),
             new StubPasswordHasher(),
@@ -245,7 +343,8 @@ public class AuthSecurityUxTests
             new StubLicenseRepository(),
             totpService,
             twoFactorState,
-            Options.Create(options));
+            Options.Create(options),
+            demoLogin: demo is null ? null : Options.Create(demo));
     }
 
     private static void SetRole(User user, string roleName)
@@ -259,14 +358,20 @@ public class AuthSecurityUxTests
 file sealed class StubUserRepository : IUserRepository
 {
     private readonly User _user;
+    // Further accounts (the demo sign-in opens another account than the one whose password it checks).
+    private readonly List<User> _all;
 
-    public StubUserRepository(User user) => _user = user;
+    public StubUserRepository(User user, IEnumerable<User>? others = null)
+    {
+        _user = user;
+        _all = [user, .. others ?? []];
+    }
 
     public Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default)
-        => Task.FromResult<User?>(_user.Id == id ? _user : null);
+        => Task.FromResult(_all.FirstOrDefault(u => u.Id == id));
 
     public Task<User?> GetByUsernameAsync(string username, CancellationToken ct = default)
-        => Task.FromResult<User?>(string.Equals(_user.Username, username, StringComparison.OrdinalIgnoreCase) ? _user : null);
+        => Task.FromResult(_all.FirstOrDefault(u => string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase)));
 
     public Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
         => Task.FromResult<User?>(null);

@@ -322,7 +322,7 @@ public sealed partial class SubmissionWorkspaceService : ISubmissionWorkspaceSer
         if (_media is null) return (null, "File storage is not configured.");
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
         var stored = await _media.SaveAsync(file.Content, category, extension,
-            string.IsNullOrWhiteSpace(file.ContentType) ? null : file.ContentType, Path.GetFileName(file.FileName), ct);
+            string.IsNullOrWhiteSpace(file.ContentType) ? null : file.ContentType, Tabsan.EduSphere.Domain.Common.UploadFileName.Of(file.FileName), ct);
         return (stored, null);
     }
 

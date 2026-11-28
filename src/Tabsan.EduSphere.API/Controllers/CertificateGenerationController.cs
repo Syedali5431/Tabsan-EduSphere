@@ -429,7 +429,7 @@ public class CertificateGenerationController : ControllerBase
         var studentFolder = Path.Combine(root, studentProfileId.ToString("N"));
         Directory.CreateDirectory(studentFolder);
 
-        var originalFileName = Path.GetFileName(file.FileName);
+        var originalFileName = Tabsan.EduSphere.Domain.Common.UploadFileName.Of(file.FileName);
         var extension = Path.GetExtension(originalFileName);
         var generatedName = $"{DateTime.UtcNow:yyyyMMddHHmmss}_{Guid.NewGuid():N}{extension}";
         var fullPath = Path.Combine(studentFolder, generatedName);

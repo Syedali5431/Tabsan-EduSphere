@@ -195,7 +195,7 @@ public sealed class BlobMediaStorageService : IMediaStorageService
         if (string.IsNullOrWhiteSpace(fileName))
             return null;
 
-        return Path.GetFileName(fileName.Trim());
+        return Tabsan.EduSphere.Domain.Common.UploadFileName.Of(fileName.Trim());
     }
 
     private string ResolveFullPath(string key)

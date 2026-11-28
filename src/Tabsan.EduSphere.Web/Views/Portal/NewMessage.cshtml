@@ -1,0 +1,93 @@
+@model Tabsan.EduSphere.Web.Models.Portal.NewMessagePageModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    ViewData["Title"] = T.Text("New message");
+    var groups = Model.Contacts.GroupBy(c => c.Group ?? "").ToList();
+    var index = 0;
+    string Describe(Tabsan.EduSphere.Application.Messaging.MessageContactDto c)
+        => c.Role == "Parent" && !string.IsNullOrWhiteSpace(c.Detail)
+            ? string.Format(T.Text("Parent of {0}"), c.Detail)
+            : string.IsNullOrWhiteSpace(c.Detail) ? T.Text(MessageFormat.RoleLabel(c.Role)) : $"{T.Text(MessageFormat.RoleLabel(c.Role))} · {c.Detail}";
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+<p class="mb-3"><a asp-action="Messages">&larr; @T["All messages"]</a></p>
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
+}
+else
+{
+    <section class="card border-0 shadow-sm" aria-labelledby="new-message-title">
+        <div class="card-body">
+            <h2 class="h5" id="new-message-title">@T["New message"]</h2>
+            <p class="small text-muted">@T["Each student or parent you write to gets a conversation of their own; they do not see each other's names or replies."]</p>
+
+            <form method="get" asp-action="NewMessage" class="row g-2 align-items-end mb-3" role="search">
+                <div class="col-sm-8 col-md-6">
+                    <label class="form-label" for="contact-search">@T["Find people"]</label>
+                    <input id="contact-search" name="search" class="form-control form-control-sm" value="@Model.Search" placeholder="@T["Name, course or child"]" data-contact-filter />
+                </div>
+                <div class="col-auto"><button class="btn btn-sm btn-outline-secondary">@T["Search"]</button></div>
+            </form>
+
+            <form method="post" asp-action="SendMessage" data-new-message-form>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="search" value="@Model.Search" />
+                <fieldset class="mb-3">
+                    <legend class="form-label fs-6">@T["Recipients"] <span class="badge text-bg-secondary ms-1" data-selected-count>@Model.Selected.Count</span></legend>
+                    @if (Model.Contacts.Count == 0)
+                    {
+                        <p class="text-muted small mb-0">@T["Nobody found. You can write to the people your role connects you with: your teachers, your students and their parents, or the school office."]</p>
+                    }
+                    else
+                    {
+                        <div class="contact-list border rounded p-2" data-contact-list>
+                            @foreach (var g in groups)
+                            {
+                                var groupId = $"contact-group-{index++}";
+                                <div class="contact-group mb-2" data-contact-group>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="@groupId" data-select-group />
+                                        <label class="form-check-label fw-semibold small" for="@groupId">
+                                            @(MessageFormat.IsKnownGroup(g.Key) ? T.Text(g.Key) : g.Key) <span class="text-muted">(@g.Count())</span>
+                                        </label>
+                                    </div>
+                                    @foreach (var c in g)
+                                    {
+                                        var id = $"to-{c.UserId:N}";
+                                        <div class="form-check ms-3" data-contact="@c.Name">
+                                            <input class="form-check-input" type="checkbox" name="recipientIds" value="@c.UserId" id="@id" checked="@(Model.Selected.Contains(c.UserId) ? "checked" : null)" />
+                                            <label class="form-check-label small" for="@id">@c.Name <span class="text-muted">· @Describe(c)</span></label>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </fieldset>
+                <div class="mb-3">
+                    <label class="form-label" for="message-subject">@T["Subject"]</label>
+                    <input id="message-subject" name="subject" class="form-control" maxlength="200" required value="@Model.Subject" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="message-body">@T["Message"]</label>
+                    <textarea id="message-body" name="body" class="form-control" rows="6" maxlength="4000" required>@Model.Body</textarea>
+                </div>
+                <button class="btn btn-primary">@T["Send"]</button>
+            </form>
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script src="~/js/messages.js" asp-append-version="true" defer></script>
+}

@@ -1,0 +1,14 @@
+@model Tabsan.EduSphere.Application.Community.AudienceDto
+@{
+    var parts = new List<string>();
+    parts.Add(Model.CampusName ?? (Model.CourseName is null ? T.Text("Whole school") : ""));
+    if (Model.SemesterName is not null) parts.Add(Model.SemesterName);
+    if (Model.CourseName is not null) parts.Add(Model.CourseName);
+    var people = Model.Roles.Count == 3 ? T.Text("Everyone") : string.Join(", ", Model.Roles.Select(r => r switch
+    {
+        "Students" => T.Text("Students"),
+        "Parents" => T.Text("Parents"),
+        _ => T.Text("Staff")
+    }));
+}
+<span class="small text-muted" data-audience>@string.Join(" · ", parts.Where(p => p.Length > 0)) · @people</span>

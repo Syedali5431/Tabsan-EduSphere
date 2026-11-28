@@ -2949,3 +2949,163 @@ html :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible 
 html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
   outline-color: #8cc4ff;
 }
+
+/* The calendar (Portal/AcademicCalendar): a colour per kind, a month grid and a day-by-day list.
+   Text on the soft fills keeps 4.5:1 in the light and the dark themes (WCAG 1.4.3). */
+:root {
+  --calendar-assignment: #1a5aa0;
+  --calendar-assignment-soft: #e3efff;
+  --calendar-quiz: #6d28d9;
+  --calendar-quiz-soft: #efe7ff;
+  --calendar-liveclass: #13704f;
+  --calendar-liveclass-soft: #ddf5ea;
+  --calendar-keydate: #8a4b08;
+  --calendar-keydate-soft: #fdf0dc;
+  --calendar-event: #0e6378;
+  --calendar-event-soft: #dff3f8;
+  --calendar-today: #fff7d6;
+}
+html:is([data-theme="midnight_dark"], [data-theme="deep_navy"], [data-theme="graphite_pro"], [data-theme="slate_grey"]) {
+  --calendar-assignment: #93c5fd;
+  --calendar-assignment-soft: rgba(96, 165, 250, 0.16);
+  --calendar-quiz: #c4b5fd;
+  --calendar-quiz-soft: rgba(167, 139, 250, 0.16);
+  --calendar-liveclass: #6ee7b7;
+  --calendar-liveclass-soft: rgba(52, 211, 153, 0.14);
+  --calendar-keydate: #fcd34d;
+  --calendar-keydate-soft: rgba(251, 191, 36, 0.14);
+  --calendar-event: #67e8f9;
+  --calendar-event-soft: rgba(34, 211, 238, 0.14);
+  --calendar-today: rgba(250, 204, 21, 0.10);
+}
+.calendar-assignment { --calendar-color: var(--calendar-assignment); --calendar-soft: var(--calendar-assignment-soft); }
+.calendar-quiz { --calendar-color: var(--calendar-quiz); --calendar-soft: var(--calendar-quiz-soft); }
+.calendar-liveclass { --calendar-color: var(--calendar-liveclass); --calendar-soft: var(--calendar-liveclass-soft); }
+.calendar-keydate { --calendar-color: var(--calendar-keydate); --calendar-soft: var(--calendar-keydate-soft); }
+.calendar-event { --calendar-color: var(--calendar-event); --calendar-soft: var(--calendar-event-soft); }
+/* School news and events */
+.news-thumb { width: 96px; height: 72px; object-fit: cover; }
+.news-hero { max-height: 320px; object-fit: cover; }
+.news-body p { margin-bottom: 0.75rem; }
+.event-date { width: 3.5rem; border: 1px solid var(--calendar-event, #0e6378); border-radius: 0.5rem; padding: 0.25rem 0; color: var(--calendar-event, #0e6378); }
+.answer-bar { display: inline-block; height: 0.6rem; border-radius: 0.3rem; min-width: 2px; }
+.calendar-swatch {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 0.2rem;
+  background: var(--calendar-color);
+  vertical-align: -0.05rem;
+}
+.calendar-month {
+  table-layout: fixed;
+  min-width: 640px;
+}
+.calendar-month td.calendar-day {
+  height: 7.5rem;
+  vertical-align: top;
+  padding: 0.25rem;
+}
+.calendar-month td.calendar-outside {
+  opacity: 0.55;
+}
+.calendar-month td.calendar-today {
+  background: var(--calendar-today);
+}
+.calendar-daynum {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+.calendar-today .calendar-daynum {
+  color: var(--color-primary-700);
+}
+.calendar-chip {
+  display: block;
+  margin-bottom: 0.15rem;
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.25rem;
+  border-inline-start: 3px solid var(--calendar-color);
+  background: var(--calendar-soft);
+  color: var(--calendar-color);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+a.calendar-chip:hover {
+  text-decoration: underline;
+}
+.calendar-chip-time {
+  font-weight: 600;
+  margin-inline-end: 0.25rem;
+}
+.calendar-chip.calendar-done,
+.calendar-item.calendar-done .calendar-what > a {
+  opacity: 0.7;
+}
+.calendar-chip.calendar-cancelled,
+.calendar-item.calendar-cancelled .calendar-what > a {
+  text-decoration: line-through;
+}
+.calendar-chip.calendar-overdue {
+  border-inline-start-color: var(--color-danger);
+}
+.calendar-agenda .calendar-item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.4rem 0.5rem;
+  margin-bottom: 0.3rem;
+  border-inline-start: 4px solid var(--calendar-color);
+  border-radius: 0.25rem;
+  background: var(--calendar-soft);
+}
+.calendar-time {
+  flex: 0 0 5.5rem;
+  font-weight: 600;
+  color: var(--calendar-color);
+}
+.calendar-what {
+  min-width: 0;
+}
+@media (max-width: 575.98px) {
+  .calendar-time {
+    flex-basis: 4.5rem;
+  }
+}
+
+/* Messages: conversations as speech bubbles (own messages on the end side), a scrolling list of people to write to. */
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.message {
+  max-width: min(42rem, 85%);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--surface-border, #dbe3ee);
+  background: var(--color-primary-50, #f4f8ff);
+}
+.message-mine {
+  align-self: flex-end;
+  background: var(--calendar-assignment-soft, #e3efff);
+}
+.message-theirs {
+  align-self: flex-start;
+}
+.message-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.contact-list {
+  max-height: 22rem;
+  overflow-y: auto;
+}
+.min-w-0 {
+  min-width: 0;
+}

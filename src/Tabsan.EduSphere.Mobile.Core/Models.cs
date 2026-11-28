@@ -57,6 +57,10 @@ public sealed class MobileConfig
     public List<MobileLanguage> Languages { get; set; } = [];
     public List<SsoProvider> SsoProviders { get; set; } = [];
     public bool PushEnabled { get; set; }
+    /// <summary>Demo installations only: the shared demo username; typing it lets people choose the role to open.</summary>
+    public string? DemoUsername { get; set; }
+    /// <summary>Demo installations only: the roles the demo sign-in can open, in order (Admin, Faculty, Student, Parent).</summary>
+    public List<string>? DemoRoles { get; set; }
 }
 
 public sealed class ClassSlot
@@ -259,6 +263,192 @@ public sealed class CourseSummary
     public string Title => string.IsNullOrWhiteSpace(CourseCode) ? CourseTitle : $"{CourseCode} — {CourseTitle}";
 }
 
+/// <summary>Someone the user may write to; Role is the role name, Detail data (a course, a child), Group how the list is grouped.</summary>
+public sealed class MessageContact : ObservableObject
+{
+    private bool _selected;
+    public Guid UserId { get; set; }
+    public string Name { get; set; } = "";
+    public string Role { get; set; } = "";
+    public string? Detail { get; set; }
+    public string? Group { get; set; }
+    /// <summary>Ticked on the new-message screen.</summary>
+    public bool IsSelected { get => _selected; set => Set(ref _selected, value); }
+
+    /// <summary>"Teacher · Mathematics (Class 9)", "Parent of Fatima Sheikh", "Student · TMS-GUL-09-01".</summary>
+    public string Description => Role == "Parent" && !string.IsNullOrWhiteSpace(Detail)
+        ? string.Format(AppText.Get("ParentOf"), Detail)
+        : string.IsNullOrWhiteSpace(Detail) ? MessageText.Role(Role) : $"{MessageText.Role(Role)} · {Detail}";
+
+    /// <summary>The group's heading: a course title as it is, or Teachers, Office, Students, Parents, Staff in the app's language.</summary>
+    public string GroupTitle => Group is "Teachers" or "Office" or "Students" or "Parents" or "Staff" ? AppText.Get("Group" + Group) : Group ?? "";
+}
+
+public sealed class ConversationPerson
+{
+    public Guid UserId { get; set; }
+    public string Name { get; set; } = "";
+    public string Role { get; set; } = "";
+}
+
+public sealed class ConversationSummary
+{
+    public Guid Id { get; set; }
+    public string Subject { get; set; } = "";
+    public List<ConversationPerson> With { get; set; } = [];
+    public DateTime LastMessageAt { get; set; }
+    public string? LastMessage { get; set; }
+    public Guid? LastSenderId { get; set; }
+    public string? LastSenderName { get; set; }
+    public int Unread { get; set; }
+    public bool Archived { get; set; }
+    public bool LastFromMe { get; set; }
+
+    public string People => string.Join(", ", With.Select(p => p.Name));
+    /// <summary>"Ms Khan: See you Friday", "You: Thank you".</summary>
+    public string Preview => LastMessage is null ? ""
+        : LastFromMe ? $"{AppText.Get("You")}: {LastMessage}"
+        : string.IsNullOrWhiteSpace(LastSenderName) ? LastMessage : $"{LastSenderName}: {LastMessage}";
+    public bool HasUnread => Unread > 0;
+}
+
+public sealed class ConversationMessageItem
+{
+    public Guid Id { get; set; }
+    public Guid SenderUserId { get; set; }
+    public string SenderName { get; set; } = "";
+    public string Body { get; set; } = "";
+    public DateTime SentAt { get; set; }
+    public bool Mine { get; set; }
+    public string Who => Mine ? AppText.Get("You") : SenderName;
+}
+
+public sealed class ConversationDetail
+{
+    public Guid Id { get; set; }
+    public string Subject { get; set; } = "";
+    public List<ConversationPerson> People { get; set; } = [];
+    public List<ConversationMessageItem> Messages { get; set; } = [];
+    public bool Archived { get; set; }
+}
+
+public sealed class StartedConversations
+{
+    public List<Guid> ConversationIds { get; set; } = [];
+}
+
+public sealed class UnreadMessages
+{
+    public int Conversations { get; set; }
+}
+
+/// <summary>How the app names roles in messages.</summary>
+public static class MessageText
+{
+    public static string Role(string? role) => role switch
+    {
+        "Faculty" => AppText.Get("Teacher"),
+        "Student" => AppText.Get("Student"),
+        "Parent" => AppText.Get("Parent"),
+        "Finance" => AppText.Get("FinanceOffice"),
+        "Admin" or "SuperAdmin" => AppText.Get("SchoolOffice"),
+        _ => role ?? ""
+    };
+}
+
+/// <summary>
+/// A calendar entry (times UTC): "Assignment" (homework due), "Quiz" (closes), "LiveClass" or "KeyDate" (all day).
+/// Status: Done, Overdue, Cancelled or Draft (teachers); parents' entries name the child.
+/// </summary>
+public sealed class CalendarEntry
+{
+    public string Id { get; set; } = "";
+    public string Kind { get; set; } = "";
+    public string Title { get; set; } = "";
+    public DateTime StartsAt { get; set; }
+    public DateTime? EndsAt { get; set; }
+    public bool AllDay { get; set; }
+    public Guid? ItemId { get; set; }
+    public Guid? OfferingId { get; set; }
+    public string? CourseCode { get; set; }
+    public string? CourseTitle { get; set; }
+    public string? Status { get; set; }
+    public string? Note { get; set; }
+    public string? StudentName { get; set; }
+    public bool OwnDates { get; set; }
+    public int ToMark { get; set; }
+    public bool SomeHaveOwnDates { get; set; }
+
+    /// <summary>The day it is on in the phone's time (key dates stay on their date everywhere).</summary>
+    public DateTime LocalDay => AllDay ? StartsAt.Date : DateTime.SpecifyKind(StartsAt, DateTimeKind.Utc).ToLocalTime().Date;
+
+    /// <summary>"17:00" in the phone's time, "17:00–17:45" for a live class, or "All day".</summary>
+    public string Time
+    {
+        get
+        {
+            if (AllDay) return AppText.Get("AllDay");
+            var start = DateTime.SpecifyKind(StartsAt, DateTimeKind.Utc).ToLocalTime().ToString("HH:mm");
+            return EndsAt is { } end && end > StartsAt ? $"{start}–{DateTime.SpecifyKind(end, DateTimeKind.Utc).ToLocalTime():HH:mm}" : start;
+        }
+    }
+
+    /// <summary>"Due: Essay", "Quiz closes: Week 3", "Ali: Due: Essay" (parents).</summary>
+    public string What
+    {
+        get
+        {
+            var prefix = Kind switch
+            {
+                "Assignment" => AppText.Get("Due"),
+                "Quiz" => AppText.Get("QuizCloses"),
+                "LiveClass" => AppText.Get("LiveClass"),
+                "Event" => AppText.Get("SchoolEvent"),
+                _ => AppText.Get("KeyDate")
+            };
+            var text = $"{prefix}: {Title}";
+            var child = StudentName?.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+            return string.IsNullOrEmpty(child) ? text : $"{child}: {text}";
+        }
+    }
+
+    /// <summary>Course, the student's own date, what is left to mark, a key date's description.</summary>
+    public string Details => string.Join(" · ", new[]
+    {
+        Kind == "KeyDate" ? CourseTitle : CourseCode ?? CourseTitle,
+        OwnDates ? AppText.Get(Kind == "Quiz" ? "OwnClosingTime" : "OwnDueDate") : null,
+        ToMark > 0 ? string.Format(AppText.Get("ToGradeCount"), ToMark) : null,
+        SomeHaveOwnDates ? AppText.Get("SomeOwnDates") : null,
+        Note
+    }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+    /// <summary>The state to show, or null.</summary>
+    public string? StatusText => Status switch
+    {
+        "Done" => AppText.Get(Kind == "Quiz" ? "Taken" : "HandedIn"),
+        "Overdue" => AppText.Get("Overdue"),
+        "Cancelled" => AppText.Get("Cancelled"),
+        "Draft" => AppText.Get("NotPublished"),
+        _ => null
+    };
+}
+
+public sealed class CalendarEvents
+{
+    public DateTime From { get; set; }
+    public DateTime To { get; set; }
+    public List<CalendarEntry> Events { get; set; } = [];
+}
+
+/// <summary>The person's private calendar link; <see cref="Path"/> is on the API server.</summary>
+public sealed class CalendarFeed
+{
+    public string Token { get; set; } = "";
+    public string Path { get; set; } = "";
+    public DateTime CreatedAt { get; set; }
+    public DateTime? LastUsedAt { get; set; }
+}
+
 /// <summary>Homework (an assignment) of one of the user's courses — or a child's for parents.</summary>
 public sealed class HomeworkItem
 {
@@ -404,4 +594,205 @@ public sealed class DiscussionReply
     public string AuthorName { get; set; } = "";
     public string Body { get; set; } = "";
     public DateTime CreatedAt { get; set; }
+}
+
+// ── School news, events and forms ─────────────────────────────────────────────
+
+public sealed class NewsItem
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = "";
+    public string? Summary { get; set; }
+    public string? ImageUrl { get; set; }
+    public DateTime PublishAt { get; set; }
+    public bool IsPinned { get; set; }
+    public bool IsNew { get; set; }
+    public string AuthorName { get; set; } = "";
+}
+
+public sealed class NewsPostDetail
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = "";
+    public string? Summary { get; set; }
+    public string Body { get; set; } = "";
+    public string? ImageUrl { get; set; }
+    public DateTime PublishAt { get; set; }
+    public bool IsPinned { get; set; }
+    public string AuthorName { get; set; } = "";
+}
+
+public sealed class EventReplyCounts
+{
+    public int Going { get; set; }
+    public int NotGoing { get; set; }
+    public int Maybe { get; set; }
+    public int Places { get; set; }
+}
+
+/// <summary>A school event (times UTC) with the person's reply.</summary>
+public sealed class SchoolEventItem
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = "";
+    public string? Description { get; set; }
+    public string? Location { get; set; }
+    public DateTime StartsAt { get; set; }
+    public DateTime EndsAt { get; set; }
+    public bool AllDay { get; set; }
+    public string Category { get; set; } = "";
+    public string Status { get; set; } = "";
+    public string? CancelReason { get; set; }
+    public bool RepliesOpen { get; set; }
+    public DateTime? RepliesCloseAt { get; set; }
+    public int? Capacity { get; set; }
+    public int MaxGuests { get; set; }
+    public Guid? FormId { get; set; }
+    public string? MyAnswer { get; set; }
+    public int MyGuests { get; set; }
+    public string? MyNote { get; set; }
+    public EventReplyCounts? Counts { get; set; }
+    public bool CanReply { get; set; }
+
+    public bool IsCancelled => Status == "Cancelled";
+
+    /// <summary>"Fri 5 Dec 09:00 – 11:00 · Main hall" in the phone's time zone (all-day events by date).</summary>
+    public string When
+    {
+        get
+        {
+            string text;
+            if (AllDay)
+            {
+                text = StartsAt.ToString("ddd d MMM yyyy");
+                if (EndsAt.Date > StartsAt.Date) text += " – " + EndsAt.ToString("ddd d MMM");
+            }
+            else
+            {
+                var start = StartsAt.ToLocalTime();
+                var end = EndsAt.ToLocalTime();
+                text = start.ToString("ddd d MMM HH:mm") + " – " + (end.Date == start.Date ? end.ToString("HH:mm") : end.ToString("ddd d MMM HH:mm"));
+            }
+            return string.IsNullOrWhiteSpace(Location) ? text : $"{text} · {Location}";
+        }
+    }
+
+    /// <summary>"Your reply: Going (+2)".</summary>
+    public string? MyReply => MyAnswer is null ? null
+        : $"{AppText.Get("YourReply")}: {AppText.Get(MyAnswer)}{(MyGuests > 0 ? $" (+{MyGuests})" : "")}";
+
+    /// <summary>"12 going · 3 maybe · 20 of 40 places taken".</summary>
+    public string? CountsText => Counts is not { } c ? null
+        : string.Format(AppText.Get("RepliesSoFar"), c.Going, c.Maybe) + (Capacity is { } cap ? " · " + string.Format(AppText.Get("PlacesTaken"), c.Places, cap) : "");
+}
+
+/// <summary>An open form for the person (for a parent: one per child it is for).</summary>
+public sealed class FormToFillItem
+{
+    public Guid FormId { get; set; }
+    public string Title { get; set; } = "";
+    public DateTime? DueAt { get; set; }
+    public Guid? StudentProfileId { get; set; }
+    public string? StudentName { get; set; }
+    public bool Answered { get; set; }
+    public DateTime? AnsweredAt { get; set; }
+    public string? AnsweredBy { get; set; }
+    public bool Open { get; set; }
+
+    public string State => Answered ? AppText.Get("Answered") : Open ? AppText.Get("ToFillIn") : AppText.Get("FormClosed");
+    public string? For => StudentName is null ? null : string.Format(AppText.Get("ForChild"), StudentName);
+}
+
+public sealed class FormFieldItem
+{
+    public Guid Id { get; set; }
+    public string Type { get; set; } = "";
+    public string Label { get; set; } = "";
+    public string? Help { get; set; }
+    public bool Required { get; set; }
+    public List<string> Options { get; set; } = [];
+}
+
+public sealed class FormDetail
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = "";
+    public string? Description { get; set; }
+    public DateTime? DueAt { get; set; }
+    public string Status { get; set; } = "";
+    public bool TakesAnswers { get; set; }
+    public List<FormFieldItem> Fields { get; set; } = [];
+    public Guid? StudentProfileId { get; set; }
+    public string? StudentName { get; set; }
+    public Dictionary<Guid, string> Answers { get; set; } = [];
+    public DateTime? AnsweredAt { get; set; }
+    public string? AnsweredBy { get; set; }
+}
+
+// ── Wellbeing (pastoral care) ─────────────────────────────────────────────────
+
+/// <summary>A note from school shared with the student or their family: praise, a concern, or something to know.</summary>
+public sealed class WellbeingNoteItem
+{
+    public Guid Id { get; set; }
+    public string Kind { get; set; } = "";
+    /// <summary>Positive, Neutral or Concern.</summary>
+    public string Tone { get; set; } = "";
+    public string? Category { get; set; }
+    public string Summary { get; set; } = "";
+    public string? Details { get; set; }
+    public string? ActionTaken { get; set; }
+    public DateTime OccurredAt { get; set; }
+    public string AuthorName { get; set; } = "";
+    /// <summary>Set by the app for parents: the child it is about.</summary>
+    public string? ChildName { get; set; }
+
+    public bool IsPraise => Tone == "Positive";
+    /// <summary>"Excellent effort" or the summary when there is no category.</summary>
+    public string Heading => string.IsNullOrWhiteSpace(Category) ? Summary : Category;
+    /// <summary>"Ali · Mr Siddiqui · 5 Dec".</summary>
+    public string Meta => string.Join(" · ", new[] { ChildName, AuthorName, OccurredAt.ToLocalTime().ToString("d MMM") }.Where(s => !string.IsNullOrWhiteSpace(s)));
+}
+
+/// <summary>A support plan shared with the student or their family.</summary>
+public sealed class WellbeingPlanItem
+{
+    public Guid Id { get; set; }
+    public string Kind { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Strategies { get; set; } = "";
+    public DateTime StartsOn { get; set; }
+    public DateTime? ReviewOn { get; set; }
+    public string OwnerName { get; set; } = "";
+}
+
+public sealed class CheckInItem
+{
+    public Guid Id { get; set; }
+    public int Mood { get; set; }
+    public string? Note { get; set; }
+    public bool WantsToTalk { get; set; }
+    public DateTime CheckedInAt { get; set; }
+    public DateTime? AcknowledgedAt { get; set; }
+    public string? AcknowledgedBy { get; set; }
+}
+
+/// <summary>A student's wellbeing: whether they can check in, their check-ins, and what the school shared with them.</summary>
+public sealed class MyWellbeing
+{
+    public bool CheckInsEnabled { get; set; }
+    public CheckInItem? Latest { get; set; }
+    public List<CheckInItem> History { get; set; } = [];
+    public List<WellbeingNoteItem> Records { get; set; } = [];
+    public List<WellbeingPlanItem> Plans { get; set; } = [];
+}
+
+/// <summary>For parents: what the school shared about one child.</summary>
+public sealed class FamilyWellbeing
+{
+    public Guid StudentProfileId { get; set; }
+    public string Name { get; set; } = "";
+    public string? ClassName { get; set; }
+    public List<WellbeingNoteItem> Records { get; set; } = [];
+    public List<WellbeingPlanItem> Plans { get; set; } = [];
 }

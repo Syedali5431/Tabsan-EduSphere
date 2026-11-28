@@ -1,0 +1,111 @@
+@model Tabsan.EduSphere.Web.Models.Portal.EditFormPageModel
+@using Tabsan.EduSphere.Domain.Community
+@{
+    ViewData["Title"] = Model.Id is null ? T.Text("New form") : T.Text("Change form");
+    var i = Model.Input;
+    var types = new[]
+    {
+        ("ShortText", T.Text("Short answer")), ("LongText", T.Text("Long answer")), ("SingleChoice", T.Text("One choice")),
+        ("MultipleChoice", T.Text("Several choices")), ("YesNo", T.Text("Yes or no")), ("Date", T.Text("Date")), ("Number", T.Text("Number")),
+        ("Signature", T.Text("Signature (typed name)")), ("Information", T.Text("Information (no answer)"))
+    };
+    // Room for new questions: the page adds more with "Add a question".
+    var rows = Model.Answered ? i.Fields : i.Fields.Concat(Enumerable.Range(0, i.Fields.Count == 0 ? 3 : 1).Select(_ => new FieldInput())).ToList();
+}
+
+<p class="mb-2"><a asp-action="SchoolForms" asp-route-tab="manage">← @T["Forms I manage"]</a></p>
+<h2 class="h3 mb-3">@(Model.Id is null ? T.Text("New form") : T.Text("Change form"))</h2>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="border border-danger rounded p-2 mb-3 text-danger" role="alert" data-form-error>@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."]</div>
+    return;
+}
+
+<form method="post" asp-action="SaveForm" class="card border-0 shadow-sm" data-community-form data-form-builder>
+    @Html.AntiForgeryToken()
+    @if (Model.Id is { } id) { <input type="hidden" name="id" value="@id" /> }
+    <div class="card-body">
+        <div class="mb-3">
+            <label class="form-label" for="form-title">@T["Title"]</label>
+            <input class="form-control" id="form-title" name="Title" value="@i.Title" required maxlength="@CommunityItem.MaxTitleLength" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="form-desc">@T["Instructions"] <span class="text-muted small">(@T["optional"])</span></label>
+            <textarea class="form-control" id="form-desc" name="Description" rows="3" maxlength="@SchoolForm.MaxDescriptionLength">@i.Description</textarea>
+        </div>
+        <div class="mb-3 col-md-6 px-0">
+            <label class="form-label" for="form-due">@T["Due (your time)"] <span class="text-muted small">(@T["optional"])</span></label>
+            <input class="form-control" id="form-due" type="datetime-local" data-utc-for="DueAt" aria-describedby="form-due-hint" />
+            <input type="hidden" name="DueAt" value="@i.DueAt" />
+            <p class="form-text" id="form-due-hint">@T["Answers are taken until then; a day before, everyone who has not answered is reminded."]</p>
+        </div>
+
+        <partial name="_AudiencePicker" model="new AudiencePickerModel(Model.Options, i.Audience, Model.Id is null)" />
+        <p class="small text-muted">@T["Parents answer once for each child the form is for; students and staff once each."]</p>
+
+        <fieldset class="border rounded p-3 mb-3">
+            <legend class="float-none w-auto px-1 mb-0 fs-6 fw-semibold">@T["Questions"]</legend>
+            @if (Model.Answered)
+            {
+                <p class="small text-warning" role="note" data-questions-locked>@T["Answers have come in, so the questions can no longer change."]</p>
+            }
+            <ol class="list-unstyled mb-2" data-question-list>
+                @for (var n = 0; n < rows.Count; n++)
+                {
+                    var q = rows[n];
+                    <li class="border rounded p-2 mb-2" data-question-row>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <label class="form-label small" for="q-type-@n">@T["Kind"]</label>
+                                <select class="form-select form-select-sm" id="q-type-@n" name="Fields[@n].Type" data-question-type disabled="@Model.Answered">
+                                    @foreach (var (value, label) in types) { <option value="@value" selected="@(value == q.Type)">@label</option> }
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small" for="q-label-@n">@T["Question"]</label>
+                                <input class="form-control form-control-sm" id="q-label-@n" name="Fields[@n].Label" value="@q.Label" maxlength="@FormField.MaxLabelLength" readonly="@Model.Answered" />
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small" for="q-help-@n">@T["Help text"] <span class="text-muted">(@T["optional"])</span></label>
+                                <input class="form-control form-control-sm" id="q-help-@n" name="Fields[@n].Help" value="@q.Help" maxlength="@FormField.MaxHelpLength" readonly="@Model.Answered" />
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end gap-2">
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" type="checkbox" id="q-req-@n" name="Fields[@n].Required" value="true" checked="@q.Required" disabled="@Model.Answered" />
+                                    <label class="form-check-label small" for="q-req-@n">@T["Required"]</label>
+                                </div>
+                                @if (!Model.Answered) { <button type="button" class="btn btn-sm btn-outline-danger ms-auto" data-remove-question>@T["Remove"]</button> }
+                            </div>
+                            <div class="col-12" data-question-options>
+                                <label class="form-label small" for="q-opt-@n">@T["Choices, one per line"]</label>
+                                <textarea class="form-control form-control-sm" id="q-opt-@n" name="Fields[@n].Options" rows="3" readonly="@Model.Answered">@q.Options</textarea>
+                            </div>
+                        </div>
+                        @if (Model.Answered)
+                        {
+                            <input type="hidden" name="Fields[@n].Type" value="@q.Type" />
+                            @if (q.Required) { <input type="hidden" name="Fields[@n].Required" value="true" /> }
+                        }
+                    </li>
+                }
+            </ol>
+            @if (!Model.Answered) { <button type="button" class="btn btn-sm btn-outline-primary" data-add-question>@T["Add a question"]</button> }
+        </fieldset>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" name="submit" value="open" class="btn btn-primary" data-open-form>@T["Open for answers"]</button>
+            <button type="submit" name="submit" value="draft" class="btn btn-outline-secondary">@T["Save as draft"]</button>
+        </div>
+        <p class="small text-muted mt-2 mb-0">@T["When the form opens, everyone it is for is asked to fill it in."]</p>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

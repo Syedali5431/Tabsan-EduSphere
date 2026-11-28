@@ -181,10 +181,20 @@ public sealed class EduSphereClient
     public Task<MobileConfig?> GetConfigAsync(string? tenant = null, CancellationToken ct = default)
         => SendAsync<MobileConfig>(HttpMethod.Get, "api/v1/mobile/config" + (string.IsNullOrWhiteSpace(tenant) ? "" : "?tenant=" + Uri.EscapeDataString(tenant)), null, anonymous: true, ct);
 
-    /// <summary>Username and password (and the authenticator code when the account has one).</summary>
-    public async Task<SignInResult> SignInAsync(string username, string password, string? mfaCode = null, CancellationToken ct = default)
+    /// <summary>
+    /// Username and password (and the authenticator code when the account has one). <paramref name="demoRole"/>: demo
+    /// installations only, the role whose account the shared demo sign-in opens (<see cref="MobileConfig.DemoRoles"/>).
+    /// </summary>
+    public async Task<SignInResult> SignInAsync(string username, string password, string? mfaCode = null, CancellationToken ct = default,
+        string? demoRole = null)
     {
-        using var request = Request(HttpMethod.Post, "api/v1/auth/login", new { username, password, mfaCode = string.IsNullOrWhiteSpace(mfaCode) ? null : mfaCode.Trim() }, anonymous: true);
+        using var request = Request(HttpMethod.Post, "api/v1/auth/login", new
+        {
+            username,
+            password,
+            mfaCode = string.IsNullOrWhiteSpace(mfaCode) ? null : mfaCode.Trim(),
+            demoRole = string.IsNullOrWhiteSpace(demoRole) ? null : demoRole
+        }, anonymous: true);
         using var response = await TransportAsync(request, ct);
         var body = await response.Content.ReadAsStringAsync(ct);
         if (response.IsSuccessStatusCode)
@@ -314,6 +324,110 @@ public sealed class EduSphereClient
     /// <summary>Homework of all courses, soonest due first (own, a child's for parents; teachers: with what is left to grade).</summary>
     public async Task<List<HomeworkItem>> GetHomeworkAsync(Guid? childProfileId = null, CancellationToken ct = default)
         => await GetAsync<List<HomeworkItem>>("api/v1/mobile/homework" + Child(childProfileId), ct) ?? [];
+
+    /// <summary>
+    /// The calendar between two UTC times: homework due dates and quiz closing times (with the student's own dates), live
+    /// classes and key dates — own, a teacher's courses, or a parent's children (one child, or all without one).
+    /// </summary>
+    public async Task<List<CalendarEntry>> GetCalendarAsync(DateTime fromUtc, DateTime toUtc, Guid? childProfileId = null, CancellationToken ct = default)
+    {
+        var path = $"api/v1/calendar/events?from={fromUtc:yyyy-MM-ddTHH:mm:ssZ}&to={toUtc:yyyy-MM-ddTHH:mm:ssZ}"
+                   + (childProfileId is { } child ? $"&studentProfileId={child}" : "");
+        return (await GetAsync<CalendarEvents>(path, ct))?.Events ?? [];
+    }
+
+    /// <summary>The person's private calendar link, created when they have none.</summary>
+    public async Task<CalendarFeed?> GetOrCreateCalendarFeedAsync(CancellationToken ct = default)
+        => await GetAsync<CalendarFeed>("api/v1/calendar/feed", ct)
+           ?? await SendAsync<CalendarFeed>(HttpMethod.Post, "api/v1/calendar/feed", null, false, ct);
+
+    /// <summary>The link a phone's calendar subscribes to (webcal:// on the server's own address).</summary>
+    public string? CalendarFeedUrl(CalendarFeed feed, bool webcal = true)
+    {
+        if (_server is null || string.IsNullOrWhiteSpace(feed.Path)) return null;
+        var url = _server.TrimEnd('/') + feed.Path;
+        return webcal ? "webcal://" + url[(url.IndexOf("://", StringComparison.Ordinal) + 3)..] : url;
+    }
+
+    /// <summary>
+    /// The address that adds the calendar on this phone: on Android, Google Calendar's "add by URL" page (Android's calendar
+    /// cannot subscribe by itself; the Google account then brings the calendar to the phone); webcal:// elsewhere (iPhone).
+    /// </summary>
+    public string? CalendarSubscribeUrl(CalendarFeed feed)
+    {
+        if (CalendarFeedUrl(feed) is not { } webcal) return null;
+        return string.Equals(_settings.Platform, "android", StringComparison.OrdinalIgnoreCase)
+            ? "https://calendar.google.com/calendar/render?cid=" + Uri.EscapeDataString(webcal)
+            : webcal;
+    }
+
+    // ── messages ──
+
+    /// <summary>The people the user may write to (their role decides; ?search narrows).</summary>
+    public async Task<List<MessageContact>> GetMessageContactsAsync(string? search = null, CancellationToken ct = default)
+        => await GetAsync<List<MessageContact>>("api/v1/messages/contacts" + (string.IsNullOrWhiteSpace(search) ? "" : "?search=" + Uri.EscapeDataString(search.Trim())), ct) ?? [];
+
+    /// <summary>The inbox (or the archived conversations), newest first.</summary>
+    public async Task<List<ConversationSummary>> GetConversationsAsync(bool archived = false, CancellationToken ct = default)
+        => await GetAsync<List<ConversationSummary>>($"api/v1/messages/conversations?archived={(archived ? "true" : "false")}", ct) ?? [];
+
+    /// <summary>A conversation with its latest messages (the server marks it read).</summary>
+    public Task<ConversationDetail?> GetConversationAsync(Guid id, CancellationToken ct = default)
+        => GetAsync<ConversationDetail>($"api/v1/messages/conversations/{id}", ct);
+
+    /// <summary>Sends a new message; each student or parent written to gets a conversation of their own.</summary>
+    public async Task<List<Guid>> StartConversationAsync(IReadOnlyCollection<Guid> recipientIds, string subject, string body, CancellationToken ct = default)
+        => (await SendAsync<StartedConversations>(HttpMethod.Post, "api/v1/messages/conversations", new { recipientIds, subject, body }, false, ct))?.ConversationIds ?? [];
+
+    public Task SendMessageAsync(Guid conversationId, string body, CancellationToken ct = default)
+        => SendAsync<object>(HttpMethod.Post, $"api/v1/messages/conversations/{conversationId}/messages", new { body }, false, ct);
+
+    public Task ArchiveConversationAsync(Guid conversationId, bool archive = true, CancellationToken ct = default)
+        => SendAsync<object>(HttpMethod.Post, $"api/v1/messages/conversations/{conversationId}/{(archive ? "archive" : "unarchive")}", null, false, ct);
+
+    /// <summary>How many conversations have messages not read yet.</summary>
+    public async Task<int> GetUnreadConversationsAsync(CancellationToken ct = default)
+        => (await GetAsync<UnreadMessages>("api/v1/messages/unread", ct))?.Conversations ?? 0;
+
+    // ── school news, events and forms ──
+
+    /// <summary>News for the person (a parent: for any of their children), pinned first, then newest.</summary>
+    public async Task<List<NewsItem>> GetNewsAsync(CancellationToken ct = default)
+        => await GetAsync<List<NewsItem>>("api/v1/community/news", ct) ?? [];
+
+    /// <summary>A news post (the server marks it read).</summary>
+    public Task<NewsPostDetail?> GetNewsPostAsync(Guid id, CancellationToken ct = default)
+        => GetAsync<NewsPostDetail>($"api/v1/community/news/{id}", ct);
+
+    /// <summary>Events from yesterday to four months ahead, with the person's reply.</summary>
+    public async Task<List<SchoolEventItem>> GetSchoolEventsAsync(CancellationToken ct = default)
+        => await GetAsync<List<SchoolEventItem>>("api/v1/community/events", ct) ?? [];
+
+    /// <summary>"Going", "NotGoing" or "Maybe", with guests; the event as it now stands.</summary>
+    public Task<SchoolEventItem?> ReplyToEventAsync(Guid id, string answer, int guests, string? note = null, CancellationToken ct = default)
+        => SendAsync<SchoolEventItem>(HttpMethod.Post, $"api/v1/community/events/{id}/reply", new { answer, guests, note }, false, ct);
+
+    /// <summary>Open forms for the person (a parent: one per child each form is for).</summary>
+    public async Task<List<FormToFillItem>> GetFormsToFillAsync(CancellationToken ct = default)
+        => await GetAsync<List<FormToFillItem>>("api/v1/community/forms", ct) ?? [];
+
+    public Task<FormDetail?> GetFormAsync(Guid id, Guid? studentProfileId = null, CancellationToken ct = default)
+        => GetAsync<FormDetail>($"api/v1/community/forms/{id}" + (studentProfileId is { } s ? $"?studentProfileId={s}" : ""), ct);
+
+    /// <summary>Sends the answers (a parent's for one child); the form with the saved answers.</summary>
+    public Task<FormDetail?> SubmitFormAsync(Guid id, Guid? studentProfileId, IReadOnlyDictionary<Guid, string?> answers, CancellationToken ct = default)
+        => SendAsync<FormDetail>(HttpMethod.Post, $"api/v1/community/forms/{id}/responses", new { studentProfileId, answers }, false, ct);
+
+    /// <summary>Students: their check-ins and the notes and plans the school shared with them.</summary>
+    public Task<MyWellbeing?> GetMyWellbeingAsync(CancellationToken ct = default) => GetAsync<MyWellbeing>("api/v1/pastoral/mine", ct);
+
+    /// <summary>A student says how they are (1 very low … 5 great); a second answer within six hours changes the first.</summary>
+    public Task<CheckInItem?> CheckInAsync(int mood, string? note, bool wantsToTalk, CancellationToken ct = default)
+        => SendAsync<CheckInItem>(HttpMethod.Post, "api/v1/pastoral/check-ins", new { mood, note, wantsToTalk }, false, ct);
+
+    /// <summary>Parents: for each child, the notes and plans the school shared with the family.</summary>
+    public async Task<List<FamilyWellbeing>> GetFamilyWellbeingAsync(CancellationToken ct = default)
+        => await GetAsync<List<FamilyWellbeing>>("api/v1/pastoral/family", ct) ?? [];
 
     /// <summary>Day-by-day attendance, newest first (own, or a linked child's for parents), optionally of one course.</summary>
     public async Task<List<AttendanceDay>> GetAttendanceDaysAsync(Guid? childProfileId = null, Guid? offeringId = null, CancellationToken ct = default)

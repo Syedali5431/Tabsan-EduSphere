@@ -1,0 +1,117 @@
+@model Tabsan.EduSphere.Web.Models.Portal.WellbeingPageModel
+@using Tabsan.EduSphere.Domain.Pastoral
+@{
+    ViewData["Title"] = T.Text("Wellbeing");
+    var m = Model.Mine;
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
+    return;
+}
+
+<h2 class="h3 mb-3">@T["Wellbeing"]</h2>
+
+@if (m is null)
+{
+    return;
+}
+
+@if (m.CheckInsEnabled)
+{
+    <section class="card border-0 shadow-sm mb-3" aria-labelledby="wb-checkin">
+        <div class="card-body">
+            <h3 class="h5" id="wb-checkin">@T["How are you feeling today?"]</h3>
+            @if (m.Latest is { } last)
+            {
+                <p class="small text-muted mb-2" data-last-check-in>
+                    @T["Your last check-in:"] <span aria-hidden="true">@PastoralFormat.MoodFace(last.Mood)</span> @T.Text(PastoralFormat.MoodWord(last.Mood)),
+                    <time datetime="@CommunityFormat.Iso(last.CheckedInAt)" data-local-time="short">@last.CheckedInAt.ToString("u")</time>
+                    @if (last.AcknowledgedAt is not null) { <span>· @T["Seen to by"] @last.AcknowledgedBy</span> }
+                </p>
+            }
+            <form method="post" asp-action="WellbeingCheckIn" data-check-in-form>
+                @Html.AntiForgeryToken()
+                <fieldset class="mb-3">
+                    <legend class="visually-hidden">@T["How are you feeling today?"]</legend>
+                    <div class="d-flex flex-wrap gap-2">
+                        @for (var mood = 1; mood <= 5; mood++)
+                        {
+                            <input type="radio" class="btn-check" name="mood" id="wb-mood-@mood" value="@mood" required autocomplete="off" />
+                            <label class="btn btn-outline-primary d-flex flex-column align-items-center px-3" for="wb-mood-@mood">
+                                <span class="fs-2" aria-hidden="true">@PastoralFormat.MoodFace(mood)</span>
+                                <span class="small">@T.Text(PastoralFormat.MoodWord(mood))</span>
+                            </label>
+                        }
+                    </div>
+                </fieldset>
+                <div class="mb-3">
+                    <label class="form-label" for="wb-note">@T["Anything you would like to add?"] <span class="text-muted small">(@T["optional"])</span></label>
+                    <textarea class="form-control" id="wb-note" name="note" rows="2" maxlength="@WellbeingCheckIn.MaxNoteLength"></textarea>
+                </div>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="wantsToTalk" value="true" id="wb-talk" />
+                    <label class="form-check-label" for="wb-talk">@T["I would like to talk to someone"]</label>
+                </div>
+                <button type="submit" class="btn btn-primary">@T["Check in"]</button>
+                <p class="small text-muted mt-2 mb-0">@T["Your answers are seen by your school's wellbeing team, not by other students or your parents."]</p>
+            </form>
+        </div>
+    </section>
+}
+
+<section class="mb-3" aria-labelledby="wb-notes">
+    <h3 class="h5" id="wb-notes">@T["From your teachers"]</h3>
+    @if (m.Records.Count == 0)
+    {
+        <p class="text-muted small">@T["Nothing has been shared with you yet."]</p>
+    }
+    @foreach (var r in m.Records)
+    {
+        <article class="card mb-2 @(r.Tone == "Positive" ? "border-success" : "")" data-shared-note>
+            <div class="card-body py-2">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="badge @PastoralWords.Badge(r.Tone, null)">@T.Text(PastoralWords.Tone(r.Tone))</span>
+                    @if (!string.IsNullOrEmpty(r.Category)) { <span class="fw-semibold small">@r.Category</span> }
+                    <time class="text-muted small ms-auto" datetime="@CommunityFormat.Iso(r.OccurredAt)" data-local-time="date">@PastoralFormat.Date(r.OccurredAt)</time>
+                </div>
+                <p class="mb-1 mt-1">@r.Summary</p>
+                @if (!string.IsNullOrWhiteSpace(r.Details)) { <p class="small mb-1" style="white-space:pre-line">@r.Details</p> }
+                <p class="small text-muted mb-0">@r.AuthorName</p>
+            </div>
+        </article>
+    }
+</section>
+
+@if (m.Plans.Count > 0)
+{
+    <section class="mb-3" aria-labelledby="wb-plans">
+        <h3 class="h5" id="wb-plans">@T["Your support plans"]</h3>
+        @foreach (var p in m.Plans)
+        {
+            <article class="card border-info mb-2">
+                <div class="card-body py-2">
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <span class="badge bg-info text-dark">@T.Text(PastoralWords.PlanKind(p.Kind))</span>
+                        <h4 class="h6 mb-0">@p.Title</h4>
+                    </div>
+                    <p class="mb-1" style="white-space:pre-line">@p.Strategies</p>
+                    <p class="small text-muted mb-0">@p.OwnerName</p>
+                </div>
+            </article>
+        }
+    </section>
+}
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

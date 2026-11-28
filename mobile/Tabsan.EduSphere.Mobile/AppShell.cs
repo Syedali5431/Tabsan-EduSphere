@@ -34,10 +34,13 @@ public sealed class AppShell : Shell
 			tabs.Items.Add(Tab("Timetable", new TimetablePage(new TimetableViewModel(client, selection), selection)));
 			tabs.Items.Add(Tab("Courses", new CoursesPage(new CoursesViewModel(client, selection), selection, client, launcher, pickers, () => portal)));
 			tabs.Items.Add(Tab("Homework", new HomeworkPage(new HomeworkViewModel(client, selection), selection, client, pickers)));
+			tabs.Items.Add(Tab("Calendar", new CalendarPage(new CalendarViewModel(client, selection, launcher), selection)));
 			tabs.Items.Add(Tab("Attendance", new AttendancePage(new AttendanceScreenViewModel(client, selection), selection, client)));
 		}
 		if (state.IsStudent || state.IsParent)
 			tabs.Items.Add(Tab("Results", new ResultsPage(new ResultsViewModel(client, selection), new ReportCardsViewModel(client), selection)));
+		tabs.Items.Add(Tab("School", new SchoolPage(new SchoolViewModel(client), client)));
+		tabs.Items.Add(Tab("Messages", new MessagesPage(new MessagesViewModel(client), client)));
 		tabs.Items.Add(Tab("Notifications", new NotificationsPage(new NotificationsViewModel(client))));
 		tabs.Items.Add(Tab("Settings", new SettingsPage(new SettingsViewModel(client, services.GetRequiredService<IPushTokenProvider>(), settings),
 			client.Session?.Username, client.Session?.Role, client.Server)));

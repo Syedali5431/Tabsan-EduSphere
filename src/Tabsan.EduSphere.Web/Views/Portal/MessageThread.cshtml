@@ -1,0 +1,70 @@
+@model Tabsan.EduSphere.Web.Models.Portal.MessageThreadPageModel
+@using Tabsan.EduSphere.Web.Models.Portal
+@{
+    ViewData["Title"] = T.Text("Messages");
+    var c = Model.Conversation;
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+<p class="mb-3"><a asp-action="Messages">&larr; @T["All messages"]</a></p>
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
+}
+else if (c is not null)
+{
+    <section class="card border-0 shadow-sm" data-thread aria-labelledby="thread-title">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+                <div class="me-auto">
+                    <h2 class="h5 mb-1" id="thread-title">@c.Subject</h2>
+                    <p class="small text-muted mb-0">
+                        @foreach (var p in c.People)
+                        {
+                            <span class="me-2" data-person="@p.Name">@p.Name <span class="text-muted">(@T.Text(MessageFormat.RoleLabel(p.Role)))</span></span>
+                        }
+                    </p>
+                </div>
+                <form method="post" asp-action="ArchiveConversation">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@c.Id" />
+                    <input type="hidden" name="archive" value="@(c.Archived ? "false" : "true")" />
+                    <button class="btn btn-sm btn-outline-secondary">@(c.Archived ? T.Text("Move to inbox") : T.Text("Archive"))</button>
+                </form>
+            </div>
+
+            <ol class="list-unstyled message-list mb-3" aria-label="@T["Messages"]">
+                @foreach (var m in c.Messages)
+                {
+                    <li class="message @(m.Mine ? "message-mine" : "message-theirs")" data-message="@m.Id">
+                        <div class="message-meta small">
+                            <strong>@(m.Mine ? T.Text("You") : m.SenderName)</strong>
+                            <time class="text-muted ms-1" datetime="@DateTime.SpecifyKind(m.SentAt, DateTimeKind.Utc).ToString("o")" data-local-time="long">@m.SentAt.ToString("dd MMM yyyy HH:mm") UTC</time>
+                        </div>
+                        <div class="message-body">@m.Body</div>
+                    </li>
+                }
+            </ol>
+
+            <form method="post" asp-action="ReplyMessage" data-reply-form>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@c.Id" />
+                <label class="form-label" for="reply-body">@T["Reply"]</label>
+                <textarea id="reply-body" name="body" class="form-control mb-2" rows="3" maxlength="4000" required></textarea>
+                <button class="btn btn-primary btn-sm">@T["Send"]</button>
+            </form>
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script src="~/js/messages.js" asp-append-version="true" defer></script>
+}

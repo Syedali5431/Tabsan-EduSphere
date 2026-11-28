@@ -1,0 +1,69 @@
+@model Tabsan.EduSphere.Web.Models.Portal.EventRepliesPageModel
+@{
+    ViewData["Title"] = T.Text("Event replies");
+    var r = Model.Replies;
+    string Answer(string a) => a switch { "Going" => T.Text("Going"), "NotGoing" => T.Text("Not going"), _ => T.Text("Maybe") };
+    string Role(string a) => a switch { "Student" => T.Text("Student"), "Parent" => T.Text("Parent"), _ => T.Text("Staff") };
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+<p class="mb-2"><a asp-action="SchoolEvents" asp-route-tab="manage">← @T["Events I manage"]</a></p>
+
+@if (r is not null)
+{
+    var e = r.Event;
+    <h2 class="h3 mb-1">@e.Title @if (e.Status == "Cancelled") { <span class="badge bg-danger align-middle">@T["Cancelled"]</span> }</h2>
+    <p class="text-muted mb-3"><time datetime="@CommunityFormat.Iso(e.StartsAt)" data-local-time="@(e.AllDay ? "allday" : "short")">@e.StartsAt.ToString("dd MMM yyyy HH:mm") UTC</time>@(e.Location is null ? "" : " · " + e.Location) · <partial name="_AudienceLabel" model="e.Audience" /></p>
+
+    <div class="row g-3 mb-3" data-reply-totals>
+        @foreach (var (label, value) in new[] { (T.Text("Going"), e.Counts?.Going ?? 0), (T.Text("Maybe"), e.Counts?.Maybe ?? 0), (T.Text("Not going"), e.Counts?.NotGoing ?? 0),
+            (T.Text("Places taken"), e.Counts?.Places ?? 0), (T.Text("Not replied"), Math.Max(0, r.AudienceSize - r.Replies.Count)) })
+        {
+            <div class="col-6 col-md"><div class="border rounded p-2 text-center"><div class="fs-4 fw-bold">@value</div><div class="small text-muted">@label</div></div></div>
+        }
+    </div>
+
+    @if (r.Replies.Count == 0)
+    {
+        <p class="text-muted">@(e.RepliesOpen ? T.Text("No replies yet.") : T.Text("This event does not ask for replies."))</p>
+    }
+    else
+    {
+        <div class="table-responsive card border-0 shadow-sm mb-3">
+            <table class="table table-sm align-middle mb-0" data-replies>
+                <thead class="table-light"><tr><th scope="col">@T["Name"]</th><th scope="col">@T["Role"]</th><th scope="col">@T["Reply"]</th><th scope="col" class="text-end">@T["Guests"]</th><th scope="col">@T["Note"]</th></tr></thead>
+                <tbody>
+                    @foreach (var x in r.Replies)
+                    {
+                        <tr data-reply="@x.Answer"><td>@x.Name</td><td>@Role(x.Role)</td><td>@Answer(x.Answer)</td><td class="text-end">@x.Guests</td><td>@x.Note</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (e.Status != "Cancelled")
+    {
+        <form method="post" asp-action="CancelEvent" class="card border-0 shadow-sm" data-cancel-event>
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@e.Id" />
+            <div class="card-body">
+                <h3 class="h6">@T["Cancel the event"]</h3>
+                <label class="form-label small" for="cancel-reason">@T["Reason (sent to everyone it is for)"]</label>
+                <input class="form-control mb-2" id="cancel-reason" name="reason" maxlength="500" />
+                <button type="submit" class="btn btn-sm btn-outline-danger">@T["Cancel the event"]</button>
+            </div>
+        </form>
+    }
+}
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

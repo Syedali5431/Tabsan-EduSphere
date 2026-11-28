@@ -170,12 +170,12 @@ public sealed partial class QuizService
         if (length <= 0) return (0, "The file is empty.");
         if (length > config.MaxSizeMb * 1024L * 1024L) return (0, $"The file is larger than {config.MaxSizeMb} MB.");
 
-        var stored = await _media.SaveAsync(content, "quiz-answers", extension, contentType, Path.GetFileName(fileName), ct);
+        var stored = await _media.SaveAsync(content, "quiz-answers", extension, contentType, Tabsan.EduSphere.Domain.Common.UploadFileName.Of(fileName), ct);
         if (existing?.ResponseJson is not null && QuizJson.Read<FileUploadResponse>(existing.ResponseJson) is { } previous)
             await _media.DeleteAsync(previous.StorageKey, ct);
 
         var answer = existing ?? new QuizAnswer(attempt.Id, questionId);
-        answer.SetResponse(null, null, QuizJson.Write(new FileUploadResponse(stored.StorageKey, Path.GetFileName(fileName)!, stored.ContentType, stored.Length)), singleSelection: false);
+        answer.SetResponse(null, null, QuizJson.Write(new FileUploadResponse(stored.StorageKey, Tabsan.EduSphere.Domain.Common.UploadFileName.Of(fileName), stored.ContentType, stored.Length)), singleSelection: false);
         if (existing is null) await _repo.AddAnswersAsync([answer], ct);
         await _repo.SaveChangesAsync(ct);
         return (1, null);

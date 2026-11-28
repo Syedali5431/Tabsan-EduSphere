@@ -62,6 +62,8 @@ public class SidebarMenuController : ControllerBase
             ["discussion"] = "courses",
             ["announcements"] = "courses",
             ["students"] = "sis",
+            ["pastoral"] = "sis",
+            ["wellbeing"] = "sis",
             ["user_import"] = "sis",
             ["admin_users"] = "sis",
             ["parent_links"] = "sis",

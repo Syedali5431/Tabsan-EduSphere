@@ -33,7 +33,8 @@
 }
 
 @* Plan M7 — student progress through the modules *@
-<div class="d-flex justify-content-end mb-2">
+<div class="d-flex flex-wrap justify-content-end gap-2 mb-2">
+    <a asp-action="CourseCopy" asp-route-offeringId="@Model.OfferingId" class="btn btn-sm btn-outline-primary" data-course-copy-link>@T["Copy content from another course"]</a>
     <a asp-action="ModuleProgress" asp-route-offeringId="@Model.OfferingId" class="btn btn-sm btn-outline-primary" data-module-progress-link>@T["Student progress"]</a>
 </div>
 

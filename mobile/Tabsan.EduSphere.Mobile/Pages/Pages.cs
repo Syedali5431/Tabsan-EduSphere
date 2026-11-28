@@ -48,6 +48,18 @@ public sealed class SignInPage : ContentPage
 		confirmPassword.SetBinding(Entry.TextProperty, nameof(SignInViewModel.ConfirmPassword));
 		var confirmField = Ui.Field(confirmPassword);
 		confirmField.SetBinding(IsVisibleProperty, nameof(SignInViewModel.NeedsNewPassword));
+		// Demo installations only: after the shared demo username, choose the role to open (school admin, teacher, student, parent).
+		var demoRole = new Picker { Title = Ui.T("SignInAs"), AutomationId = "demorole" };
+		void ShowDemoRoles()
+		{
+			demoRole.ItemsSource = vm.DemoRoles.Select(r => $"{Ui.T("SignInAs")}: {Ui.RoleName(r)}").ToList();
+			demoRole.SelectedIndex = vm.DemoRoles.Count == 0 ? -1 : Math.Clamp(vm.DemoRoleIndex, 0, vm.DemoRoles.Count - 1);
+		}
+		demoRole.SelectedIndexChanged += (_, _) => { if (demoRole.SelectedIndex >= 0) vm.DemoRoleIndex = demoRole.SelectedIndex; };
+		var demoField = Ui.Field(demoRole);
+		demoField.SetBinding(IsVisibleProperty, nameof(SignInViewModel.IsDemo));
+		vm.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(SignInViewModel.DemoRoles)) ShowDemoRoles(); };
+		ShowDemoRoles();
 		var signIn = Ui.Primary(Ui.T("SignIn"));
 		signIn.AutomationId = "signin";
 		signIn.Margin = new Thickness(0, 6, 0, 0);
@@ -88,7 +100,7 @@ public sealed class SignInPage : ContentPage
 			Children =
 			{
 				Ui.Title(Ui.T("SignInTitle"), 20), Ui.Small(Ui.T("SignInHint")), Ui.Busy(), Ui.Status(vm), Ui.Notice(),
-				Ui.Field(username), Ui.Field(password), mfaField, newPasswordField, confirmField, signIn, or, providers, update, server
+				Ui.Field(username), Ui.Field(password), demoField, mfaField, newPasswordField, confirmField, signIn, or, providers, update, server
 			}
 		}, padding: 20);
 		form.Margin = new Thickness(18, -48, 18, 0);
@@ -364,6 +376,297 @@ public sealed class TimetablePage : ContentPage
 	{
 		base.OnAppearing();
 		await _vm.LoadAsync();
+	}
+}
+
+// ── calendar ──────────────────────────────────────────────────────────────────────────────────
+
+/// <summary>
+/// The next six weeks day by day: homework due (blue), quizzes closing (violet), live classes (green) and key dates (amber),
+/// with what is done or overdue; "Add to my phone's calendar" at the top.
+/// </summary>
+public sealed class CalendarPage : ContentPage
+{
+	public static readonly Color Violet = Color.FromArgb("#6D28D9");
+	private readonly CalendarViewModel _vm;
+
+	public CalendarPage(CalendarViewModel vm, Selection selection)
+	{
+		_vm = vm;
+		BindingContext = vm;
+		Title = Ui.T("Calendar");
+		var subscribe = Ui.Secondary(Ui.T("AddToPhoneCalendar"));
+		subscribe.AutomationId = "calendar-subscribe";
+		subscribe.Command = vm.SubscribeCommand;
+		var hint = Ui.Small(Ui.T("PhoneCalendarHint"));
+		var list = new CollectionView
+		{
+			ItemsSource = vm.Days,
+			Header = new VerticalStackLayout { Padding = new Thickness(16, 12, 16, 0), Spacing = 6, Children = { subscribe, hint } },
+			ItemTemplate = new DataTemplate(() =>
+			{
+				var day = Ui.Heading("");
+				day.Margin = new Thickness(0);
+				day.SetBinding(Label.TextProperty, nameof(CalendarDay.Day));
+				var today = Ui.Chip(Ui.T("Today"), Ui.Accent);
+				today.SetBinding(IsVisibleProperty, nameof(CalendarDay.IsToday));
+				var header = new HorizontalStackLayout { Spacing = 10, Margin = new Thickness(2, 18, 2, 4), Children = { day, today } };
+				var entries = new VerticalStackLayout { Spacing = 0 };
+				entries.SetBinding(BindableLayout.ItemsSourceProperty, nameof(CalendarDay.Entries));
+				BindableLayout.SetItemTemplate(entries, new DataTemplate(() =>
+				{
+					var time = Ui.Small();
+					time.FontFamily = "OpenSansSemibold";
+					time.HorizontalOptions = LayoutOptions.Start;
+					time.VerticalOptions = LayoutOptions.Center;
+					var what = Ui.Title();
+					var details = Ui.Small();
+					var chip = Ui.Chip("", Ui.Accent);
+					var chipText = (Label)chip.Content!;
+					var bar = new BoxView { WidthRequest = 4, CornerRadius = 2, BackgroundColor = Colors.Transparent, VerticalOptions = LayoutOptions.Fill };
+					var card = Ui.Card(Ui.Row(bar, Ui.Lines(time, what, details), chip), padding: 10);
+					card.BindingContextChanged += (_, _) =>
+					{
+						if (card.BindingContext is not CalendarEntry e) return;
+						var color = KindColor(e.Kind);
+						bar.Color = color;
+						time.Text = e.Time;
+						time.TextColor = color;
+						what.Text = e.What;
+						what.TextDecorations = e.Status == "Cancelled" ? TextDecorations.Strikethrough : TextDecorations.None;
+						details.Text = e.Details;
+						details.IsVisible = details.Text.Length > 0;
+						var status = e.StatusText;
+						chip.IsVisible = status is not null;
+						if (status is null) return;
+						var statusColor = e.Status switch { "Done" => Ui.Good, "Overdue" => Ui.Bad, _ => Ui.Warn };
+						chipText.Text = status;
+						chipText.TextColor = statusColor;
+						chip.BackgroundColor = statusColor.WithAlpha(0.13f);
+					};
+					return card;
+				}));
+				return new VerticalStackLayout { Padding = new Thickness(16, 0), Children = { header, entries } };
+			}),
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoCalendar"), vm) },
+			Footer = new ContentView { HeightRequest = 24 }
+		};
+		var refresh = new RefreshView { Content = list, Command = vm.LoadCommand };
+		refresh.SetBinding(RefreshView.IsRefreshingProperty, nameof(PageViewModel.IsBusy));
+		Content = Ui.ListLayout(vm, Ui.ScopeBar(selection), refresh);
+		Ui.ApplyDirection(this);
+	}
+
+	public static Color KindColor(string kind) => kind switch
+	{
+		"Assignment" => Ui.Sky,
+		"Quiz" => Violet,
+		"LiveClass" => Ui.Good,
+		_ => Ui.Warn
+	};
+
+	protected override async void OnAppearing()
+	{
+		base.OnAppearing();
+		await _vm.LoadAsync();
+	}
+}
+
+// ── messages ──────────────────────────────────────────────────────────────────────────────────
+
+/// <summary>The inbox: newest conversation first, unread ones in bold with a count; New message at the top.</summary>
+public sealed class MessagesPage : ContentPage
+{
+	private readonly MessagesViewModel _vm;
+
+	public MessagesPage(MessagesViewModel vm, EduSphereClient client)
+	{
+		_vm = vm;
+		BindingContext = vm;
+		Title = Ui.T("Messages");
+		var write = Ui.Primary(Ui.T("NewMessage"));
+		write.AutomationId = "new-message";
+		write.Clicked += async (_, _) => await Navigation.PushAsync(new NewMessagePage(new NewMessageViewModel(client), client));
+		var list = new CollectionView
+		{
+			ItemsSource = vm.Items,
+			SelectionMode = SelectionMode.Single,
+			Header = new ContentView { Padding = new Thickness(16, 12, 16, 4), Content = write },
+			Footer = new ContentView { HeightRequest = 16 },
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NoMessages"), vm) },
+			ItemTemplate = new DataTemplate(() =>
+			{
+				var subject = Ui.Title();
+				var people = Ui.Small();
+				var preview = Ui.Small();
+				preview.MaxLines = 2;
+				preview.LineBreakMode = LineBreakMode.TailTruncation;
+				var when = Ui.Small();
+				when.FontSize = 12;
+				var chip = Ui.Chip("", Ui.Accent);
+				var count = (Label)chip.Content!;
+				var card = Ui.Card(Ui.Row(null, Ui.Lines(subject, people, preview, when), chip), padding: 12);
+				card.BindingContextChanged += (_, _) =>
+				{
+					if (card.BindingContext is not ConversationSummary c) return;
+					subject.Text = c.Subject;
+					subject.FontFamily = c.HasUnread ? "OpenSansSemibold" : "OpenSansRegular";
+					people.Text = c.People;
+					preview.Text = c.Preview;
+					when.Text = Ui.Date(c.LastMessageAt);
+					chip.IsVisible = c.HasUnread;
+					count.Text = c.Unread.ToString();
+				};
+				return new ContentView { Padding = new Thickness(16, 0), Content = card };
+			})
+		};
+		list.SelectionChanged += async (_, e) =>
+		{
+			if (e.CurrentSelection.FirstOrDefault() is not ConversationSummary c) return;
+			list.SelectedItem = null;
+			await Navigation.PushAsync(new ConversationPage(new ConversationViewModel(client), c.Id));
+		};
+		var refresh = new RefreshView { Content = list, Command = vm.LoadCommand };
+		refresh.SetBinding(RefreshView.IsRefreshingProperty, nameof(PageViewModel.IsBusy));
+		Content = Ui.ListLayout(vm, new ContentView(), refresh);
+		Ui.ApplyDirection(this);
+	}
+
+	protected override async void OnAppearing()
+	{
+		base.OnAppearing();
+		await _vm.LoadAsync();
+	}
+}
+
+/// <summary>A conversation: its people, the messages as bubbles (own ones on the end side) and the reply box.</summary>
+public sealed class ConversationPage : ContentPage
+{
+	private readonly ConversationViewModel _vm;
+	private readonly Guid _id;
+
+	public ConversationPage(ConversationViewModel vm, Guid id)
+	{
+		_vm = vm;
+		_id = id;
+		BindingContext = vm;
+		Title = Ui.T("Messages");
+		var subject = Ui.Title(size: 19);
+		subject.SetBinding(Label.TextProperty, nameof(ConversationViewModel.Subject));
+		var people = Ui.Small();
+		people.SetBinding(Label.TextProperty, nameof(ConversationViewModel.People));
+		var messages = new VerticalStackLayout { Spacing = 8 };
+		BindableLayout.SetItemsSource(messages, vm.Messages);
+		BindableLayout.SetItemTemplate(messages, new DataTemplate(() =>
+		{
+			var who = Ui.Small();
+			who.FontFamily = "OpenSansSemibold";
+			var when = Ui.Small();
+			when.FontSize = 12;
+			var body = Ui.Body();
+			var bubble = Ui.Card(new VerticalStackLayout { Spacing = 2, Children = { new HorizontalStackLayout { Spacing = 8, Children = { who, when } }, body } }, padding: 10);
+			bubble.MaximumWidthRequest = 520;
+			bubble.BindingContextChanged += (_, _) =>
+			{
+				if (bubble.BindingContext is not ConversationMessageItem m) return;
+				who.Text = m.Who;
+				when.Text = Ui.Date(m.SentAt);
+				body.Text = m.Body;
+				bubble.HorizontalOptions = m.Mine ? LayoutOptions.End : LayoutOptions.Start;
+				bubble.Margin = m.Mine ? new Thickness(48, 0, 0, 0) : new Thickness(0, 0, 48, 0);
+				bubble.BackgroundColor = m.Mine ? Ui.Accent.WithAlpha(0.12f) : null;
+			};
+			return bubble;
+		}));
+		var reply = new Editor { Placeholder = Ui.T("WriteReply"), AutoSize = EditorAutoSizeOption.TextChanges, MinimumHeightRequest = 80, MaxLength = 4000 };
+		reply.SetBinding(Editor.TextProperty, nameof(ConversationViewModel.Reply));
+		var send = Ui.Primary(Ui.T("Send"));
+		send.AutomationId = "send-reply";
+		send.Command = vm.SendCommand;
+		var replyBox = Ui.Card(new VerticalStackLayout { Spacing = 10, Children = { Ui.Field(reply), send } }, padding: 14);
+		ToolbarItems.Add(new ToolbarItem { Text = Ui.T("Archive"), Command = vm.ArchiveCommand });
+		vm.Archived += async (_, _) => await Navigation.PopAsync();
+		Content = Ui.Page(Title, vm, subject, people, messages, replyBox).Content;
+		Ui.ApplyDirection(this);
+	}
+
+	protected override async void OnAppearing()
+	{
+		base.OnAppearing();
+		await _vm.LoadAsync(_id);
+	}
+}
+
+/// <summary>A new message: find and tick people, then subject and text. Each student or parent gets their own conversation.</summary>
+public sealed class NewMessagePage : ContentPage
+{
+	private readonly NewMessageViewModel _vm;
+
+	public NewMessagePage(NewMessageViewModel vm, EduSphereClient client)
+	{
+		_vm = vm;
+		BindingContext = vm;
+		Title = Ui.T("NewMessage");
+		var search = new Entry { Placeholder = Ui.T("SearchPeople"), ReturnType = ReturnType.Search, AutomationId = "contact-search" };
+		search.SetBinding(Entry.TextProperty, nameof(NewMessageViewModel.Search));
+		search.ReturnCommand = vm.SearchCommand;
+		var hint = Ui.Small(Ui.T("OwnConversations"));
+		var chosen = Ui.Small();
+		chosen.SetBinding(Label.TextProperty, new Binding(nameof(NewMessageViewModel.SelectedCount), stringFormat: Ui.T("Recipients") + ": {0}"));
+		var list = new CollectionView
+		{
+			ItemsSource = vm.Contacts,
+			ItemTemplate = new DataTemplate(() =>
+			{
+				var tick = new CheckBox { Color = Ui.Accent, VerticalOptions = LayoutOptions.Center };
+				tick.SetBinding(CheckBox.IsCheckedProperty, nameof(MessageContact.IsSelected));
+				var name = Ui.Title(size: 14);
+				name.SetBinding(Label.TextProperty, nameof(MessageContact.Name));
+				var what = Ui.Small();
+				what.SetBinding(Label.TextProperty, nameof(MessageContact.Description));
+				var group = Ui.Small();
+				group.FontSize = 12;
+				group.SetBinding(Label.TextProperty, nameof(MessageContact.GroupTitle));
+				var row = Ui.Row(tick, Ui.Lines(name, what, group));
+				row.Padding = new Thickness(12, 6);
+				var tap = new TapGestureRecognizer();
+				tap.Tapped += (_, _) => { if (row.BindingContext is MessageContact c) c.IsSelected = !c.IsSelected; };
+				row.GestureRecognizers.Add(tap);
+				return row;
+			}),
+			EmptyView = new ContentView { Padding = 16, Content = Ui.Empty(Ui.T("NobodyFound"), vm) }
+		};
+		var subject = new Entry { Placeholder = Ui.T("Subject"), MaxLength = 200, AutomationId = "message-subject" };
+		subject.SetBinding(Entry.TextProperty, nameof(NewMessageViewModel.Subject));
+		var body = new Editor { Placeholder = Ui.T("Message"), AutoSize = EditorAutoSizeOption.TextChanges, MinimumHeightRequest = 90, MaxLength = 4000, AutomationId = "message-body" };
+		body.SetBinding(Editor.TextProperty, nameof(NewMessageViewModel.Body));
+		var send = Ui.Primary(Ui.T("Send"));
+		send.AutomationId = "send-message";
+		send.Command = vm.SendCommand;
+		var top = new VerticalStackLayout { Padding = new Thickness(16, 10, 16, 4), Spacing = 6, Children = { Ui.Field(search), hint, chosen } };
+		var bottom = new VerticalStackLayout { Padding = new Thickness(16, 6, 16, 12), Spacing = 8, Children = { Ui.Field(subject), Ui.Field(body), send } };
+		var grid = new Grid
+		{
+			RowDefinitions = { new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Auto), new RowDefinition(GridLength.Star), new RowDefinition(GridLength.Auto) },
+			Children = { Ui.Status(vm) }
+		};
+		grid.Add(top, 0, 1);
+		grid.Add(list, 0, 2);
+		grid.Add(bottom, 0, 3);
+		Content = grid;
+		vm.Sent += async (_, ids) =>
+		{
+			// One conversation: it takes the place of this page; several (one per student or parent): back to the inbox.
+			if (ids.Count == 1) Navigation.InsertPageBefore(new ConversationPage(new ConversationViewModel(client), ids[0]), this);
+			await Navigation.PopAsync();
+		};
+		Ui.ApplyDirection(this);
+	}
+
+	protected override async void OnAppearing()
+	{
+		base.OnAppearing();
+		if (_vm.Contacts.Count == 0) await _vm.LoadAsync();
 	}
 }
 

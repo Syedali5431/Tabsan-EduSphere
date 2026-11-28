@@ -99,7 +99,7 @@ public sealed class CourseMaterialController : ControllerBase
         {
             BlobPath = stored.StorageKey,
             FileUrl = stored.Reference,
-            FileName = stored.DownloadFileName ?? Path.GetFileName(file.FileName),
+            FileName = stored.DownloadFileName ?? Tabsan.EduSphere.Domain.Common.UploadFileName.Of(file.FileName),
             FileSizeBytes = stored.Length,
             ContentType = stored.ContentType
         });

@@ -1,0 +1,112 @@
+@model Tabsan.EduSphere.Web.Models.Portal.EditEventPageModel
+@using Tabsan.EduSphere.Domain.Community
+@{
+    ViewData["Title"] = Model.Id is null ? T.Text("New event") : T.Text("Change event");
+    var i = Model.Input;
+    var kinds = new[] { ("General", T.Text("General")), ("Sports", T.Text("Sports")), ("Excursion", T.Text("Excursion")), ("Meeting", T.Text("Meeting")),
+        ("Performance", T.Text("Performance")), ("Holiday", T.Text("Holiday")), ("Exam", T.Text("Exam")) };
+}
+
+<p class="mb-2"><a asp-action="SchoolEvents" asp-route-tab="manage">← @T["Events I manage"]</a></p>
+<h2 class="h3 mb-3">@(Model.Id is null ? T.Text("New event") : T.Text("Change event"))</h2>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="border border-danger rounded p-2 mb-3 text-danger" role="alert" data-form-error>@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."]</div>
+    return;
+}
+
+<form method="post" asp-action="SaveEvent" class="card border-0 shadow-sm" data-community-form>
+    @Html.AntiForgeryToken()
+    @if (Model.Id is { } id) { <input type="hidden" name="id" value="@id" /> }
+    <div class="card-body">
+        <div class="row g-3 mb-3">
+            <div class="col-md-8">
+                <label class="form-label" for="ev-title">@T["Title"]</label>
+                <input class="form-control" id="ev-title" name="Title" value="@i.Title" required maxlength="@CommunityItem.MaxTitleLength" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="ev-kind">@T["Kind of event"]</label>
+                <select class="form-select" id="ev-kind" name="Category">
+                    @foreach (var (value, label) in kinds) { <option value="@value" selected="@(value == i.Category)">@label</option> }
+                </select>
+            </div>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-5">
+                <label class="form-label" for="ev-start">@T["Starts (your time)"]</label>
+                <input class="form-control" id="ev-start" type="datetime-local" data-utc-for="StartsAt" required />
+                <input type="hidden" name="StartsAt" value="@i.StartsAt" />
+            </div>
+            <div class="col-md-5">
+                <label class="form-label" for="ev-end">@T["Ends (your time)"]</label>
+                <input class="form-control" id="ev-end" type="datetime-local" data-utc-for="EndsAt" required />
+                <input type="hidden" name="EndsAt" value="@i.EndsAt" />
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="AllDay" value="true" id="ev-allday" checked="@i.AllDay" data-all-day />
+                    <label class="form-check-label" for="ev-allday">@T["All day"]</label>
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="ev-place">@T["Place"] <span class="text-muted small">(@T["optional"])</span></label>
+            <input class="form-control" id="ev-place" name="Location" value="@i.Location" maxlength="@SchoolEvent.MaxLocationLength" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="ev-desc">@T["Description"] <span class="text-muted small">(@T["optional"])</span></label>
+            <textarea class="form-control" id="ev-desc" name="Description" rows="4" maxlength="@SchoolEvent.MaxDescriptionLength">@i.Description</textarea>
+        </div>
+
+        <partial name="_AudiencePicker" model="new AudiencePickerModel(Model.Options, i.Audience, Model.Id is null)" />
+
+        <fieldset class="border rounded p-3 mb-3">
+            <legend class="float-none w-auto px-1 mb-0 fs-6 fw-semibold">@T["Replies"]</legend>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" name="RepliesOpen" value="true" id="ev-replies" checked="@i.RepliesOpen" />
+                <label class="form-check-label" for="ev-replies">@T["Ask people whether they are coming"]</label>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <label class="form-label small" for="ev-replyby">@T["Replies close (your time)"]</label>
+                    <input class="form-control" id="ev-replyby" type="datetime-local" data-utc-for="ReplyBy" aria-describedby="ev-replyby-hint" />
+                    <input type="hidden" name="ReplyBy" value="@i.ReplyBy" />
+                    <p class="form-text" id="ev-replyby-hint">@T["Empty: when the event starts."]</p>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small" for="ev-capacity">@T["Places"]</label>
+                    <input class="form-control" id="ev-capacity" type="number" name="Capacity" min="1" max="100000" value="@i.Capacity" aria-describedby="ev-capacity-hint" />
+                    <p class="form-text" id="ev-capacity-hint">@T["Empty: no limit. Guests take places too."]</p>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small" for="ev-guests">@T["Guests each person may bring"]</label>
+                    <input class="form-control" id="ev-guests" type="number" name="MaxGuests" min="0" max="@SchoolEvent.MaxGuestsLimit" value="@i.MaxGuests" />
+                </div>
+            </div>
+            <div class="mt-2">
+                <label class="form-label small" for="ev-form">@T["Form to fill in"] <span class="text-muted">(@T["optional"])</span></label>
+                <select class="form-select" id="ev-form" name="FormId" aria-describedby="ev-form-hint">
+                    <option value="">@T["None"]</option>
+                    @foreach (var f in Model.Forms) { <option value="@f.Id" selected="@(f.Id == i.FormId)">@f.Title</option> }
+                </select>
+                <p class="form-text" id="ev-form-hint">@T["For example a consent form for an excursion: make it on the Forms page first."]</p>
+            </div>
+        </fieldset>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" name="submit" value="publish" class="btn btn-primary" data-publish>@T["Publish"]</button>
+            <button type="submit" name="submit" value="draft" class="btn btn-outline-secondary">@T["Save as draft"]</button>
+        </div>
+        <p class="small text-muted mt-2 mb-0">@T["Everyone it is for is told when the event is published, and again if it is cancelled. Events also appear in their calendar."]</p>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

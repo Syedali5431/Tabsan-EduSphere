@@ -58,6 +58,9 @@ Positioning target after Plan M:
 | M12 | Native Mobile Apps | P3 | 10–12 dw | M4, M1 | ✅ M12.1–M12.5 (iOS build on a Mac, real-phone and live push checks open) |
 | M13 | SCORM / xAPI Packages | P4 (on demand) | 4 dw | M7 | ✅ M13.1–M13.2 incl. packages in parts and SCORM 2004 sequencing (commercial authoring-tool exports untested) |
 | M14 | Accessibility (WCAG 2.1 AA) & Scale Hardening | Ongoing | 2–3 dw | all UI phases | ✅ M14.1–M14.3 (5,000-user staging run, live cloud storage, AT user testing open) |
+| M15 | Course Copy & Templates | P1 | 1 dw | M7, M8 | ✅ M15.1 (Common Cartridge import/export, template sync and SCORM copy open) |
+| M16 | School News, Events & Online Forms (Schoolbox-style community) | P1 | 2 dw | M12 | ✅ M16.1–M16.3 (image upload, comments on news and event reminders open) |
+| M17 | Pastoral Care & Wellbeing (Schoolbox-style) | P1 | 2 dw | M16 | ✅ M17.1–M17.4 (points / house points, bulk notes from the app and a wellbeing trends report open) |
 
 **Totals:** P1 ≈ 20–24 dw · P2 ≈ 11 dw · P3/P4 ≈ 18–21 dw · Overall ≈ 9–12 months for 1 dev, ~5–6 months for 2.
 
@@ -817,6 +820,106 @@ Deliverables:
 
 ---
 
+## Phase M15 - Course Copy & Templates
+Reason: the first thing a school notices in a Canvas or Moodle demo after messaging. Without it every term's course is built again by hand, and departments cannot give new teachers a ready course.
+
+### Stage M15.1 - Copy a course's content, and share courses as templates ✅ (2026-11-28)
+- [x] **Copy course content** page (from **Manage Course Content** → *Copy content from another course*): choose a course you look after or a template shared with you, see its content part by part (modules, assignments, quizzes, question banks, files and links, external tools, course settings) and tick what to copy, down to single items.
+- [x] Copies point at each other: module items open the copied assignment, quiz, file, video or tool; rubrics belong to the copied assignment; quizzes draw from the copied course bank (shared and department banks stay where they are); graded tools bring their gradebook column; module prerequisites, completion requirements, release settings, group set definitions (not their members) and outcome links come along. A chosen module brings what its items open; a chosen quiz brings the course banks it draws from.
+- [x] **Dates** move together by a number of days, suggested from the two terms' start dates (due dates, availability windows and late cut-offs, peer review dates, quiz windows, module unlock dates, tool line item dates).
+- [x] Everything arrives **hidden from students** unless "Publish what is published in the course you copy from" is ticked.
+- [x] Nothing of the students' is copied (submissions, grades, attempts, extensions, group members, progress). Not copied, and listed with the reason: SCORM packages (their files stay with the course), discussions (they belong to the class that held them), outcome links to another course's own outcomes.
+- [x] Files are shared, not duplicated (course files are never deleted, only hidden); files of the same course and term are reused.
+- [x] **Templates**: admins share a course as a template for its department or for the whole school (name, description). Teachers see templates first in the list of courses to copy from.
+- [x] **History**: every copy into a course is listed with who, when, from where, what was copied and the date shift; copying the same source again warns first.
+- [x] Access: SuperAdmins every course (of their school when limited to one); admins their departments' courses; teachers their departments' courses and those they teach. Copies never cross schools. Audit log entries for copies and template changes.
+
+### ✅ Implementation Summary
+- Domain: `Lms/CourseCopy.cs` (`CourseTemplate`, `CourseTemplateScope`, `CourseCopyRun`); migration `CourseCopyAndTemplates` (tables `course_templates`, `course_copy_runs`), added to `Scripts/01-Schema-Current.sql`.
+- Application: `Lms/CourseCopy/` — `CourseContentCloner` (pure: builds the copy and the "not copied" notes), `CourseCopyService` (access, templates, preview, copy, history), contracts and `ICourseCopyStore`.
+- Infrastructure: `Lms/CourseCopyStore` (reads a course's content without tracking; saves the copy and its history in one `SaveChanges`), `CourseCopyConfigurations`.
+- API: `CourseCopyController` (`/api/v1/course-copy/offerings/{id}/sources|preview|copy|history|template`), under the `courses` licence.
+- Portal: `CourseCopy` page and `course-copy.js`, link on Manage Course Content, English, Urdu and Arabic.
+
+### ✅ Validation Summary
+- Unit (11, `CourseCopyTests`): copies point at each other, dates move, hidden by default and kept when asked, a module brings what it opens, single items, settings only when asked, same-term files reused, graded tool columns, outcome links, access by department and role, department and school templates, request checks, history.
+- Integration (2, `CourseCopyIntegrationTests`, real API + LocalDB): last term into this term (modules, items, video, assignments, rubric levels, quiz with its bank, file, late policy, outcome link; dates moved; source untouched; history; repeat warning); another department refused until an admin shares the course with the whole school, then a single assignment copied; template removed.
+- Portal (3, `CourseCopyWebIntegrationTests`): sources and templates, preview with "not copied", the request sent for the ticked items, result and history, template sharing for admins only, menu guard, Urdu.
+
+## Phase M16 - School News, Events & Online Forms
+Reason: what draws K-12 schools to Schoolbox. Without it news goes out on paper notes and group chats, events are counted by hand, and consent forms come back crumpled in school bags (or not at all).
+
+Every item has an **audience**: the whole school or one campus, optionally one year level ("Class 7") or one class, and any of students, parents and staff. Parents are reached through each of their children. Admins write for their school (or for their own campuses, from their department assignments), teachers for their own classes. Parents use the app; students and staff the portal and the app.
+
+### Stage M16.1 - School news ✅ (2026-11-28)
+- [x] Posts with a summary, paragraphs, an optional picture link, scheduled publishing, an end date and pinning; drafts; taking a post down (a draft nobody saw is deleted).
+- [x] The audience is told once when a post goes live (in the app, by push and by e-mail where switched on), including posts scheduled for later (a worker runs every minute).
+- [x] "New" marks for unread posts; authors see "read by X of the Y people it is for".
+
+### Stage M16.2 - Events with replies ✅ (2026-11-28)
+- [x] Events (sports, excursions, meetings, performances, holidays, exams) with place, times or all-day dates, description and audience; draft, published, cancelled (with a reason sent to everyone it was for).
+- [x] Replies: going / maybe / not going, guests (0–10 each), places (guests count), a closing time; changed freely until replies close; the author sees every reply and who has not replied.
+- [x] An optional form to fill in for the event (for example the excursion's consent form).
+- [x] Events appear in each person's calendar (portal, app and the subscribed phone calendar), in their own colour.
+
+### Stage M16.3 - Online forms ✅ (2026-11-28)
+- [x] Form builder: short and long answers, one choice, several choices, yes/no, date, number, signature (typed name) and information text; required questions; instructions and a due date.
+- [x] Parents answer once for each child the form is for (either parent; the latest answer counts and says who gave it); students and staff once each. Answers can be changed until the form closes; questions are locked once answers come in.
+- [x] Following up: who has answered and who has not (with "no parent account" for children without one), counts for each choice, a reminder to everyone who has not answered (at most hourly) and an automatic reminder a day before the due date, the answers as a CSV file (spreadsheet formulas neutralised).
+
+### ✅ Implementation Summary
+- Domain: `Community/CommunityEntities.cs` (`CommunityItem` audience, `NewsPost`, `NewsRead`, `SchoolEvent`, `EventReply`, `SchoolForm`, `FormField`, `FormResponse`, `FormAnswers` checks); `NotificationType.SchoolNews`; migration `SchoolNewsEventsAndForms` (7 tables), added to `Scripts/01-Schema-Current.sql`.
+- Application: `Community/CommunityService` (audience rules, news, events, forms, reminders), `ICommunityStore`; calendar entries of kind `Event`.
+- Infrastructure: `Community/CommunityStore` (who a person is in the audience model, the people an item reaches), `CommunityConfigurations`.
+- API: `CommunityController` (`/api/v1/community/audiences|news|events|forms`, under the `notifications` licence), `CommunityWorker`.
+- Portal: School News, Events and Forms menus and pages (local-time pickers, audience picker, form builder, answers and tracking), English, Urdu and Arabic; API messages in Urdu and Arabic.
+- App: a **School** tab with News, Events (replies and guests) and Forms (filled in per child), in the three languages.
+
+### ✅ Validation Summary
+- Unit (8, `CommunityTests`): audiences (school, campus, year level, class; parents through each child; staff; campus admins), writers and managers, scheduled news announced once, read marks and counts, event replies with guests and places, cancellation, parent forms per child by either parent, answer checks, locked questions, tracking, reminders (manual and a day before), CSV export.
+- App (2, `MobileSchoolTests`): the School tab's lists, counts and replies; filling in a form for a child with single and multiple choices.
+- Integration (2, `CommunityIntegrationTests`, real API + LocalDB): news reach and notifications, teacher limits, seen counts; an event in the calendar with places and replies; a consent form answered per child, tracking, reminder, CSV, locked questions.
+
+## Phase M17 - Pastoral Care & Wellbeing
+Reason: the other half of what draws K-12 schools to Schoolbox. Without it, behaviour and wellbeing notes live in exercise books and staff-room conversations, learning adjustments do not reach every teacher, and a student who is struggling has no easy way to ask for help.
+
+Who sees what: a student's **teachers**, the **wellbeing team** (counsellors, heads of year, learning support: for the whole school, a campus and/or a year level) and the school's **admins** see staff notes and plans. **Confidential** notes and plans are seen only by their author, the person following them up and team members allowed to see confidential notes (not by admins unless they are on the team; that choice is audited). Students and parents see only what is shared with them, never confidential notes. Every view of a student's pastoral page is written to the audit log.
+
+### Stage M17.1 - Notes about students ✅ (2026-11-28)
+- [x] Notes of five kinds (behaviour, wellbeing, learning support, contact with the family, general) marked as praise, a concern (minor, moderate or serious) or neither, with the school's own categories, what happened, details, what was done, when and in which class.
+- [x] The same note for several students at once (a class, or students found by name or number); students the writer does not teach or look after are left out and listed.
+- [x] Sharing with the student and/or the parents (they are told once; confidential notes cannot be shared).
+- [x] Follow-ups: passed to someone who works with the student (for confidential notes only someone who sees them), with a date; follow-up notes; done and reopened; reminded once when the date passes.
+- [x] Notes are never deleted: one written in error is removed with a reason and kept for the wellbeing team.
+
+### Stage M17.2 - Alerts and the overview ✅ (2026-11-28)
+- [x] A serious concern tells the wellbeing team for the student at once (confidential ones only team members who see them); a run of behaviour or wellbeing concerns (the school's number within its number of days, 3 in 14 by default) tells them once. Without a team for the student, the school's admins are told. Alerts name the student but never the note's details.
+- [x] The overview by campus, year level, class and period: praise, concerns, wellbeing notes, open follow-ups and plans; every student with notes (those needing someone first); the most common categories; the person's own follow-ups. Teachers see the students they teach.
+- [x] A student's pastoral page: the last 90 days' counts, running and ended plans, check-ins (team and admins) and every note they may see with its follow-ups.
+
+### Stage M17.3 - Support plans ✅ (2026-11-28)
+- [x] Learning adjustments, behaviour, wellbeing and health plans: what the student needs, what staff should do, a start and a review date; written by the wellbeing team and admins.
+- [x] A new plan staff can see is announced to the student's teachers; one shared with the student or family is announced to them; the owner is reminded on the review date; plans end and can be started again.
+
+### Stage M17.4 - Check-ins and the wellbeing team ✅ (2026-11-28)
+- [x] Students check in when the school switches it on: how they feel from 1 (very low) to 5 (great), a note, and "I would like to talk to someone" (portal and app). A second answer within six hours changes the first.
+- [x] Asking to talk or a very low mood tells the team at once; low moods wait on the overview until someone marks them "seen to" (with what was done); the student sees who saw to it.
+- [x] Set-up: the wellbeing team (who, their role, campus, year level, confidential notes), the alert settings and the categories (the school's first change keeps the starting list; hidden ones stay on old notes). Admins of some campuses manage the team for their campuses only.
+
+### ✅ Implementation Summary
+- Domain: `Pastoral/PastoralEntities.cs` (`PastoralRecord`, `PastoralNote`, `SupportPlan`, `WellbeingCheckIn`, `PastoralTeamMember`, `PastoralCategory`, `PastoralSettings`); `NotificationType.Pastoral`; migration `PastoralCareAndWellbeing` (7 tables), added to `Scripts/01-Schema-Current.sql`.
+- Application: `Pastoral/PastoralService` (access rules, notes, alerts, follow-ups, plans, check-ins, overview, family views, set-up, reminders), `IPastoralStore`.
+- Infrastructure: `Pastoral/PastoralStore` (the students a note is about, with their classes, teachers and parents), `PastoralConfigurations`.
+- API: `PastoralController` (`/api/v1/pastoral/...`, under the `sis` licence), `PastoralWorker` (plan reviews and follow-ups every minute).
+- Portal: **Pastoral Care** (overview, student page, writing notes and plans, set-up) for staff and **Wellbeing** (check-in, shared notes and plans) for students, in English, Urdu and Arabic; API messages in Urdu and Arabic.
+- App: a **Wellbeing** section on the School tab: students check in and see shared notes and plans, parents see what was shared about each child.
+
+### ✅ Validation Summary
+- Unit (10, `PastoralTests`): who sees which notes (teachers, team by campus and year level, confidential, campus admins), what students and parents see, serious concerns and runs of concerns (admins when no team), follow-ups and reminders, removed notes, notes for a group, support plans and reviews, check-ins and "seen to", the overview, set-up and categories.
+- App (2, `MobileWellbeingTests`): a student's check-in asking to talk and shared notes; a parent's notes per child; no section for staff; a school without pastoral care.
+- Integration (2, `PastoralIntegrationTests`, real API + LocalDB): notes and confidentiality across teacher, counsellor, admin and parents, alerts, a follow-up, a removed note; check-ins with an alert and "seen to", a support plan for teachers and parents, the overview by campus, set-up.
+- Portal (4, `PastoralWebIntegrationTests`): the overview and a student's page, a note for a class or one student (what was typed kept when refused), a plan and the set-up page, a student's check-in, the menu guard and Urdu.
+
 ## Out of Scope (EduSphere already ahead — protect, don't rebuild)
 SIS & academic structure, results/GPA calculation, degree audit & graduation, transcripts/certificates, timetable/rooms, attendance, fees/payments, FYP, parent portal, AI chat & study planner, helpdesk, incidents, compliance/ISO modules, licensing & multi-tenancy, theming/sidebar customisation.
 
@@ -848,3 +951,6 @@ SIS & academic structure, results/GPA calculation, degree audit & graduation, tr
 | 2026-10-24 | M4.4 Android check without a device: Chrome emulating a Pixel 7 — installable (no Chrome installability errors), FCM push received, offline reload; iPhone Home Screen tags added to the sign-in page; phone procedure in the SuperAdmin guide. Physical-phone check still open | — |
 | 2026-10-25 | SCORM 2004 sequencing (activity tree from the manifest, navigation requests, rules, attempt limits, randomization, rollup, global objectives) and SCORM 1.2 prerequisites; older packages read again at start-up; concurrency retry on the attempt; Rustici sequencing samples played as students; user manual v1.6. Tests: unit 658/658, integration 373/374 (1 long-standing skip), web-integration 100/100, contract 1/1, Plan M Playwright specs 41/41. | — |
 | 2026-10-25 | Real IdP check with a local Keycloak (OIDC + SAML: ID and email linking, role refusal, signed requests, encrypted assertions); SCORM packages in parts (contents list, per-part data and roll-up) checked with Rustici's Golf Explained samples; user manual v1.5 (154 pages, 121 new screenshots, chapters on quizzes and assessment, learning outcomes, integrations). Found and fixed while preparing the manual: grading an essay in a quiz that draws bank questions failed (500); the notification inbox showed every date as 01 Jan 0001 and "Mark read" sent an empty id (portal DTO did not match the API); students had no way to reach Course Content (new **Course Content** menu and course chooser) | — |
+| 2026-11-28 | Phase M15 completed (M15.1): course copy (choose parts and single items, copies linked to each other, dates moved together, hidden until published, nothing of the students' copied, SCORM and discussions listed as not copied), course templates for a department or the whole school, copy history. Open: Common Cartridge / Moodle import and export, keeping courses in step with their template, copying SCORM packages | — |
+| 2026-11-28 | Phase M16 completed (M16.1–M16.3): school news (scheduled, pinned, read counts), events with replies, places and guests (also in the calendar), online forms with consent per child, tracking, reminders and CSV; audiences by campus, year level, class and role; portal pages and an app School tab. Open: picture uploads, comments on news, event reminders | — |
+| 2026-11-28 | Phase M17 completed (M17.1–M17.4): pastoral notes (praise, concerns, wellbeing, learning support, family contact) with confidentiality, sharing, follow-ups and reminders; alerts for serious concerns and runs of concerns; support plans for teachers and families; student check-ins with "seen to"; the wellbeing team, categories and settings; portal pages and the app's Wellbeing section. Open: house points, notes from the app for teachers, a wellbeing trends report | — |

@@ -40,6 +40,11 @@ public sealed class EduSphereWebFactory : WebApplicationFactory<Program>, IAsync
         {
             Environment.SetEnvironmentVariable("EDUSPHERE_ENVIRONMENTS_FILE", sharedEnvironmentsFile);
         }
+
+        // The API's start-up check (and its seeding) must use the test database too. Without this it uses the machine's
+        // environment profile: on a CI runner the "CI/CD" profile, whose sa password is not the runner's, so start-up
+        // skips seeding and every test fails; on a developer machine their own SQL Express database.
+        Environment.SetEnvironmentVariable("EDUSPHERE_DB_CONNECTION", TestConnectionString);
     }
 
     // ── Lifecycle ──────────────────────────────────────────────────────────────

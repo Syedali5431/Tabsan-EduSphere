@@ -45,7 +45,10 @@ public static class EnvironmentConfigurationResolver
             detectionSource = "DockerDetection";
             shouldPreferProfile = true;
         }
-        else if (IsCiEnvironment() && TryResolveByName(profiles, "CI/CD", out detectedEnvironment))
+        // The "CI/CD" profile is for an app deployed from a CI pipeline. A test host (the "Testing" environment the
+        // integration and portal test factories start) is configured by its tests, so running the tests on a CI runner
+        // must not swap in that profile's database and API address.
+        else if (IsCiEnvironment() && !hostEnvironment.IsEnvironment("Testing") && TryResolveByName(profiles, "CI/CD", out detectedEnvironment))
         {
             detectionSource = "CICDDetection";
             shouldPreferProfile = true;

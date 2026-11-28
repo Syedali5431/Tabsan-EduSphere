@@ -1,0 +1,98 @@
+@model Tabsan.EduSphere.Web.Models.Portal.FillFormPageModel
+@{
+    ViewData["Title"] = T.Text("Forms");
+    var f = Model.Form;
+    string Value(Guid id) => Model.Typed.TryGetValue(id, out var typed) ? typed : f!.Answers.TryGetValue(id, out var a) ? a : "";
+}
+
+<p class="mb-2"><a asp-action="SchoolForms">← @T["All forms"]</a></p>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="border border-danger rounded p-2 mb-3 text-danger" role="alert" data-form-error>@T.Text(Model.Message)</div>
+}
+
+@if (f is not null)
+{
+    var locked = !f.TakesAnswers;
+    <form method="post" asp-action="SubmitForm" class="card border-0 shadow-sm" data-fill-form>
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@f.Id" />
+        @if (f.StudentProfileId is { } child) { <input type="hidden" name="studentProfileId" value="@child" /> }
+        <div class="card-body">
+            <h2 class="h3 mb-1">@f.Title</h2>
+            <p class="small text-muted mb-2">
+                @if (f.StudentName is not null) { <span data-form-child>@T.Format("For {0}", f.StudentName) · </span> }
+                @if (f.DueAt is { } due) { <span>@T["Due"] <time datetime="@CommunityFormat.Iso(due)" data-local-time="short">@due.ToString("dd MMM yyyy HH:mm") UTC</time></span> }
+            </p>
+            @if (f.CanManage)
+            {
+                <div class="border border-info rounded p-2 small mb-3" role="note">@T["You manage this form."] <a asp-action="FormResponses" asp-route-id="@f.Id">@T["See the answers"]</a></div>
+            }
+            @if (f.AnsweredAt is { } at)
+            {
+                <div class="border border-success rounded p-2 small mb-3" role="note" data-answered>
+                    @T["Answered"] <time datetime="@CommunityFormat.Iso(at)" data-local-time="short">@at.ToString("dd MMM yyyy HH:mm") UTC</time>@(f.AnsweredBy is null ? "" : " · " + f.AnsweredBy).
+                    @if (!locked) { <span>@T["You can change the answers until the form closes."]</span> }
+                </div>
+            }
+            @if (locked) { <div class="border border-secondary rounded p-2 small mb-3" role="note">@T["This form is closed."]</div> }
+            @if (f.Description is not null) { <p style="white-space: pre-line">@f.Description</p> }
+            @if (f.EventId is not null) { <p><a asp-action="SchoolEvents">@T["See the event"]</a></p> }
+
+            @foreach (var q in f.Fields)
+            {
+                var name = "q_" + q.Id;
+                var id = "f-" + q.Id.ToString("N");
+                var value = Value(q.Id);
+                <div class="mb-3" data-question="@q.Type">
+                    @switch (q.Type)
+                    {
+                        case "Information":
+                            <div class="bg-light rounded p-2"><strong>@q.Label</strong>@if (q.Help is not null) { <div style="white-space: pre-line">@q.Help</div> }</div>
+                            break;
+                        case "LongText":
+                            <label class="form-label" for="@id">@q.Label@(q.Required ? " *" : "")</label>
+                            <textarea class="form-control" id="@id" name="@name" rows="4" required="@q.Required" disabled="@locked" maxlength="4000">@value</textarea>
+                            break;
+                        case "SingleChoice":
+                        case "MultipleChoice":
+                        case "YesNo":
+                            var choices = q.Type == "YesNo" ? new List<(string Value, string Label)> { ("Yes", T.Text("Yes")), ("No", T.Text("No")) } : q.Options.Select(o => (Value: o, Label: o)).ToList();
+                            var picked = value.Split('\n');
+                            <fieldset>
+                                <legend class="form-label fs-6 mb-1">@q.Label@(q.Required ? " *" : "")</legend>
+                                @for (var c = 0; c < choices.Count; c++)
+                                {
+                                    var cid = id + "-" + c;
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="@(q.Type == "MultipleChoice" ? "checkbox" : "radio")" name="@name" id="@cid" value="@choices[c].Value"
+                                               checked="@picked.Contains(choices[c].Value)" disabled="@locked" required="@(q.Required && q.Type != "MultipleChoice")" />
+                                        <label class="form-check-label" for="@cid">@choices[c].Label</label>
+                                    </div>
+                                }
+                            </fieldset>
+                            break;
+                        default:
+                            var type = q.Type switch { "Date" => "date", "Number" => "number", _ => "text" };
+                            <label class="form-label" for="@id">@q.Label@(q.Required ? " *" : "")</label>
+                            <input class="form-control" id="@id" name="@name" type="@type" value="@value" required="@q.Required" disabled="@locked" step="@(q.Type == "Number" ? "any" : null)"
+                                   maxlength="@(q.Type is "ShortText" or "Signature" ? "300" : null)" autocomplete="@(q.Type == "Signature" ? "name" : null)" />
+                            @if (q.Type == "Signature") { <p class="form-text">@T["Type your full name to sign."]</p> }
+                            break;
+                    }
+                    @if (q.Help is not null && q.Type != "Information") { <p class="form-text mb-0">@q.Help</p> }
+                </div>
+            }
+
+            @if (!locked)
+            {
+                <button type="submit" class="btn btn-primary" data-send-answers>@(f.AnsweredAt is null ? T.Text("Send answers") : T.Text("Save changes"))</button>
+            }
+        </div>
+    </form>
+}
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

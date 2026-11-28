@@ -3218,6 +3218,506 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.ToTable("backup_verification_logs", (string)null);
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Calendar.CalendarFeedToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("TokenEncrypted")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("IX_calendar_feed_tokens_hash");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_calendar_feed_tokens_user");
+
+                    b.ToTable("calendar_feed_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Calendar.DueReminderLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DueAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Kind")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("IX_due_reminder_logs_created");
+
+                    b.HasIndex("Kind", "ItemId", "StudentProfileId", "DueAt")
+                        .IsUnique()
+                        .HasDatabaseName("IX_due_reminder_logs_item_student_due");
+
+                    b.ToTable("due_reminder_logs", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.EventReply", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Answer")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Guests")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_event_replies_event_user");
+
+                    b.ToTable("event_replies", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.FormField", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("FormId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Help")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("OptionsJson")
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Required")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FormId", "Position")
+                        .HasDatabaseName("IX_form_fields_form_position");
+
+                    b.ToTable("form_fields", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.FormResponse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AnswersJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("FormId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RespondentUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FormId", "RespondentUserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_form_responses_form_person")
+                        .HasFilter("[StudentProfileId] IS NULL");
+
+                    b.HasIndex("FormId", "StudentProfileId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_form_responses_form_child")
+                        .HasFilter("[StudentProfileId] IS NOT NULL");
+
+                    b.ToTable("form_responses", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.NewsPost", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("CampusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CourseOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("NotifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("PublishAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Roles")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("SemesterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_news_posts_tenant");
+
+                    b.HasIndex("Status", "PublishAt")
+                        .HasDatabaseName("IX_news_posts_status_publish");
+
+                    b.ToTable("news_posts", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.NewsRead", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_news_reads_user");
+
+                    b.HasIndex("PostId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_news_reads_post_user");
+
+                    b.ToTable("news_reads", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.SchoolEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("AllDay")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CampusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CancelReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("Category")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid?>("CourseOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(5000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("FormId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int>("MaxGuests")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("NotifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("RepliesOpen")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ReplyBy")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Roles")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("SemesterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FormId")
+                        .HasDatabaseName("IX_school_events_form");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_school_events_tenant");
+
+                    b.HasIndex("StartsAt", "EndsAt")
+                        .HasDatabaseName("IX_school_events_dates");
+
+                    b.ToTable("school_events", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.SchoolForm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CampusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CourseOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(5000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DueAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("OpenedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RemindedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Roles")
+                        .HasColumnType("tinyint");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("SemesterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_school_forms_tenant");
+
+                    b.HasIndex("Status", "DueAt")
+                        .HasDatabaseName("IX_school_forms_status_due");
+
+                    b.ToTable("school_forms", (string)null);
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.DataProtection.DataClassificationEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4723,6 +5223,50 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.ToTable("course_content_modules", (string)null);
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Lms.CourseCopyRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CopiedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("DateShiftDays")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("KeptPublishedState")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("SourceOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SummaryJson")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("TargetOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TargetOfferingId", "CreatedAt")
+                        .HasDatabaseName("IX_course_copy_runs_target_created");
+
+                    b.ToTable("course_copy_runs", (string)null);
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Lms.CourseMaterial", b =>
                 {
                     b.Property<Guid>("Id")
@@ -4825,6 +5369,49 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
 
                             t.HasCheckConstraint("CK_course_materials_scope_required", "[TenantId] <> '00000000-0000-0000-0000-000000000000' AND [CampusId] <> '00000000-0000-0000-0000-000000000000' AND [DepartmentId] <> '00000000-0000-0000-0000-000000000000' AND [AcademicProgramId] <> '00000000-0000-0000-0000-000000000000' AND [SemesterId] <> '00000000-0000-0000-0000-000000000000' AND [CourseId] <> '00000000-0000-0000-0000-000000000000' AND [CreatedByUserId] <> '00000000-0000-0000-0000-000000000000'");
                         });
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Lms.CourseTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<Guid>("OfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<byte>("Scope")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OfferingId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_course_templates_offering");
+
+                    b.ToTable("course_templates", (string)null);
                 });
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Lms.DiscussionReply", b =>
@@ -5879,6 +6466,124 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.ToTable("lti_used_nonces", (string)null);
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.Conversation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CourseOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("LastMessageAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastMessageAt")
+                        .HasDatabaseName("IX_conversations_last_message");
+
+                    b.ToTable("conversations", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.ConversationMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("SenderUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderUserId");
+
+                    b.HasIndex("ConversationId", "CreatedAt")
+                        .HasDatabaseName("IX_conversation_messages_conversation_time");
+
+                    b.ToTable("conversation_messages", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.ConversationParticipant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ArchivedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastNotifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("LastReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConversationId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_conversation_participants_conversation_user");
+
+                    b.HasIndex("UserId", "ArchivedAt")
+                        .HasDatabaseName("IX_conversation_participants_user");
+
+                    b.ToTable("conversation_participants", (string)null);
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Mobile.MobileCrashReport", b =>
                 {
                     b.Property<Guid>("Id")
@@ -6587,6 +7292,434 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .HasDatabaseName("IX_student_outcome_results_unique");
 
                     b.ToTable("student_outcome_results", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Pastoral.PastoralCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<byte>("Kind")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Tone")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_pastoral_categories_tenant");
+
+                    b.ToTable("pastoral_categories", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Pastoral.PastoralNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("RecordId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecordId")
+                        .HasDatabaseName("IX_pastoral_notes_record");
+
+                    b.ToTable("pastoral_notes", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Pastoral.PastoralRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActionTaken")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CampusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<Guid?>("CourseOfferingId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<byte>("FollowUp")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("FollowUpBy")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FollowUpDoneAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("FollowUpDoneByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("FollowUpRemindedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("FollowUpUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Kind")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RemovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("RemovedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RemovedReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<byte>("Severity")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("SharedNotifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("SharedWithParents")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SharedWithStudent")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Tone")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Visibility")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FollowUp", "FollowUpUserId")
+                        .HasDatabaseName("IX_pastoral_records_follow_up");
+
+                    b.HasIndex("StudentProfileId", "OccurredAt")
+                        .HasDatabaseName("IX_pastoral_records_student");
+
+                    b.HasIndex("TenantId", "OccurredAt")
+                        .HasDatabaseName("IX_pastoral_records_tenant");
+
+                    b.ToTable("pastoral_records", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Pastoral.PastoralSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("CheckInsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ConcernAlertCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ConcernAlertDays")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_pastoral_settings_tenant");
+
+                    b.ToTable("pastoral_settings", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Pastoral.PastoralTeamMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AddedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CampusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<bool>("SeesConfidential")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("SemesterId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_pastoral_team_members_tenant");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("IX_pastoral_team_members_user");
+
+                    b.ToTable("pastoral_team_members", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Pastoral.SupportPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CampusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EndedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Kind")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Needs")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ReviewOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ReviewRemindedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime?>("SharedNotifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("SharedWithParents")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SharedWithStudent")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("StartsOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Strategies")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Visibility")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentProfileId")
+                        .HasDatabaseName("IX_support_plans_student");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("IX_support_plans_tenant");
+
+                    b.ToTable("support_plans", (string)null);
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Pastoral.WellbeingCheckIn", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AcknowledgeNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("AcknowledgedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("AcknowledgedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AlertedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("CampusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CheckedInAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Mood")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<Guid>("StudentProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StudentUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("WantsToTalk")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentProfileId", "CheckedInAt")
+                        .HasDatabaseName("IX_wellbeing_check_ins_student");
+
+                    b.HasIndex("TenantId", "CheckedInAt")
+                        .HasDatabaseName("IX_wellbeing_check_ins_tenant");
+
+                    b.ToTable("wellbeing_check_ins", (string)null);
                 });
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Permissions.RoleResourcePermission", b =>
@@ -8636,6 +9769,51 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Calendar.CalendarFeedToken", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.EventReply", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Community.SchoolEvent", null)
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.FormField", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Community.SchoolForm", null)
+                        .WithMany()
+                        .HasForeignKey("FormId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.FormResponse", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Community.SchoolForm", null)
+                        .WithMany()
+                        .HasForeignKey("FormId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Community.NewsRead", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Community.NewsPost", null)
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Fyp.FypMeeting", b =>
                 {
                     b.HasOne("Tabsan.EduSphere.Domain.Fyp.FypProject", "Project")
@@ -8770,6 +9948,15 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Lms.CourseCopyRun", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Academic.CourseOffering", null)
+                        .WithMany()
+                        .HasForeignKey("TargetOfferingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Lms.CourseMaterial", b =>
                 {
                     b.HasOne("Tabsan.EduSphere.Domain.Academic.AcademicProgram", null)
@@ -8813,6 +10000,15 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .HasForeignKey("CampusId", "TenantId")
                         .HasPrincipalKey("Id", "TenantId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Lms.CourseTemplate", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Academic.CourseOffering", null)
+                        .WithMany()
+                        .HasForeignKey("OfferingId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -8905,6 +10101,36 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.ConversationMessage", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Messaging.Conversation", null)
+                        .WithMany()
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tabsan.EduSphere.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.ConversationParticipant", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Messaging.Conversation", null)
+                        .WithMany("Participants")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tabsan.EduSphere.Domain.Identity.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Modules.ModuleStatus", b =>
                 {
                     b.HasOne("Tabsan.EduSphere.Domain.Modules.Module", "Module")
@@ -8983,6 +10209,15 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
                     b.HasOne("Tabsan.EduSphere.Domain.Outcomes.OutcomeAlignment", null)
                         .WithMany()
                         .HasForeignKey("AlignmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Pastoral.PastoralNote", b =>
+                {
+                    b.HasOne("Tabsan.EduSphere.Domain.Pastoral.PastoralRecord", null)
+                        .WithMany()
+                        .HasForeignKey("RecordId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -9351,6 +10586,11 @@ namespace Tabsan.EduSphere.Infrastructure.Migrations
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Lti.LtiTool", b =>
                 {
                     b.Navigation("Deployments");
+                });
+
+            modelBuilder.Entity("Tabsan.EduSphere.Domain.Messaging.Conversation", b =>
+                {
+                    b.Navigation("Participants");
                 });
 
             modelBuilder.Entity("Tabsan.EduSphere.Domain.Outcomes.Outcome", b =>

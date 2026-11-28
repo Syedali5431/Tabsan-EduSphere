@@ -1,0 +1,103 @@
+@model Tabsan.EduSphere.Web.Models.Portal.NewsPageModel
+@{
+    ViewData["Title"] = T.Text("School news");
+
+    string State(string s) => s switch
+    {
+        "Draft" => T.Text("Draft"),
+        "Scheduled" => T.Text("Scheduled"),
+        "Live" => T.Text("Live"),
+        "Ended" => T.Text("Ended"),
+        _ => T.Text("Taken down")
+    };
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status">
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."] <a asp-action="Dashboard">@T["Configure API"]</a>.</div>
+    return;
+}
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <h2 class="h3 mb-0 me-auto">@T["School news"]</h2>
+    @if (Model.CanWrite)
+    {
+        <nav class="btn-group btn-group-sm" aria-label="@T["School news"]">
+            <a class="btn @(Model.Tab == "feed" ? "btn-secondary" : "btn-outline-secondary")" asp-action="News" aria-current="@(Model.Tab == "feed" ? "page" : null)">@T["News"]</a>
+            <a class="btn @(Model.Tab == "manage" ? "btn-secondary" : "btn-outline-secondary")" asp-action="News" asp-route-tab="manage" aria-current="@(Model.Tab == "manage" ? "page" : null)">@T["Posts I manage"]</a>
+        </nav>
+        <a class="btn btn-sm btn-primary" asp-action="EditNews" data-write-news>@T["Write news"]</a>
+    }
+</div>
+
+@if (Model.Tab == "manage")
+{
+    @if (Model.Managed.Count == 0)
+    {
+        <p class="text-muted">@T["You have not written any news yet."]</p>
+    }
+    else
+    {
+        <div class="table-responsive card border-0 shadow-sm">
+            <table class="table table-sm align-middle mb-0" data-news-manage>
+                <thead class="table-light">
+                    <tr><th scope="col">@T["Title"]</th><th scope="col">@T["Status"]</th><th scope="col">@T["Appears"]</th><th scope="col">@T["For"]</th><th scope="col" class="text-end">@T["Read by"]</th><th scope="col"><span class="visually-hidden">@T["Actions"]</span></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model.Managed)
+                    {
+                        <tr data-news-row="@p.Status">
+                            <td><a asp-action="NewsPost" asp-route-id="@p.Id">@p.Title</a>@if (p.IsPinned) { <span class="badge bg-info text-dark ms-1">@T["Pinned"]</span> }<div class="small text-muted">@p.AuthorName</div></td>
+                            <td><span class="badge @(p.Live ? "bg-success" : "bg-secondary")">@State(p.Status)</span></td>
+                            <td class="text-nowrap"><time datetime="@CommunityFormat.Iso(p.PublishAt)" data-local-time="short">@p.PublishAt.ToString("dd MMM yyyy HH:mm") UTC</time></td>
+                            <td><partial name="_AudienceLabel" model="p.Audience" /></td>
+                            <td class="text-end">@p.SeenBy</td>
+                            <td class="text-end"><a class="btn btn-sm btn-outline-secondary" asp-action="EditNews" asp-route-id="@p.Id">@T["Change"]</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+else if (Model.Feed.Count == 0)
+{
+    <p class="text-muted" data-news-empty>@T["No news yet."]</p>
+}
+else
+{
+    <div class="d-grid gap-3" data-news-feed>
+        @foreach (var n in Model.Feed)
+        {
+            <article class="card border-0 shadow-sm news-card@(n.IsPinned ? " border-start border-4 border-info" : "")" data-news="@n.Title">
+                <div class="card-body d-flex gap-3">
+                    @if (n.ImageUrl is not null)
+                    {
+                        <img src="@n.ImageUrl" alt="" class="news-thumb rounded flex-shrink-0" loading="lazy" referrerpolicy="no-referrer" />
+                    }
+                    <div class="min-w-0">
+                        <h3 class="h5 mb-1">
+                            <a class="text-decoration-none" asp-action="NewsPost" asp-route-id="@n.Id">@n.Title</a>
+                            @if (n.IsPinned) { <span class="badge bg-info text-dark ms-1">@T["Pinned"]</span> }
+                            @if (n.IsNew) { <span class="badge bg-primary ms-1" data-news-new>@T["New"]</span> }
+                        </h3>
+                        @if (n.Summary is not null) { <p class="mb-1">@n.Summary</p> }
+                        <p class="mb-0 small text-muted">@n.AuthorName · <time datetime="@CommunityFormat.Iso(n.PublishAt)" data-local-time="date">@n.PublishAt.ToString("dd MMM yyyy")</time> · <partial name="_AudienceLabel" model="n.Audience" /></p>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+}
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+}

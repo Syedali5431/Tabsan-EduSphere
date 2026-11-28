@@ -123,7 +123,63 @@ public partial class PortalController : Controller
         [nameof(LiveClasses)] = "live_classes",
         [nameof(LiveSessionAttendance)] = "live_classes",
         [nameof(LiveClassSettings)] = "live_class_settings",
+        // The calendar and its private link.
+        [nameof(AcademicCalendar)] = "calendar",
+        [nameof(ResetCalendarFeed)] = "calendar",
+        [nameof(RemoveCalendarFeed)] = "calendar",
+        // Messages.
+        [nameof(Messages)] = "messages",
+        [nameof(MessageThread)] = "messages",
+        [nameof(ReplyMessage)] = "messages",
+        [nameof(ArchiveConversation)] = "messages",
+        [nameof(NewMessage)] = "messages",
+        [nameof(SendMessage)] = "messages",
         // Plan M13: SCORM packages are course content; the xAPI store is a system setting.
+        // School news, events and forms.
+        [nameof(News)] = "news",
+        [nameof(NewsPost)] = "news",
+        [nameof(EditNews)] = "news",
+        [nameof(SaveNews)] = "news",
+        [nameof(WithdrawNews)] = "news",
+        [nameof(SchoolEvents)] = "events",
+        [nameof(EditEvent)] = "events",
+        [nameof(SaveEvent)] = "events",
+        [nameof(ReplyEvent)] = "events",
+        [nameof(EventReplies)] = "events",
+        [nameof(CancelEvent)] = "events",
+        [nameof(SchoolForms)] = "forms",
+        [nameof(FillForm)] = "forms",
+        [nameof(SubmitForm)] = "forms",
+        [nameof(EditForm)] = "forms",
+        [nameof(SaveForm)] = "forms",
+        [nameof(OpenForm)] = "forms",
+        [nameof(FormResponses)] = "forms",
+        [nameof(RemindForm)] = "forms",
+        [nameof(ExportForm)] = "forms",
+        // Pastoral care (the overview itself is open to everyone signed in: it sends students to their wellbeing page,
+        // where pastoral notifications lead them).
+        [nameof(PastoralStudent)] = "pastoral",
+        [nameof(PastoralNote)] = "pastoral",
+        [nameof(SavePastoralNote)] = "pastoral",
+        [nameof(AddPastoralFollowUpNote)] = "pastoral",
+        [nameof(PastoralFollowUp)] = "pastoral",
+        [nameof(RemovePastoralNote)] = "pastoral",
+        [nameof(PastoralPlan)] = "pastoral",
+        [nameof(SavePastoralPlan)] = "pastoral",
+        [nameof(EndPastoralPlan)] = "pastoral",
+        [nameof(PastoralCheckInSeen)] = "pastoral",
+        [nameof(PastoralSetup)] = "pastoral",
+        [nameof(AddPastoralTeamMember)] = "pastoral",
+        [nameof(RemovePastoralTeamMember)] = "pastoral",
+        [nameof(SavePastoralSettings)] = "pastoral",
+        [nameof(SavePastoralCategory)] = "pastoral",
+        [nameof(Wellbeing)] = "wellbeing",
+        [nameof(WellbeingCheckIn)] = "wellbeing",
+        // Course copy and templates are course content work.
+        [nameof(CourseCopy)] = "lms_manage",
+        [nameof(CopyCourseContent)] = "lms_manage",
+        [nameof(SaveCourseTemplate)] = "lms_manage",
+        [nameof(RemoveCourseTemplate)] = "lms_manage",
         [nameof(UploadScormPackage)] = "lms_manage",
         [nameof(UpdateScormPackage)] = "lms_manage",
         [nameof(RemoveScormPackage)] = "lms_manage",
@@ -10331,26 +10387,7 @@ public partial class PortalController : Controller
         return RedirectToAction(nameof(DashboardSettings));
     }
 
-    // -- Phase 12: Academic Calendar --------------------------------------------
-
-    [HttpGet]
-    public async Task<IActionResult> AcademicCalendar(Guid? semesterId, CancellationToken ct)
-    {
-        ViewData["Title"] = "Academic Calendar";
-        var model = new AcademicCalendarPageModel
-        {
-            IsConnected        = _api.IsConnected(),
-            SelectedSemesterId = semesterId
-        };
-        if (!model.IsConnected) return View(model);
-        try
-        {
-            model.Semesters = await _api.GetSemestersAsync(ct);
-            model.Deadlines = await _api.GetCalendarDeadlinesAsync(semesterId, ct);
-        }
-        catch (Exception ex) { model.Message = ex.Message; }
-        return View(model);
-    }
+    // -- Phase 12: Academic Calendar (the page is in PortalController.Calendar.cs) ---
 
     [HttpGet]
     public async Task<IActionResult> AcademicDeadlines(Guid? semesterId, CancellationToken ct)

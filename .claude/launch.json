@@ -1,0 +1,49 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/Tabsan.EduSphere.API/Tabsan.EduSphere.API.csproj", "--launch-profile", "http", "--",
+        "--urls", "http://0.0.0.0:5181",
+        "--Mobile:PortalBaseUrl=http://192.168.1.109:5063",
+        "--Licensing:EnforceReadOnlyWhenUnlicensed=false"],
+      "port": 5181
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/Tabsan.EduSphere.Web/Tabsan.EduSphere.Web.csproj", "--launch-profile", "http", "--",
+        "--urls", "http://0.0.0.0:5063"],
+      "port": 5063
+    },
+    {
+      "name": "api-northfield",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tools/user-manual/connection-guide/start-northfield.ps1",
+        "-Part", "api", "-Root", "C:\\Users\\SYEDAL~1\\AppData\\Local\\Temp\\claude\\8e59ce1115e8df26\\5275977c-1667-43d7-9bea-f21c97a31207\\scratchpad\\northfield"],
+      "port": 5281
+    },
+    {
+      "name": "portal-northfield",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "tools/user-manual/connection-guide/start-northfield.ps1",
+        "-Part", "portal", "-Root", "C:\\Users\\SYEDAL~1\\AppData\\Local\\Temp\\claude\\8e59ce1115e8df26\\5275977c-1667-43d7-9bea-f21c97a31207\\scratchpad\\northfield"],
+      "port": 5163
+    },
+    {
+      "name": "api-e2e",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+        "$env:Lti__PlatformUrl = 'http://localhost:5263'; & 'F:\\Tabsan-EduSphere\\tools\\user-manual\\connection-guide\\start-northfield.ps1' -Part api -Root 'C:\\Users\\SYEDAL~1\\AppData\\Local\\Temp\\claude\\19d8d98bbbc8f701\\5275977c-1667-43d7-9bea-f21c97a31207\\scratchpad\\e2e' -Database 'Tabsan-EduSphere-E2E' -ApiPort 5381 -PortalPort 5263 -PortalAddressForPhones 'http://localhost:5263'"],
+      "port": 5381
+    },
+    {
+      "name": "portal-e2e",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+        "& 'F:\\Tabsan-EduSphere\\tools\\user-manual\\connection-guide\\start-northfield.ps1' -Part portal -Root 'C:\\Users\\SYEDAL~1\\AppData\\Local\\Temp\\claude\\19d8d98bbbc8f701\\5275977c-1667-43d7-9bea-f21c97a31207\\scratchpad\\e2e' -Database 'Tabsan-EduSphere-E2E' -ApiPort 5381 -PortalPort 5263"],
+      "port": 5263
+    }
+  ]
+}

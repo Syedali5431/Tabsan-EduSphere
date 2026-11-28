@@ -56,7 +56,10 @@ public sealed class MauiPickers : IPickers
 
 public sealed class MauiLauncher : ILauncherService
 {
-	public Task OpenAsync(Uri uri) => Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred);
+	/// <summary>Web pages in the in-app browser; other links (webcal:// for the calendar) in the app that handles them.</summary>
+	public Task OpenAsync(Uri uri) => uri.Scheme is "http" or "https"
+		? Browser.Default.OpenAsync(uri, BrowserLaunchMode.SystemPreferred)
+		: Launcher.Default.OpenAsync(uri);
 }
 
 /// <summary>

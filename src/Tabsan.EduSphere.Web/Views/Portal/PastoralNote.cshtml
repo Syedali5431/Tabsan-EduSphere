@@ -1,0 +1,215 @@
+@model Tabsan.EduSphere.Web.Models.Portal.PastoralNotePageModel
+@using Tabsan.EduSphere.Domain.Pastoral
+@{
+    ViewData["Title"] = Model.Id is null ? T.Text("Write a note") : T.Text("Change a note");
+    var i = Model.Input;
+    var one = Model.Student;
+    var chosen = i.StudentProfileIds.ToHashSet();
+}
+
+<p class="mb-2">
+    @if (one is not null)
+    {
+        <a asp-action="PastoralStudent" asp-route-id="@one.Student.Id">← @one.Student.Name</a>
+    }
+    else
+    {
+        <a asp-action="Pastoral">← @T["Pastoral care"]</a>
+    }
+</p>
+<h2 class="h3 mb-3">@(Model.Id is null ? T.Text("Write a note") : T.Text("Change a note"))</h2>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="border border-danger rounded p-2 mb-3 text-danger" role="alert" data-form-error>@T.Text(Model.Message)</div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="alert alert-warning">@T["Not connected."]</div>
+    return;
+}
+
+@if (one is null)
+{
+    <div class="row g-3 mb-3">
+        <div class="col-md-6">
+            <form method="get" asp-action="PastoralNote" class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <label class="form-label small" for="pn-class">@T["Students of a class"]</label>
+                    <div class="input-group input-group-sm">
+                        <select class="form-select" id="pn-class" name="classId">
+                            <option value="">@T["Choose a class"]</option>
+                            @foreach (var c in Model.Filters?.Classes ?? []) { <option value="@c.Id" selected="@(c.Id == Model.ClassId)">@c.Name</option> }
+                        </select>
+                        <button type="submit" class="btn btn-outline-secondary">@T["Show"]</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <form method="get" asp-action="PastoralNote" class="card border-0 shadow-sm h-100" role="search">
+                <div class="card-body">
+                    <label class="form-label small" for="pn-q">@T["Find a student"]</label>
+                    <div class="input-group input-group-sm">
+                        <input class="form-control" id="pn-q" name="q" value="@Model.Search" minlength="2" placeholder="@T["Name or registration number"]" />
+                        <button type="submit" class="btn btn-outline-secondary">@T["Find"]</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
+<form method="post" asp-action="SavePastoralNote" class="card border-0 shadow-sm" data-community-form data-pastoral-note-form>
+    @Html.AntiForgeryToken()
+    @if (Model.Id is { } id) { <input type="hidden" name="id" value="@id" /> }
+    <input type="hidden" name="CourseOfferingId" value="@i.CourseOfferingId" />
+    <div class="card-body">
+        @if (one is not null)
+        {
+            <input type="hidden" name="studentId" value="@one.Student.Id" />
+            <p class="mb-3"><span class="text-muted">@T["About"]</span> <span class="fw-semibold" data-note-student>@one.Student.Name</span> <span class="text-muted small">@one.Student.ClassName</span></p>
+        }
+        else
+        {
+            @if (Model.ClassId is { } classId) { <input type="hidden" name="classId" value="@classId" /> }
+            @if (!string.IsNullOrEmpty(Model.Search)) { <input type="hidden" name="q" value="@Model.Search" /> }
+            <fieldset class="border rounded p-3 mb-3" data-note-students>
+                <legend class="float-none w-auto px-1 mb-0 fs-6 fw-semibold">@T["Students"]</legend>
+                @if (Model.Choices.Count == 0)
+                {
+                    <p class="text-muted small mb-0">@T["Choose a class or find a student first."]</p>
+                }
+                else
+                {
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="pn-all" data-select-all />
+                        <label class="form-check-label fw-semibold" for="pn-all">@T["Everyone in the list"]</label>
+                    </div>
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-1">
+                        @foreach (var s in Model.Choices)
+                        {
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="StudentProfileIds" value="@s.Id" id="pn-s-@s.Id" checked="@chosen.Contains(s.Id)" data-student-choice />
+                                    <label class="form-check-label" for="pn-s-@s.Id">@s.Name <span class="text-muted small">@s.ClassName</span></label>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <p class="form-text mb-0">@T["The same note is written for each student you choose."]</p>
+                }
+            </fieldset>
+        }
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <label class="form-label" for="pn-kind">@T["Kind of note"]</label>
+                <select class="form-select" id="pn-kind" name="Kind" data-note-kind>
+                    @foreach (var k in PastoralWords.Kinds) { <option value="@k" selected="@(k == i.Kind)">@T.Text(PastoralWords.Kind(k))</option> }
+                </select>
+            </div>
+            <div class="col-md-5">
+                <span class="form-label d-block" id="pn-tone-label">@T["Is it praise or a concern?"]</span>
+                <div class="d-flex flex-wrap gap-2" role="radiogroup" aria-labelledby="pn-tone-label">
+                    @foreach (var tone in PastoralWords.Tones)
+                    {
+                        <input type="radio" class="btn-check" name="Tone" id="pn-tone-@tone" value="@tone" checked="@(tone == i.Tone)" data-note-tone autocomplete="off" />
+                        <label class="btn btn-sm @(tone == "Positive" ? "btn-outline-success" : tone == "Concern" ? "btn-outline-danger" : "btn-outline-secondary")" for="pn-tone-@tone">@T.Text(PastoralWords.Tone(tone))</label>
+                    }
+                </div>
+            </div>
+            <div class="col-md-3" data-severity-box>
+                <label class="form-label" for="pn-severity">@T["How serious?"]</label>
+                <select class="form-select" id="pn-severity" name="Severity" data-note-severity aria-describedby="pn-severity-hint">
+                    @foreach (var sev in PastoralWords.Severities) { <option value="@sev" selected="@(sev == i.Severity)">@T.Text(PastoralWords.Severity(sev))</option> }
+                </select>
+                <p class="form-text" id="pn-severity-hint">@T["Serious: the wellbeing team is told at once."]</p>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="pn-category">@T["Category"] <span class="text-muted small">(@T["optional"])</span></label>
+            <select class="form-select" id="pn-category" name="Category" data-note-category>
+                <option value="">@T["None"]</option>
+                @foreach (var c in Model.Categories.Where(c => c.IsActive))
+                {
+                    <option value="@c.Name" data-kind="@c.Kind" data-tone="@c.Tone" selected="@(c.Name == i.Category)">@c.Name</option>
+                }
+                @if (!string.IsNullOrEmpty(i.Category) && Model.Categories.All(c => c.Name != i.Category))
+                {
+                    <option value="@i.Category" selected>@i.Category</option>
+                }
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="pn-summary">@T["What happened, in a few words"]</label>
+            <input class="form-control" id="pn-summary" name="Summary" value="@i.Summary" required maxlength="@PastoralRecord.MaxSummaryLength" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="pn-details">@T["Details"] <span class="text-muted small">(@T["optional"])</span></label>
+            <textarea class="form-control" id="pn-details" name="Details" rows="4" maxlength="@PastoralRecord.MaxDetailsLength">@i.Details</textarea>
+        </div>
+        <div class="row g-3 mb-3">
+            <div class="col-md-8">
+                <label class="form-label" for="pn-action">@T["What was done"] <span class="text-muted small">(@T["optional"])</span></label>
+                <textarea class="form-control" id="pn-action" name="ActionTaken" rows="2" maxlength="@PastoralRecord.MaxActionLength">@i.ActionTaken</textarea>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="pn-when">@T["When (your time)"]</label>
+                <input class="form-control" id="pn-when" type="datetime-local" data-utc-for="OccurredAt" aria-describedby="pn-when-hint" />
+                <input type="hidden" name="OccurredAt" value="@i.OccurredAt" />
+                <p class="form-text" id="pn-when-hint">@T["Empty: now."]</p>
+            </div>
+        </div>
+
+        <fieldset class="border rounded p-3 mb-3">
+            <legend class="float-none w-auto px-1 mb-0 fs-6 fw-semibold">@T["Who may read it"]</legend>
+            <p class="small text-muted">@T["The student's teachers, the wellbeing team and the school's admins read every note that is not confidential."]</p>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="Confidential" value="true" id="pn-conf" checked="@i.Confidential" data-note-confidential />
+                <label class="form-check-label" for="pn-conf">@T["Confidential: only me and the wellbeing team members who see confidential notes"]</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="ShareWithStudent" value="true" id="pn-student" checked="@i.ShareWithStudent" data-note-share />
+                <label class="form-check-label" for="pn-student">@T["Share with the student"]</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="ShareWithParents" value="true" id="pn-parents" checked="@i.ShareWithParents" data-note-share />
+                <label class="form-check-label" for="pn-parents">@T["Share with the parents (in the app)"]</label>
+            </div>
+        </fieldset>
+
+        @if (one is not null)
+        {
+            <fieldset class="border rounded p-3 mb-3">
+                <legend class="float-none w-auto px-1 mb-0 fs-6 fw-semibold">@T["Follow-up"] <span class="text-muted small fw-normal">(@T["optional"])</span></legend>
+                <div class="row g-2">
+                    <div class="col-md-8">
+                        <label class="form-label small" for="pn-fu">@T["Who should follow it up?"]</label>
+                        <select class="form-select" id="pn-fu" name="FollowUpUserId" aria-describedby="pn-fu-hint">
+                            <option value="">@T["Nobody"]</option>
+                            @foreach (var p in one.FollowUpOptions)
+                            {
+                                <option value="@p.UserId" selected="@(p.UserId == i.FollowUpUserId)" data-sees-confidential="@(p.SeesConfidential ? "true" : "false")">@p.Name@(p.Role is { } role ? $" — {(role == "You" ? T.Text("You") : role == "Teacher" ? T.Text("Teacher") : role)}" : "")</option>
+                            }
+                        </select>
+                        <p class="form-text" id="pn-fu-hint">@T["They are told, and reminded when the date comes."]</p>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small" for="pn-fu-by">@T["By"]</label>
+                        <input class="form-control" id="pn-fu-by" type="date" name="FollowUpBy" value="@i.FollowUpBy" />
+                    </div>
+                </div>
+            </fieldset>
+        }
+
+        <button type="submit" class="btn btn-primary">@T["Save the note"]</button>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/community.js" asp-append-version="true" defer></script>
+    <script src="~/js/pastoral.js" asp-append-version="true" defer></script>
+}

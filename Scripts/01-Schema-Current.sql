@@ -9785,3 +9785,914 @@ GO
 COMMIT;
 GO
 
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE TABLE [calendar_feed_tokens] (
+        [Id] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [TokenHash] nvarchar(64) NOT NULL,
+        [TokenEncrypted] nvarchar(500) NOT NULL,
+        [LastUsedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_calendar_feed_tokens] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_calendar_feed_tokens_users_UserId] FOREIGN KEY ([UserId]) REFERENCES [users] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE TABLE [due_reminder_logs] (
+        [Id] uniqueidentifier NOT NULL,
+        [Kind] tinyint NOT NULL,
+        [ItemId] uniqueidentifier NOT NULL,
+        [StudentProfileId] uniqueidentifier NOT NULL,
+        [DueAt] datetime2 NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_due_reminder_logs] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_calendar_feed_tokens_hash] ON [calendar_feed_tokens] ([TokenHash]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_calendar_feed_tokens_user] ON [calendar_feed_tokens] ([UserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE INDEX [IX_due_reminder_logs_created] ON [due_reminder_logs] ([CreatedAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_due_reminder_logs_item_student_due] ON [due_reminder_logs] ([Kind], [ItemId], [StudentProfileId], [DueAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126103407_CalendarFeedAndDueReminders'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261126103407_CalendarFeedAndDueReminders', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE TABLE [conversations] (
+        [Id] uniqueidentifier NOT NULL,
+        [Subject] nvarchar(200) NOT NULL,
+        [CreatedByUserId] uniqueidentifier NOT NULL,
+        [CourseOfferingId] uniqueidentifier NULL,
+        [LastMessageAt] datetime2 NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_conversations] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE TABLE [conversation_messages] (
+        [Id] uniqueidentifier NOT NULL,
+        [ConversationId] uniqueidentifier NOT NULL,
+        [SenderUserId] uniqueidentifier NOT NULL,
+        [Body] nvarchar(4000) NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_conversation_messages] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_conversation_messages_conversations_ConversationId] FOREIGN KEY ([ConversationId]) REFERENCES [conversations] ([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_conversation_messages_users_SenderUserId] FOREIGN KEY ([SenderUserId]) REFERENCES [users] ([Id]) ON DELETE NO ACTION
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE TABLE [conversation_participants] (
+        [Id] uniqueidentifier NOT NULL,
+        [ConversationId] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [LastReadAt] datetime2 NULL,
+        [LastNotifiedAt] datetime2 NULL,
+        [ArchivedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_conversation_participants] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_conversation_participants_conversations_ConversationId] FOREIGN KEY ([ConversationId]) REFERENCES [conversations] ([Id]) ON DELETE CASCADE,
+        CONSTRAINT [FK_conversation_participants_users_UserId] FOREIGN KEY ([UserId]) REFERENCES [users] ([Id]) ON DELETE NO ACTION
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE INDEX [IX_conversation_messages_conversation_time] ON [conversation_messages] ([ConversationId], [CreatedAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE INDEX [IX_conversation_messages_SenderUserId] ON [conversation_messages] ([SenderUserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_conversation_participants_conversation_user] ON [conversation_participants] ([ConversationId], [UserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE INDEX [IX_conversation_participants_user] ON [conversation_participants] ([UserId], [ArchivedAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    CREATE INDEX [IX_conversations_last_message] ON [conversations] ([LastMessageAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261126121558_Messaging'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261126121558_Messaging', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127132554_CourseCopyAndTemplates'
+)
+BEGIN
+    CREATE TABLE [course_copy_runs] (
+        [Id] uniqueidentifier NOT NULL,
+        [SourceOfferingId] uniqueidentifier NOT NULL,
+        [TargetOfferingId] uniqueidentifier NOT NULL,
+        [CopiedByUserId] uniqueidentifier NOT NULL,
+        [DateShiftDays] int NOT NULL,
+        [KeptPublishedState] bit NOT NULL,
+        [SummaryJson] nvarchar(max) NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_course_copy_runs] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_course_copy_runs_course_offerings_TargetOfferingId] FOREIGN KEY ([TargetOfferingId]) REFERENCES [course_offerings] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127132554_CourseCopyAndTemplates'
+)
+BEGIN
+    CREATE TABLE [course_templates] (
+        [Id] uniqueidentifier NOT NULL,
+        [OfferingId] uniqueidentifier NOT NULL,
+        [Name] nvarchar(150) NOT NULL,
+        [Description] nvarchar(1000) NULL,
+        [Scope] tinyint NOT NULL,
+        [CreatedByUserId] uniqueidentifier NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_course_templates] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_course_templates_course_offerings_OfferingId] FOREIGN KEY ([OfferingId]) REFERENCES [course_offerings] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127132554_CourseCopyAndTemplates'
+)
+BEGIN
+    CREATE INDEX [IX_course_copy_runs_target_created] ON [course_copy_runs] ([TargetOfferingId], [CreatedAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127132554_CourseCopyAndTemplates'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_course_templates_offering] ON [course_templates] ([OfferingId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127132554_CourseCopyAndTemplates'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261127132554_CourseCopyAndTemplates', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE TABLE [news_posts] (
+        [Id] uniqueidentifier NOT NULL,
+        [Summary] nvarchar(400) NULL,
+        [Body] nvarchar(max) NOT NULL,
+        [ImageUrl] nvarchar(1000) NULL,
+        [PublishAt] datetime2 NOT NULL,
+        [ExpiresAt] datetime2 NULL,
+        [IsPinned] bit NOT NULL,
+        [Status] tinyint NOT NULL,
+        [NotifiedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        [TenantId] uniqueidentifier NULL,
+        [CampusId] uniqueidentifier NULL,
+        [SemesterId] uniqueidentifier NULL,
+        [CourseOfferingId] uniqueidentifier NULL,
+        [Roles] tinyint NOT NULL,
+        [AuthorUserId] uniqueidentifier NOT NULL,
+        [Title] nvarchar(200) NOT NULL,
+        CONSTRAINT [PK_news_posts] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE TABLE [school_events] (
+        [Id] uniqueidentifier NOT NULL,
+        [Description] nvarchar(max) NULL,
+        [Location] nvarchar(300) NULL,
+        [StartsAt] datetime2 NOT NULL,
+        [EndsAt] datetime2 NOT NULL,
+        [AllDay] bit NOT NULL,
+        [Category] tinyint NOT NULL,
+        [Status] tinyint NOT NULL,
+        [RepliesOpen] bit NOT NULL,
+        [ReplyBy] datetime2 NULL,
+        [Capacity] int NULL,
+        [MaxGuests] int NOT NULL,
+        [FormId] uniqueidentifier NULL,
+        [CancelReason] nvarchar(500) NULL,
+        [NotifiedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        [TenantId] uniqueidentifier NULL,
+        [CampusId] uniqueidentifier NULL,
+        [SemesterId] uniqueidentifier NULL,
+        [CourseOfferingId] uniqueidentifier NULL,
+        [Roles] tinyint NOT NULL,
+        [AuthorUserId] uniqueidentifier NOT NULL,
+        [Title] nvarchar(200) NOT NULL,
+        CONSTRAINT [PK_school_events] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE TABLE [school_forms] (
+        [Id] uniqueidentifier NOT NULL,
+        [Description] nvarchar(max) NULL,
+        [DueAt] datetime2 NULL,
+        [Status] tinyint NOT NULL,
+        [OpenedAt] datetime2 NULL,
+        [ClosedAt] datetime2 NULL,
+        [RemindedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        [TenantId] uniqueidentifier NULL,
+        [CampusId] uniqueidentifier NULL,
+        [SemesterId] uniqueidentifier NULL,
+        [CourseOfferingId] uniqueidentifier NULL,
+        [Roles] tinyint NOT NULL,
+        [AuthorUserId] uniqueidentifier NOT NULL,
+        [Title] nvarchar(200) NOT NULL,
+        CONSTRAINT [PK_school_forms] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE TABLE [news_reads] (
+        [Id] uniqueidentifier NOT NULL,
+        [PostId] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_news_reads] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_news_reads_news_posts_PostId] FOREIGN KEY ([PostId]) REFERENCES [news_posts] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE TABLE [event_replies] (
+        [Id] uniqueidentifier NOT NULL,
+        [EventId] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [Answer] tinyint NOT NULL,
+        [Guests] int NOT NULL,
+        [Note] nvarchar(500) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_event_replies] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_event_replies_school_events_EventId] FOREIGN KEY ([EventId]) REFERENCES [school_events] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE TABLE [form_fields] (
+        [Id] uniqueidentifier NOT NULL,
+        [FormId] uniqueidentifier NOT NULL,
+        [Position] int NOT NULL,
+        [Type] tinyint NOT NULL,
+        [Label] nvarchar(300) NOT NULL,
+        [Help] nvarchar(1000) NULL,
+        [Required] bit NOT NULL,
+        [OptionsJson] nvarchar(max) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_form_fields] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_form_fields_school_forms_FormId] FOREIGN KEY ([FormId]) REFERENCES [school_forms] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE TABLE [form_responses] (
+        [Id] uniqueidentifier NOT NULL,
+        [FormId] uniqueidentifier NOT NULL,
+        [RespondentUserId] uniqueidentifier NOT NULL,
+        [StudentProfileId] uniqueidentifier NULL,
+        [AnswersJson] nvarchar(max) NOT NULL,
+        [SubmittedAt] datetime2 NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_form_responses] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_form_responses_school_forms_FormId] FOREIGN KEY ([FormId]) REFERENCES [school_forms] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_event_replies_event_user] ON [event_replies] ([EventId], [UserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE INDEX [IX_form_fields_form_position] ON [form_fields] ([FormId], [Position]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    EXEC(N'CREATE UNIQUE INDEX [IX_form_responses_form_child] ON [form_responses] ([FormId], [StudentProfileId]) WHERE [StudentProfileId] IS NOT NULL');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    EXEC(N'CREATE UNIQUE INDEX [IX_form_responses_form_person] ON [form_responses] ([FormId], [RespondentUserId]) WHERE [StudentProfileId] IS NULL');
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE INDEX [IX_news_posts_status_publish] ON [news_posts] ([Status], [PublishAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE INDEX [IX_news_posts_tenant] ON [news_posts] ([TenantId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE UNIQUE INDEX [IX_news_reads_post_user] ON [news_reads] ([PostId], [UserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE INDEX [IX_news_reads_user] ON [news_reads] ([UserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE INDEX [IX_school_events_dates] ON [school_events] ([StartsAt], [EndsAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE INDEX [IX_school_events_form] ON [school_events] ([FormId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE INDEX [IX_school_events_tenant] ON [school_events] ([TenantId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE INDEX [IX_school_forms_status_due] ON [school_forms] ([Status], [DueAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    CREATE INDEX [IX_school_forms_tenant] ON [school_forms] ([TenantId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261127141542_SchoolNewsEventsAndForms'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261127141542_SchoolNewsEventsAndForms', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+
+
+
+BEGIN TRANSACTION;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE TABLE [pastoral_categories] (
+        [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NULL,
+        [Kind] tinyint NOT NULL,
+        [Tone] tinyint NOT NULL,
+        [Name] nvarchar(80) NOT NULL,
+        [Position] int NOT NULL,
+        [IsActive] bit NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_pastoral_categories] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE TABLE [pastoral_records] (
+        [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NULL,
+        [CampusId] uniqueidentifier NULL,
+        [StudentProfileId] uniqueidentifier NOT NULL,
+        [CourseOfferingId] uniqueidentifier NULL,
+        [AuthorUserId] uniqueidentifier NOT NULL,
+        [Kind] tinyint NOT NULL,
+        [Tone] tinyint NOT NULL,
+        [Severity] tinyint NOT NULL,
+        [Category] nvarchar(80) NULL,
+        [Summary] nvarchar(200) NOT NULL,
+        [Details] nvarchar(4000) NULL,
+        [ActionTaken] nvarchar(1000) NULL,
+        [OccurredAt] datetime2 NOT NULL,
+        [Visibility] tinyint NOT NULL,
+        [SharedWithStudent] bit NOT NULL,
+        [SharedWithParents] bit NOT NULL,
+        [SharedNotifiedAt] datetime2 NULL,
+        [FollowUp] tinyint NOT NULL,
+        [FollowUpUserId] uniqueidentifier NULL,
+        [FollowUpBy] datetime2 NULL,
+        [FollowUpRemindedAt] datetime2 NULL,
+        [FollowUpDoneAt] datetime2 NULL,
+        [FollowUpDoneByUserId] uniqueidentifier NULL,
+        [RemovedAt] datetime2 NULL,
+        [RemovedByUserId] uniqueidentifier NULL,
+        [RemovedReason] nvarchar(500) NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_pastoral_records] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE TABLE [pastoral_settings] (
+        [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NOT NULL,
+        [CheckInsEnabled] bit NOT NULL,
+        [ConcernAlertCount] int NOT NULL,
+        [ConcernAlertDays] int NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_pastoral_settings] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE TABLE [pastoral_team_members] (
+        [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NOT NULL,
+        [UserId] uniqueidentifier NOT NULL,
+        [CampusId] uniqueidentifier NULL,
+        [SemesterId] uniqueidentifier NULL,
+        [Title] nvarchar(100) NOT NULL,
+        [SeesConfidential] bit NOT NULL,
+        [AddedByUserId] uniqueidentifier NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_pastoral_team_members] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE TABLE [support_plans] (
+        [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NULL,
+        [CampusId] uniqueidentifier NULL,
+        [StudentProfileId] uniqueidentifier NOT NULL,
+        [OwnerUserId] uniqueidentifier NOT NULL,
+        [Kind] tinyint NOT NULL,
+        [Title] nvarchar(200) NOT NULL,
+        [Needs] nvarchar(4000) NULL,
+        [Strategies] nvarchar(4000) NOT NULL,
+        [StartsOn] datetime2 NOT NULL,
+        [ReviewOn] datetime2 NULL,
+        [ReviewRemindedAt] datetime2 NULL,
+        [Status] tinyint NOT NULL,
+        [EndedAt] datetime2 NULL,
+        [Visibility] tinyint NOT NULL,
+        [SharedWithStudent] bit NOT NULL,
+        [SharedWithParents] bit NOT NULL,
+        [SharedNotifiedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_support_plans] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE TABLE [wellbeing_check_ins] (
+        [Id] uniqueidentifier NOT NULL,
+        [TenantId] uniqueidentifier NULL,
+        [CampusId] uniqueidentifier NULL,
+        [StudentProfileId] uniqueidentifier NOT NULL,
+        [StudentUserId] uniqueidentifier NOT NULL,
+        [Mood] tinyint NOT NULL,
+        [Note] nvarchar(500) NULL,
+        [WantsToTalk] bit NOT NULL,
+        [CheckedInAt] datetime2 NOT NULL,
+        [AcknowledgedAt] datetime2 NULL,
+        [AcknowledgedByUserId] uniqueidentifier NULL,
+        [AcknowledgeNote] nvarchar(500) NULL,
+        [AlertedAt] datetime2 NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_wellbeing_check_ins] PRIMARY KEY ([Id])
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE TABLE [pastoral_notes] (
+        [Id] uniqueidentifier NOT NULL,
+        [RecordId] uniqueidentifier NOT NULL,
+        [AuthorUserId] uniqueidentifier NOT NULL,
+        [Text] nvarchar(2000) NOT NULL,
+        [CreatedAt] datetime2 NOT NULL,
+        [UpdatedAt] datetime2 NULL,
+        [RowVersion] rowversion NULL,
+        CONSTRAINT [PK_pastoral_notes] PRIMARY KEY ([Id]),
+        CONSTRAINT [FK_pastoral_notes_pastoral_records_RecordId] FOREIGN KEY ([RecordId]) REFERENCES [pastoral_records] ([Id]) ON DELETE CASCADE
+    );
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_pastoral_categories_tenant] ON [pastoral_categories] ([TenantId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_pastoral_notes_record] ON [pastoral_notes] ([RecordId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_pastoral_records_follow_up] ON [pastoral_records] ([FollowUp], [FollowUpUserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_pastoral_records_student] ON [pastoral_records] ([StudentProfileId], [OccurredAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_pastoral_records_tenant] ON [pastoral_records] ([TenantId], [OccurredAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE UNIQUE INDEX [UX_pastoral_settings_tenant] ON [pastoral_settings] ([TenantId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_pastoral_team_members_tenant] ON [pastoral_team_members] ([TenantId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_pastoral_team_members_user] ON [pastoral_team_members] ([UserId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_support_plans_student] ON [support_plans] ([StudentProfileId]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_support_plans_tenant] ON [support_plans] ([TenantId], [Status]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_wellbeing_check_ins_student] ON [wellbeing_check_ins] ([StudentProfileId], [CheckedInAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    CREATE INDEX [IX_wellbeing_check_ins_tenant] ON [wellbeing_check_ins] ([TenantId], [CheckedInAt]);
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT * FROM [__EFMigrationsHistory]
+    WHERE [MigrationId] = N'20261128022213_PastoralCareAndWellbeing'
+)
+BEGIN
+    INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+    VALUES (N'20261128022213_PastoralCareAndWellbeing', N'8.0.8');
+END;
+GO
+
+COMMIT;
+GO
+

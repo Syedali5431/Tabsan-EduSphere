@@ -263,6 +263,9 @@ builder.Services.AddDbContext<ApplicationDbContext>((serviceProvider, opts) =>
 // Binds JwtSettings section from appsettings.json so options are strongly-typed.
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<AuthSecurityOptions>(builder.Configuration.GetSection(AuthSecurityOptions.SectionName));
+// Demo installations only: one shared sign-in that opens the chosen role's account (off unless DemoLogin:Enabled).
+builder.Services.Configure<Tabsan.EduSphere.Application.Auth.DemoLoginOptions>(
+    builder.Configuration.GetSection(Tabsan.EduSphere.Application.Auth.DemoLoginOptions.SectionName));
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()!;
 var authSecuritySettings = builder.Configuration.GetSection(AuthSecurityOptions.SectionName).Get<AuthSecurityOptions>() ?? new AuthSecurityOptions();
 
@@ -642,6 +645,31 @@ builder.Services.AddScoped<IReportService, Tabsan.EduSphere.Infrastructure.Repor
 // ── Phase 12: Academic Calendar ───────────────────────────────────────────
 builder.Services.AddScoped<IAcademicDeadlineRepository, AcademicDeadlineRepository>();
 builder.Services.AddScoped<IAcademicCalendarService, AcademicCalendarService>();
+// One calendar (homework, quizzes, live classes, key dates), its private feed link and due-date reminders.
+builder.Services.Configure<Tabsan.EduSphere.Application.Calendar.CalendarOptions>(builder.Configuration.GetSection(Tabsan.EduSphere.Application.Calendar.CalendarOptions.SectionName));
+builder.Services.PostConfigure<Tabsan.EduSphere.Application.Calendar.CalendarOptions>(o =>
+{
+    // Links in calendar entries go to the portal: the calendar's own setting, else the address the app is given.
+    if (string.IsNullOrWhiteSpace(o.PortalBaseUrl))
+        o.PortalBaseUrl = builder.Configuration["Mobile:PortalBaseUrl"] is { Length: > 0 } mobile ? mobile : builder.Configuration["LiveClasses:PortalBaseUrl"];
+});
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Calendar.ICalendarQueries, Tabsan.EduSphere.Infrastructure.Calendar.CalendarQueries>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Calendar.CalendarService>();
+builder.Services.AddHostedService<Tabsan.EduSphere.API.Services.DueReminderWorker>();
+// Messages between teachers, students, parents and the school office.
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Messaging.IMessagingQueries, Tabsan.EduSphere.Infrastructure.Messaging.MessagingQueries>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Messaging.MessagingService>();
+// Course copy (last term's course into this term's) and course templates.
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Lms.ICourseCopyStore, Tabsan.EduSphere.Infrastructure.Lms.CourseCopyStore>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Lms.CourseCopyService>();
+// School news, events and online forms.
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Community.ICommunityStore, Tabsan.EduSphere.Infrastructure.Community.CommunityStore>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Community.CommunityService>();
+builder.Services.AddHostedService<Tabsan.EduSphere.API.Services.CommunityWorker>();
+// Pastoral care and wellbeing: notes, support plans, check-ins and the wellbeing team (plan reviews and follow-ups reminded every minute).
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Pastoral.IPastoralStore, Tabsan.EduSphere.Infrastructure.Pastoral.PastoralStore>();
+builder.Services.AddScoped<Tabsan.EduSphere.Application.Pastoral.PastoralService>();
+builder.Services.AddHostedService<Tabsan.EduSphere.API.Services.PastoralWorker>();
 
 // ── Phase 13: Global Search ───────────────────────────────────────────────
 builder.Services.AddScoped<Tabsan.EduSphere.Application.Interfaces.ISearchRepository, Tabsan.EduSphere.Infrastructure.Repositories.SearchRepository>();

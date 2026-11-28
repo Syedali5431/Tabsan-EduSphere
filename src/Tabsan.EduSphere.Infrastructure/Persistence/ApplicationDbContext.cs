@@ -207,6 +207,32 @@ public class ApplicationDbContext : DbContext
     // Plan M4.3 — Web Push.
     public DbSet<Tabsan.EduSphere.Domain.Notifications.PushSubscription> PushSubscriptions => Set<Tabsan.EduSphere.Domain.Notifications.PushSubscription>();
     public DbSet<Tabsan.EduSphere.Domain.Notifications.NotificationPreference> NotificationPreferences => Set<Tabsan.EduSphere.Domain.Notifications.NotificationPreference>();
+    // Calendar feed links and the due-date reminders already sent.
+    public DbSet<Tabsan.EduSphere.Domain.Calendar.CalendarFeedToken> CalendarFeedTokens => Set<Tabsan.EduSphere.Domain.Calendar.CalendarFeedToken>();
+    public DbSet<Tabsan.EduSphere.Domain.Calendar.DueReminderLog> DueReminderLogs => Set<Tabsan.EduSphere.Domain.Calendar.DueReminderLog>();
+    // Messaging between teachers, students, parents and staff.
+    public DbSet<Tabsan.EduSphere.Domain.Messaging.Conversation> Conversations => Set<Tabsan.EduSphere.Domain.Messaging.Conversation>();
+    public DbSet<Tabsan.EduSphere.Domain.Messaging.ConversationParticipant> ConversationParticipants => Set<Tabsan.EduSphere.Domain.Messaging.ConversationParticipant>();
+    public DbSet<Tabsan.EduSphere.Domain.Messaging.ConversationMessage> ConversationMessages => Set<Tabsan.EduSphere.Domain.Messaging.ConversationMessage>();
+    // Course copy: courses shared as templates, and the copies made into each course.
+    public DbSet<Tabsan.EduSphere.Domain.Lms.CourseTemplate> CourseTemplates => Set<Tabsan.EduSphere.Domain.Lms.CourseTemplate>();
+    public DbSet<Tabsan.EduSphere.Domain.Lms.CourseCopyRun> CourseCopyRuns => Set<Tabsan.EduSphere.Domain.Lms.CourseCopyRun>();
+    // School community: news, events with replies, online forms with answers.
+    public DbSet<Tabsan.EduSphere.Domain.Community.NewsPost> NewsPosts => Set<Tabsan.EduSphere.Domain.Community.NewsPost>();
+    public DbSet<Tabsan.EduSphere.Domain.Community.NewsRead> NewsReads => Set<Tabsan.EduSphere.Domain.Community.NewsRead>();
+    public DbSet<Tabsan.EduSphere.Domain.Community.SchoolEvent> SchoolEvents => Set<Tabsan.EduSphere.Domain.Community.SchoolEvent>();
+    public DbSet<Tabsan.EduSphere.Domain.Community.EventReply> EventReplies => Set<Tabsan.EduSphere.Domain.Community.EventReply>();
+    public DbSet<Tabsan.EduSphere.Domain.Community.SchoolForm> SchoolForms => Set<Tabsan.EduSphere.Domain.Community.SchoolForm>();
+    public DbSet<Tabsan.EduSphere.Domain.Community.FormField> FormFields => Set<Tabsan.EduSphere.Domain.Community.FormField>();
+    public DbSet<Tabsan.EduSphere.Domain.Community.FormResponse> FormResponses => Set<Tabsan.EduSphere.Domain.Community.FormResponse>();
+    // Pastoral care and wellbeing: notes, follow-ups, support plans, check-ins and each school's wellbeing team.
+    public DbSet<Tabsan.EduSphere.Domain.Pastoral.PastoralRecord> PastoralRecords => Set<Tabsan.EduSphere.Domain.Pastoral.PastoralRecord>();
+    public DbSet<Tabsan.EduSphere.Domain.Pastoral.PastoralNote> PastoralNotes => Set<Tabsan.EduSphere.Domain.Pastoral.PastoralNote>();
+    public DbSet<Tabsan.EduSphere.Domain.Pastoral.SupportPlan> SupportPlans => Set<Tabsan.EduSphere.Domain.Pastoral.SupportPlan>();
+    public DbSet<Tabsan.EduSphere.Domain.Pastoral.WellbeingCheckIn> WellbeingCheckIns => Set<Tabsan.EduSphere.Domain.Pastoral.WellbeingCheckIn>();
+    public DbSet<Tabsan.EduSphere.Domain.Pastoral.PastoralTeamMember> PastoralTeamMembers => Set<Tabsan.EduSphere.Domain.Pastoral.PastoralTeamMember>();
+    public DbSet<Tabsan.EduSphere.Domain.Pastoral.PastoralCategory> PastoralCategories => Set<Tabsan.EduSphere.Domain.Pastoral.PastoralCategory>();
+    public DbSet<Tabsan.EduSphere.Domain.Pastoral.PastoralSettings> PastoralSettings => Set<Tabsan.EduSphere.Domain.Pastoral.PastoralSettings>();
 
     /// <summary>Published and draft result marks per student per course offering.</summary>
     public DbSet<Result> Results => Set<Result>();

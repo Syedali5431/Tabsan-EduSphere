@@ -1,0 +1,378 @@
+@model Tabsan.EduSphere.Web.Models.Portal.CourseCopyPageModel
+@using Tabsan.EduSphere.Application.Lms
+@{
+    ViewData["Title"] = T.Text("Copy course content");
+    ViewData["ActivePage"] = "lms_manage";
+    var preview = Model.Preview;
+
+    string PartLabel(string part) => part switch
+    {
+        CourseCopyParts.Modules => T.Text("Modules"),
+        "items" => T.Text("Module items"),
+        "videos" => T.Text("Videos"),
+        CourseCopyParts.Assignments => T.Text("Assignments"),
+        "rubrics" => T.Text("Rubrics"),
+        CourseCopyParts.Quizzes => T.Text("Quizzes"),
+        "questions" => T.Text("Questions"),
+        CourseCopyParts.QuestionBanks => T.Text("Question banks"),
+        CourseCopyParts.Files => T.Text("Files and links"),
+        CourseCopyParts.ExternalTools => T.Text("External tools"),
+        CourseCopyParts.Settings => T.Text("Course settings"),
+        "outcomes" => T.Text("Outcome links"),
+        _ => part
+    };
+
+    string PartHint(string part) => part switch
+    {
+        CourseCopyParts.Modules => T.Text("With their pages, videos and links. What a module's items open comes along, even if you untick it below."),
+        CourseCopyParts.Assignments => T.Text("With rubrics, submission and grading settings. Students' work and grades stay behind."),
+        CourseCopyParts.Quizzes => T.Text("With their questions, and the course's own question banks they draw from."),
+        CourseCopyParts.QuestionBanks => T.Text("The course's own banks. Shared and department banks are used where they are."),
+        CourseCopyParts.Files => T.Text("This term's files and links. Stored files are shared, not duplicated."),
+        CourseCopyParts.ExternalTools => T.Text("External tool links, with their gradebook columns."),
+        CourseCopyParts.Settings => T.Text("The late and missing work policy."),
+        _ => ""
+    };
+
+    // Text (encoded when written) or translated HTML from T.Format.
+    object Reason(CourseCopyNoteDto note) => note.Reason switch
+    {
+        CourseCopyNotes.Scorm => T.Text("SCORM packages aren't copied, because their files stay with the course. Upload the package again in the new course."),
+        CourseCopyNotes.Discussion => T.Text("Discussions aren't copied, because they belong to the class that held them. Start a new discussion in the new course."),
+        CourseCopyNotes.Missing => T.Text("What it opens no longer exists."),
+        CourseCopyNotes.OtherCourseOutcomes => T.Format("{0} outcome links use another course's own outcomes. Align the work with this course's outcomes.", note.Count),
+        _ => T.Text("It could not be copied.")
+    };
+
+    string ScopeLabel(string? scope) => string.Equals(scope, "Institution", StringComparison.OrdinalIgnoreCase)
+        ? T.Text("Every teacher in the school")
+        : T.Text("Teachers of this course's department");
+
+    string SourceName(CourseCopySourceDto s) => s.IsTemplate && !string.IsNullOrWhiteSpace(s.TemplateName)
+        ? $"{s.TemplateName} ({s.CourseCode} · {s.SemesterName})"
+        : $"{s.CourseCode} — {s.CourseTitle} · {s.SemesterName}" + (string.IsNullOrWhiteSpace(s.TeacherName) ? "" : $" · {s.TeacherName}");
+}
+
+<div class="d-flex flex-wrap align-items-start gap-2 mb-3">
+    <div class="me-auto">
+        <h2 class="h3 mb-1">@T["Copy course content"]</h2>
+        <p class="text-muted mb-0">@T["Bring in modules, pages, assignments, quizzes and files from another course you teach, or from a template, instead of building the course again."]</p>
+    </div>
+    @if (Model.OfferingId != Guid.Empty)
+    {
+        <a asp-action="LmsManage" asp-route-offeringId="@Model.OfferingId" class="btn btn-sm btn-outline-secondary">@T["Back to course content"]</a>
+    }
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="status" data-copy-message>
+        @T.Text(Model.Message)
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@T["Close"]"></button>
+    </div>
+}
+
+@if (!Model.IsConnected)
+{
+    <div class="border rounded p-3 bg-light">@T["API connection is not configured."]</div>
+    return;
+}
+@if (Model.OfferingId == Guid.Empty)
+{
+    <div class="alert alert-info">@T["Select a valid course offering to manage LMS content."]</div>
+    return;
+}
+
+@if (Model.Target is { } target)
+{
+    <p class="mb-3" data-copy-target>@T["Copying into"]: <strong>@target.CourseCode — @target.CourseTitle</strong> · @target.SemesterName</p>
+}
+
+@if (Model.Result is { } result)
+{
+    <section class="card border-success mb-4" role="status" data-copy-result>
+        <div class="card-body">
+        <h3 class="h6 mb-2 text-success">@(result.KeptPublished
+            ? T.Text("The content was copied. What was published in the original is published here too.")
+            : T.Text("The content was copied. Everything copied is hidden from students until you publish it."))</h3>
+        <div class="d-flex flex-wrap gap-2 mb-2">
+            @foreach (var (part, n) in result.Copied)
+            {
+                <span class="badge text-bg-light border" data-copied="@part">@PartLabel(part): @n</span>
+            }
+        </div>
+        @if (result.ShiftDays != 0)
+        {
+            <p class="small mb-2">@T.Format("Dates moved by {0} days.", result.ShiftDays)</p>
+        }
+        @if (result.NotCopied.Count > 0)
+        {
+            <p class="small fw-semibold mb-1">@T["Not copied"]</p>
+            <ul class="small mb-2">
+                @foreach (var note in result.NotCopied)
+                {
+                    <li data-not-copied="@note.Reason">@if (note.Title is not null) { <strong>@note.Title</strong><span>: </span> }@Reason(note)</li>
+                }
+            </ul>
+        }
+        <a asp-action="LmsManage" asp-route-offeringId="@Model.OfferingId" class="btn btn-sm btn-success">@T["Open course content"]</a>
+        </div>
+    </section>
+}
+
+<section class="card border-0 shadow-sm mb-4" aria-labelledby="copy-from-title">
+    <div class="card-body">
+        <h3 class="h5" id="copy-from-title">@T["1. Where to copy from"]</h3>
+        @if (Model.Sources.Count == 0)
+        {
+            <p class="text-muted mb-0" data-no-sources>@T["There is no other course you can copy from yet. Courses of your departments, and templates your school shares, appear here."]</p>
+        }
+        else
+        {
+            var templates = Model.Sources.Where(s => s.IsTemplate).ToList();
+            var mine = Model.Sources.Where(s => !s.IsTemplate && s.TaughtByYou).ToList();
+            var courses = Model.Sources.Where(s => !s.IsTemplate && !s.TaughtByYou).ToList();
+            <form method="get" asp-action="CourseCopy" class="row g-2 align-items-end" data-copy-source-form>
+                <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                <div class="col-lg-9">
+                    <label class="form-label small" for="copy-source">@T["Course or template"]</label>
+                    <select id="copy-source" name="sourceId" class="form-select" required data-copy-source>
+                        <option value="">@T["Choose a course…"]</option>
+                        @if (templates.Count > 0)
+                        {
+                            <optgroup label="@T.Text("Templates")">
+                                @foreach (var s in templates) { <option value="@s.OfferingId" selected="@(s.OfferingId == Model.SourceId)">@SourceName(s)</option> }
+                            </optgroup>
+                        }
+                        @if (mine.Count > 0)
+                        {
+                            <optgroup label="@T.Text("Your courses")">
+                                @foreach (var s in mine) { <option value="@s.OfferingId" selected="@(s.OfferingId == Model.SourceId)">@SourceName(s)</option> }
+                            </optgroup>
+                        }
+                        @if (courses.Count > 0)
+                        {
+                            <optgroup label="@T.Text("Other courses")">
+                                @foreach (var s in courses) { <option value="@s.OfferingId" selected="@(s.OfferingId == Model.SourceId)">@SourceName(s)</option> }
+                            </optgroup>
+                        }
+                    </select>
+                </div>
+                <div class="col-lg-3">
+                    <button type="submit" class="btn btn-outline-primary w-100">@T["Show its content"]</button>
+                </div>
+            </form>
+        }
+    </div>
+</section>
+
+@if (preview is not null)
+{
+    var source = preview.Source;
+    <form method="post" asp-action="CopyCourseContent" data-copy-form>
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+        <input type="hidden" name="sourceId" value="@source.OfferingId" />
+
+        <section class="card border-0 shadow-sm mb-4" aria-labelledby="copy-what-title">
+            <div class="card-body">
+                <h3 class="h5 mb-1" id="copy-what-title">@T["2. What to copy"]</h3>
+                <p class="text-muted small mb-3">
+                    @SourceName(source)
+                    @if (source.IsTemplate)
+                    {
+                        <span class="badge bg-info text-dark ms-1">@T["Template"]</span>
+                        @if (!string.IsNullOrWhiteSpace(source.TemplateDescription)) { <span class="d-block mt-1">@source.TemplateDescription</span> }
+                    }
+                </p>
+                @if (preview.PreviouslyCopiedAt is { } before)
+                {
+                    <div class="border border-warning rounded p-2 small mb-3" role="note" data-copied-before>
+                        @{ var when = DateTime.SpecifyKind(before, DateTimeKind.Utc); }
+                        @T.Format("You copied this course here on {0}. Copying it again adds a second copy of everything you choose.",
+                            new Microsoft.AspNetCore.Html.HtmlString($"<time datetime=\"{when:o}\" data-local-time=\"date\">{when:dd MMM yyyy} UTC</time>"))
+                    </div>
+                }
+                @if (preview.Parts.Count == 0)
+                {
+                    <p class="text-muted mb-0" data-nothing-to-copy>@T["This course has no content to copy yet."]</p>
+                }
+                @foreach (var part in preview.Parts)
+                {
+                    var partId = "copy-part-" + part.Part;
+                    <fieldset class="border rounded p-3 mb-3" data-copy-part="@part.Part">
+                        <legend class="float-none w-auto px-1 mb-0 fs-6">
+                            <span class="form-check d-inline-block mb-0">
+                                <input class="form-check-input" type="checkbox" id="@partId" checked data-copy-part-toggle aria-describedby="@(partId)-hint" />
+                                <label class="form-check-label fw-semibold" for="@partId">@PartLabel(part.Part)</label>
+                            </span>
+                            <span class="badge text-bg-light border ms-1" data-copy-chosen>@T.Format("{0} of {1} chosen", part.Count, part.Count)</span>
+                        </legend>
+                        <p class="small text-muted mb-2" id="@(partId)-hint">@PartHint(part.Part)</p>
+                        <details @(part.Items.Count <= 6 ? "open" : "")>
+                            <summary class="small">@T["Choose items"]</summary>
+                            <ul class="list-unstyled mb-0 mt-2 copy-item-list">
+                                @foreach (var item in part.Items)
+                                {
+                                    var itemId = $"copy-{part.Part}-{item.Id:N}";
+                                    <li class="form-check" data-copy-item>
+                                        <input class="form-check-input" type="checkbox" name="items" value="@part.Part:@item.Id" id="@itemId" checked />
+                                        <label class="form-check-label" for="@itemId">
+                                            @(part.Part == CourseCopyParts.Settings ? T.Text(item.Title) : item.Title)
+                                            <span class="small text-muted">
+                                                @if (part.Part == CourseCopyParts.Modules) { @T.Format("Week {0} · {1} items", item.Week, item.Count) }
+                                                else if (part.Part == CourseCopyParts.Assignments && item.DueDate is { } due) { @T.Format("Due {0}", due.ToString("dd MMM yyyy")) }
+                                                else if (part.Part == CourseCopyParts.Quizzes && item.DueDate is { } closes) { @T.Format("Closes {0} · {1} questions", closes.ToString("dd MMM yyyy"), item.Count) }
+                                                else if (item.Count is { } n) { @T.Format("{0} questions", n) }
+                                            </span>
+                                            @if (!item.Published) { <span class="badge bg-secondary ms-1">@T["Hidden from students"]</span> }
+                                        </label>
+                                    </li>
+                                }
+                            </ul>
+                        </details>
+                    </fieldset>
+                }
+                @if (preview.NotCopied.Count > 0)
+                {
+                    <div class="border rounded p-3 bg-light" data-not-copied-list>
+                        <p class="fw-semibold mb-1">@T["Not copied"]</p>
+                        <ul class="small mb-0">
+                            @foreach (var note in preview.NotCopied)
+                            {
+                                <li data-not-copied="@note.Reason">@if (note.Title is not null) { <strong>@note.Title</strong><span>: </span> }@Reason(note)</li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        </section>
+
+        @if (preview.Parts.Count > 0)
+        {
+            <section class="card border-0 shadow-sm mb-4" aria-labelledby="copy-dates-title">
+                <div class="card-body">
+                    <h3 class="h5" id="copy-dates-title">@T["3. Dates and visibility"]</h3>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label" for="copy-shift">@T["Move every date by (days)"]</label>
+                            <input type="number" class="form-control" id="copy-shift" name="shiftDays" value="@preview.SuggestedShiftDays"
+                                   min="-@CourseCopyService.MaxShiftDays" max="@CourseCopyService.MaxShiftDays" step="1" aria-describedby="copy-shift-hint" data-copy-shift />
+                        </div>
+                        <div class="col-md-8 small text-muted" id="copy-shift-hint">
+                            <p class="mb-1">@T["Suggested from the two terms' start dates. Use 0 to keep the dates, or a negative number to move them earlier."]</p>
+                            <p class="mb-0">@T["Due dates, availability windows, peer review dates and module unlock dates all move together."]</p>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="copy-keep" name="keepPublished" value="true" aria-describedby="copy-keep-hint" />
+                                <label class="form-check-label" for="copy-keep">@T["Publish what is published in the course you copy from"]</label>
+                            </div>
+                            <p class="small text-muted mb-0" id="copy-keep-hint">@T["Otherwise everything arrives hidden from students, so you can check it first."]</p>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3" data-copy-submit>@T["Copy into this course"]</button>
+                    <p class="text-danger small mt-2 mb-0 d-none" role="alert" data-copy-empty>@T["Choose something to copy."]</p>
+                </div>
+            </section>
+        }
+    </form>
+}
+
+<section class="card border-0 shadow-sm mb-4" aria-labelledby="copy-history-title" data-copy-history>
+    <div class="card-body">
+        <h3 class="h5" id="copy-history-title">@T["Copies into this course"]</h3>
+        @if (Model.History.Count == 0)
+        {
+            <p class="text-muted mb-0">@T["No content has been copied into this course yet."]</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">@T["When"]</th>
+                            <th scope="col">@T["From"]</th>
+                            <th scope="col">@T["By"]</th>
+                            <th scope="col">@T["What was copied"]</th>
+                            <th scope="col">@T["Dates moved"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var run in Model.History)
+                        {
+                            <tr data-copy-run>
+                                <td class="text-nowrap"><time datetime="@DateTime.SpecifyKind(run.CopiedAt, DateTimeKind.Utc).ToString("o")" data-local-time="short">@run.CopiedAt.ToString("dd MMM yyyy HH:mm") UTC</time></td>
+                                <td>@(string.IsNullOrEmpty(run.SourceTitle) ? T.Text("A deleted course") : run.SourceTitle)<div class="small text-muted">@run.SourceSemester</div></td>
+                                <td>@run.CopiedBy</td>
+                                <td>
+                                    @foreach (var (part, n) in run.Copied) { <span class="badge text-bg-light border me-1">@PartLabel(part): @n</span> }
+                                    @if (run.NotCopiedCount > 0) { <span class="small text-muted d-block">@T.Format("{0} not copied", run.NotCopiedCount)</span> }
+                                </td>
+                                <td>@(run.ShiftDays == 0 ? (object)T.Text("No") : T.Format("{0} days", run.ShiftDays))</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
+
+@if (Model.CanShareTemplate)
+{
+    var template = Model.Template;
+    <section class="card border-0 shadow-sm mb-4" aria-labelledby="copy-template-title" data-course-template="@(template is null ? "none" : template.Scope)">
+        <div class="card-body">
+            <h3 class="h5 mb-1" id="copy-template-title">@T["Share as a template"]</h3>
+            <p class="text-muted small">@T["Other teachers can start their courses from this course's content. They copy from it on this page, in their own courses."]</p>
+            @if (template is not null)
+            {
+                <p class="mb-2"><span class="badge bg-info text-dark">@T["Shared as a template"]</span> <strong>@template.Name</strong> · @ScopeLabel(template.Scope)</p>
+            }
+            <form method="post" asp-action="SaveCourseTemplate" class="row g-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                <div class="col-md-6">
+                    <label class="form-label" for="template-name">@T["Template name"]</label>
+                    <input class="form-control" id="template-name" name="name" required maxlength="@Tabsan.EduSphere.Domain.Lms.CourseTemplate.MaxNameLength"
+                           value="@(template?.Name ?? Model.Target?.CourseTitle)" />
+                </div>
+                <div class="col-md-6">
+                    <fieldset>
+                        <legend class="form-label fs-6 mb-1">@T["Who may use it"]</legend>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="scope" id="template-scope-department" value="Department" checked="@(template?.Scope != "Institution")" />
+                            <label class="form-check-label" for="template-scope-department">@T["Teachers of this course's department"]</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="scope" id="template-scope-institution" value="Institution" checked="@(template?.Scope == "Institution")" />
+                            <label class="form-check-label" for="template-scope-institution">@T["Every teacher in the school"]</label>
+                        </div>
+                    </fieldset>
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="template-description">@T["Description"]</label>
+                    <textarea class="form-control" id="template-description" name="description" rows="2"
+                              maxlength="@Tabsan.EduSphere.Domain.Lms.CourseTemplate.MaxDescriptionLength">@template?.Description</textarea>
+                </div>
+                <div class="col-12 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-outline-primary">@T["Save template"]</button>
+                </div>
+            </form>
+            @if (template is not null)
+            {
+                <form method="post" asp-action="RemoveCourseTemplate" class="mt-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="offeringId" value="@Model.OfferingId" />
+                    <button type="submit" class="btn btn-sm btn-outline-danger" data-remove-template>@T["Stop sharing"]</button>
+                </form>
+            }
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script src="~/js/course-copy.js" asp-append-version="true" defer></script>
+}

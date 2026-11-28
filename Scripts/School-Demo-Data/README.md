@@ -31,6 +31,33 @@ Both are safe to re-run. Script 1 skips rows that exist (keyed on usernames, cod
 
 Restart the API and the portal afterwards (or wait a few minutes) so cached menus, dashboards and settings pick up the new data.
 
+On a database built from scratch: run `02-Seed-Core.sql`, the `Schools-And-Campuses` scripts, then **start the API once before script 1**. The API adds the Teacher, Student, Finance and Parent roles at its first start, and script 1 fails without them ("Cannot insert the value NULL into column 'RoleId'"). Install a licence (Settings → License Update, or `POST /api/v1/license/upload` as SuperAdmin) before script 2: on an unlicensed database every module is off and script 2 stops with "Module 'courses' is disabled".
+
+## Demo sign-in: one login, any role
+
+`04-Demo-Login-Accounts.sql` (run after script 1 and one API start) adds the accounts for a single demo login. With the API's `DemoLogin` settings switched on, people sign in as **`demo`** / `EduSphere147`; the mobile app then shows **Sign in as** with each role, and the session belongs to that role's account:
+
+| Sign in as | Account | Shows |
+|---|---|---|
+| SuperAdmin | `superadmin` | every school and campus |
+| Admin | `demo.admin` | Tabsan Model School, all three campuses |
+| Teacher (`Faculty`) | `tmsgul.maths` | Mathematics in Class 1 to 10, Gulberg |
+| Student | `tmsgul.c9s1` | Class 9, Gulberg |
+| Parent | `demo.parent` | two children: `tmsgul.c9s1` and `tmsjt.c4s2` |
+
+The portal has no role choice: `demo` opens the first role (SuperAdmin). API settings (environment variables, or the `DemoLogin` section of the API's `appsettings.json`):
+
+```
+DemoLogin__Enabled=true
+DemoLogin__Accounts__0__Role=SuperAdmin   DemoLogin__Accounts__0__Username=superadmin
+DemoLogin__Accounts__1__Role=Admin        DemoLogin__Accounts__1__Username=demo.admin
+DemoLogin__Accounts__2__Role=Faculty      DemoLogin__Accounts__2__Username=tmsgul.maths
+DemoLogin__Accounts__3__Role=Student      DemoLogin__Accounts__3__Username=tmsgul.c9s1
+DemoLogin__Accounts__4__Role=Parent       DemoLogin__Accounts__4__Username=demo.parent
+```
+
+`DemoLogin` is off by default. **Never switch it on for a real institution**: anyone with the demo password can open every listed account.
+
 ## Sign-in names
 
 Every account's password is the demo password `EduSphere147`. **Change the passwords, or delete these accounts, before real use.**

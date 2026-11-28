@@ -80,7 +80,10 @@ public class Phase31Stage2SecurityHardeningTests
             "XapiController.About",
             "XapiController.Get",
             "XapiController.Post",
-            "XapiController.Put"
+            "XapiController.Put",
+            // The calendar feed: Google Calendar, Outlook and phones subscribe without signing in. The private link (32 random
+            // bytes, stored hashed) is the key; it can be replaced or turned off, and it only reads the owner's calendar.
+            "CalendarController.Feed"
         };
 
         Assert.Equal(expected.OrderBy(x => x), allowAnonymousEndpoints);

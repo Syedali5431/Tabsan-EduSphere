@@ -45,6 +45,7 @@ public sealed class SignInViewModel : PageViewModel
     private string _confirmPassword = "";
     private MobileConfig? _config;
     private VersionPolicy.State _version;
+    private int _demoRoleIndex;
 
     public SignInViewModel(EduSphereClient client, IBrowserAuthenticator browser, AppSettings settings)
     {
@@ -56,15 +57,34 @@ public sealed class SignInViewModel : PageViewModel
         LoadCommand = new AsyncCommand(LoadAsync);
     }
 
-    public string Username { get => _username; set => Set(ref _username, value); }
+    public string Username { get => _username; set { if (Set(ref _username, value)) OnPropertyChanged(nameof(IsDemo)); } }
     public string Password { get => _password; set => Set(ref _password, value); }
+
+    /// <summary>Demo installations only: the roles the shared demo sign-in can open (empty elsewhere).</summary>
+    public IReadOnlyList<string> DemoRoles => Config?.DemoRoles ?? [];
+    /// <summary>Demo installations only: the shared demo username was typed, so the role to open is chosen before signing in.</summary>
+    public bool IsDemo => DemoRoles.Count > 0 && !string.IsNullOrWhiteSpace(Config?.DemoUsername)
+        && string.Equals(Username.Trim(), Config!.DemoUsername!.Trim(), StringComparison.OrdinalIgnoreCase);
+    /// <summary>The chosen role (index into <see cref="DemoRoles"/>); the first by default.</summary>
+    public int DemoRoleIndex { get => _demoRoleIndex; set => Set(ref _demoRoleIndex, value); }
+    /// <summary>The role sent with the sign-in: only for the demo username, otherwise null.</summary>
+    public string? DemoRole => IsDemo ? DemoRoles[Math.Clamp(DemoRoleIndex, 0, DemoRoles.Count - 1)] : null;
     public string MfaCode { get => _mfaCode; set => Set(ref _mfaCode, value); }
     public bool NeedsMfa { get => _needsMfa; private set => Set(ref _needsMfa, value); }
     /// <summary>The account still has its temporary password (imported accounts): a new one is chosen before the app opens.</summary>
     public bool NeedsNewPassword { get => _needsNewPassword; private set => Set(ref _needsNewPassword, value); }
     public string NewPassword { get => _newPassword; set => Set(ref _newPassword, value); }
     public string ConfirmPassword { get => _confirmPassword; set => Set(ref _confirmPassword, value); }
-    public MobileConfig? Config { get => _config; private set => Set(ref _config, value); }
+    public MobileConfig? Config
+    {
+        get => _config;
+        private set
+        {
+            if (!Set(ref _config, value)) return;
+            OnPropertyChanged(nameof(DemoRoles));
+            OnPropertyChanged(nameof(IsDemo));
+        }
+    }
     public VersionPolicy.State VersionState { get => _version; private set => Set(ref _version, value); }
     public ObservableCollection<SsoProvider> Providers { get; } = [];
     /// <summary>The institute's server, as shown under the form (with "Change server" unless the build is locked to it).</summary>
@@ -93,7 +113,7 @@ public sealed class SignInViewModel : PageViewModel
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password)) { Error = AppText.Get("WrongCredentials"); return; }
         if (NeedsNewPassword) { await ChangePasswordAsync(); return; }
         SignInResult? result = null;
-        await RunAsync(async () => result = await _client.SignInAsync(Username.Trim(), Password, NeedsMfa ? MfaCode : null));
+        await RunAsync(async () => result = await _client.SignInAsync(Username.Trim(), Password, NeedsMfa ? MfaCode : null, demoRole: DemoRole));
         if (result is null) return;
         Handle(result);
     }
@@ -284,6 +304,214 @@ public sealed class TimetableViewModel : PageViewModel
 }
 
 public sealed record TimetableDay(string Day, bool IsToday, IReadOnlyList<ClassSlot> Classes);
+
+/// <summary>
+/// The calendar: homework due dates, quiz closing times, live classes and key dates of the next six weeks (and overdue work
+/// of the past week), day by day in the phone's time — own, a teacher's courses, or a parent's child (all children when none
+/// is chosen). "Add to my phone's calendar" subscribes the phone's calendar app to the person's private link.
+/// </summary>
+public sealed class CalendarViewModel : PageViewModel
+{
+    public const int DaysAhead = 42;
+    public const int DaysBack = 7;
+    private readonly EduSphereClient _client;
+    private readonly Selection? _selection;
+    private readonly ILauncherService? _launcher;
+
+    public CalendarViewModel(EduSphereClient client, Selection? selection = null, ILauncherService? launcher = null)
+    {
+        _client = client;
+        _selection = selection;
+        _launcher = launcher;
+        LoadCommand = new AsyncCommand(LoadAsync);
+        SubscribeCommand = new AsyncCommand(SubscribeAsync);
+        if (selection is not null) selection.Changed += (_, _) => _ = LoadAsync();
+    }
+
+    public ObservableCollection<CalendarDay> Days { get; } = [];
+    public AsyncCommand LoadCommand { get; }
+    public AsyncCommand SubscribeCommand { get; }
+
+    public Task LoadAsync() => RunAsync(async () =>
+    {
+        var today = DateTime.Today;
+        var rows = await _client.GetCalendarAsync(today.AddDays(-DaysBack).ToUniversalTime(), today.AddDays(DaysAhead + 1).ToUniversalTime(),
+            _selection?.IsParent == true ? _selection.ChildId : null);
+        Days.Clear();
+        foreach (var day in Group(rows.Where(e => e.OfferingId is null || (_selection?.Includes(e.OfferingId) ?? true)), today)) Days.Add(day);
+    });
+
+    /// <summary>Today onwards day by day (with work from earlier days that is still overdue), all-day entries first.</summary>
+    public static IReadOnlyList<CalendarDay> Group(IEnumerable<CalendarEntry> entries, DateTime today)
+        => entries.Where(e => e.LocalDay >= today || e.Status == "Overdue")
+            .GroupBy(e => e.LocalDay)
+            .OrderBy(g => g.Key)
+            .Select(g => new CalendarDay(DayLabel(g.Key, today), g.Key == today, g.Key < today,
+                g.OrderBy(e => e.AllDay ? 0 : 1).ThenBy(e => e.StartsAt).ThenBy(e => e.Title, StringComparer.CurrentCulture).ToList()))
+            .ToList();
+
+    /// <summary>"Today", "Tomorrow", "Friday 4 December" (with the year when it is not this year).</summary>
+    public static string DayLabel(DateTime day, DateTime today)
+        => day == today ? AppText.Get("Today")
+           : day == today.AddDays(1) ? AppText.Get("Tomorrow")
+           : day.ToString(day.Year == today.Year ? "dddd d MMMM" : "d MMMM yyyy");
+
+    /// <summary>Opens the private link (webcal://) in the phone's calendar app, creating the link the first time.</summary>
+    public Task SubscribeAsync() => RunAsync(async () =>
+    {
+        var feed = await _client.GetOrCreateCalendarFeedAsync();
+        if (feed is null || _client.CalendarSubscribeUrl(feed) is not { } url || _launcher is null) return;
+        await _launcher.OpenAsync(new Uri(url));
+    });
+}
+
+public sealed record CalendarDay(string Day, bool IsToday, bool IsPast, IReadOnlyList<CalendarEntry> Entries);
+
+/// <summary>The inbox: conversations newest first, with how many messages are not read yet.</summary>
+public sealed class MessagesViewModel : PageViewModel
+{
+    private readonly EduSphereClient _client;
+    private int _unread;
+
+    public MessagesViewModel(EduSphereClient client)
+    {
+        _client = client;
+        LoadCommand = new AsyncCommand(LoadAsync);
+    }
+
+    public ObservableCollection<ConversationSummary> Items { get; } = [];
+    /// <summary>Conversations with unread messages.</summary>
+    public int Unread { get => _unread; private set => Set(ref _unread, value); }
+    public AsyncCommand LoadCommand { get; }
+
+    public Task LoadAsync() => RunAsync(async () =>
+    {
+        var rows = await _client.GetConversationsAsync();
+        Items.Clear();
+        foreach (var c in rows.OrderByDescending(c => c.LastMessageAt)) Items.Add(c);
+        Unread = Items.Count(c => c.HasUnread);
+    });
+}
+
+/// <summary>One conversation: its people and messages (oldest first), the reply box and Archive.</summary>
+public sealed class ConversationViewModel : PageViewModel
+{
+    private readonly EduSphereClient _client;
+    private ConversationDetail? _conversation;
+    private string _reply = "";
+
+    public ConversationViewModel(EduSphereClient client)
+    {
+        _client = client;
+        SendCommand = new AsyncCommand(SendAsync);
+        ArchiveCommand = new AsyncCommand(ArchiveAsync);
+    }
+
+    public ConversationDetail? Conversation
+    {
+        get => _conversation;
+        private set { if (Set(ref _conversation, value)) { OnPropertyChanged(nameof(Subject)); OnPropertyChanged(nameof(People)); } }
+    }
+
+    public string Subject => Conversation?.Subject ?? "";
+    /// <summary>The others in the conversation ("Ms Khan (Teacher), Mr Ali (School office)").</summary>
+    public string People => Conversation is null ? "" : string.Join(", ", Conversation.People.Where(p => p.UserId != _client.Session?.UserId)
+        .Select(p => $"{p.Name} ({MessageText.Role(p.Role)})"));
+    public ObservableCollection<ConversationMessageItem> Messages { get; } = [];
+    public string Reply { get => _reply; set => Set(ref _reply, value); }
+    public AsyncCommand SendCommand { get; }
+    public AsyncCommand ArchiveCommand { get; }
+    /// <summary>Raised once the conversation is archived (the page goes back to the inbox).</summary>
+    public event EventHandler? Archived;
+
+    public Task LoadAsync(Guid id) => RunAsync(async () =>
+    {
+        Conversation = await _client.GetConversationAsync(id);
+        Messages.Clear();
+        foreach (var m in (Conversation?.Messages ?? []).OrderBy(m => m.SentAt)) Messages.Add(m);
+    });
+
+    public async Task SendAsync()
+    {
+        if (Conversation is null) return;
+        if (string.IsNullOrWhiteSpace(Reply)) { Error = AppText.Get("WriteMessage"); return; }
+        var id = Conversation.Id;
+        if (await RunAsync(() => _client.SendMessageAsync(id, Reply.Trim())))
+        {
+            Reply = "";
+            await LoadAsync(id);
+        }
+    }
+
+    public async Task ArchiveAsync()
+    {
+        if (Conversation is null) return;
+        var id = Conversation.Id;
+        if (await RunAsync(() => _client.ArchiveConversationAsync(id))) Archived?.Invoke(this, EventArgs.Empty);
+    }
+}
+
+/// <summary>
+/// A new message: the people the user may write to (a search asks the server; ticks are kept across searches), subject and
+/// text. Each student or parent ticked gets a conversation of their own.
+/// </summary>
+public sealed class NewMessageViewModel : PageViewModel
+{
+    private readonly EduSphereClient _client;
+    private readonly Dictionary<Guid, MessageContact> _chosen = [];
+    private string _search = "", _subject = "", _body = "";
+
+    public NewMessageViewModel(EduSphereClient client)
+    {
+        _client = client;
+        SearchCommand = new AsyncCommand(LoadAsync);
+        SendCommand = new AsyncCommand(SendAsync);
+    }
+
+    public ObservableCollection<MessageContact> Contacts { get; } = [];
+    public string Search { get => _search; set => Set(ref _search, value); }
+    public string Subject { get => _subject; set => Set(ref _subject, value); }
+    public string Body { get => _body; set => Set(ref _body, value); }
+    public int SelectedCount => _chosen.Count;
+    public IReadOnlyCollection<Guid> SelectedIds => _chosen.Keys;
+    public AsyncCommand SearchCommand { get; }
+    public AsyncCommand SendCommand { get; }
+    /// <summary>Raised with the new conversations once the message is sent.</summary>
+    public event EventHandler<IReadOnlyList<Guid>>? Sent;
+
+    public Task LoadAsync() => RunAsync(async () =>
+    {
+        var rows = await _client.GetMessageContactsAsync(Search);
+        foreach (var c in Contacts) c.PropertyChanged -= Ticked;
+        Contacts.Clear();
+        foreach (var c in rows)
+        {
+            c.IsSelected = _chosen.ContainsKey(c.UserId);
+            c.PropertyChanged += Ticked;
+            Contacts.Add(c);
+        }
+    });
+
+    private void Ticked(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (sender is not MessageContact c || e.PropertyName != nameof(MessageContact.IsSelected)) return;
+        if (c.IsSelected) _chosen[c.UserId] = c; else _chosen.Remove(c.UserId);
+        OnPropertyChanged(nameof(SelectedCount));
+    }
+
+    public async Task SendAsync()
+    {
+        if (_chosen.Count == 0) { Error = AppText.Get("ChooseRecipients"); return; }
+        if (string.IsNullOrWhiteSpace(Subject)) { Error = AppText.Get("EnterSubject"); return; }
+        if (string.IsNullOrWhiteSpace(Body)) { Error = AppText.Get("WriteMessage"); return; }
+        List<Guid> ids = [];
+        if (await RunAsync(async () => ids = await _client.StartConversationAsync(_chosen.Keys.ToList(), Subject.Trim(), Body.Trim())))
+        {
+            if (ids.Count > 1) Notice = string.Format(AppText.Get("MessageSentTo"), ids.Count);
+            Sent?.Invoke(this, ids);
+        }
+    }
+}
 
 public sealed class CoursesViewModel : PageViewModel
 {
